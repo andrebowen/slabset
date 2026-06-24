@@ -129,6 +129,16 @@ a{color:inherit}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
 
 .row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-top:4px}
+.dim-head{margin-bottom:8px}
+.dim-head .block-label{margin-bottom:0}
+.dim-wrap{display:flex;align-items:flex-start;gap:10px}
+.dim-wrap .field-grid{flex:1;min-width:0}
+.unit-seg{flex:0 0 auto;flex-direction:column;margin-top:28px;padding:4px;align-self:flex-start}
+.unit-seg button{min-width:3rem;padding:8px 10px}
+.shape-hint,.dim-hint{margin:0 0 12px}
+.seg--compact button{padding:6px 11px;font-size:.82rem;min-width:2.6rem}
+.input--dim input{padding-right:14px}
+.field.price-flash .input input{border-color:var(--hi-vis-deep);box-shadow:0 0 0 3px rgba(243,195,0,.35);transition:border-color .2s,box-shadow .2s}
 .block-label{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:8px;display:block}
 .divider{height:1px;background:var(--steel-line);margin:22px 0}
 
@@ -247,6 +257,8 @@ a{color:inherit}
   .input input{padding-right:46px}
   .seg{width:100%;gap:5px;flex-wrap:nowrap}
   .seg button{flex:1 1 0;min-width:0;padding:11px 8px;font-size:.96rem;min-height:46px;white-space:nowrap}
+  .seg--compact button{flex:0 0 auto;min-width:2.6rem;padding:8px 10px;font-size:.78rem;white-space:nowrap}
+  #meshSeg button{font-size:.72rem;padding:8px 6px}
   .btn{width:100%;justify-content:center;padding:16px;font-size:1.05rem}
   /* the result reads as a panel-mounted gauge */
   .slab{border-radius:14px}
@@ -275,4 +287,5 @@ img,svg{max-width:100%}
   .wrap{padding-inline:15px}
   body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
   .readbar-fig{font-size:1.7rem}
+  .unit-seg{margin-top:26px}
 }

@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="SlabSet — Accurate Metric Concrete Calculator, Built for Australia">
 <meta name="twitter:description" content="Free Australian concrete calculator. Volume, bags, cost and reinforcement for slabs, driveways and footings — with local pricing and wastage.">
 <meta name="twitter:image" content="https://slabset.online/shared/og-image.png">
-<link rel="stylesheet" href="shared/styles.css?v=5">
+<link rel="stylesheet" href="shared/styles.css?v=6">
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-PPKFHXV1DS"></script>
 <script>
@@ -63,11 +63,21 @@
         <button type="button" data-shape="footing" aria-pressed="false">Footing</button>
         <button type="button" data-shape="cylinder" aria-pressed="false">Cylinder</button>
       </div>
+      <p class="hint shape-hint" id="shapeHint">Flat pad or floor. Turn on reinforcement below for slab mesh.</p>
 
       <div class="divider"></div>
 
-      <span class="block-label">2 · Dimensions</span>
-      <div class="field-grid" id="dims"><!-- dimension fields injected by JS --></div>
+      <div class="dim-head">
+        <span class="block-label">2 · Dimensions</span>
+      </div>
+      <p class="hint dim-hint" id="dimHint">Enter in millimetres — e.g. 4000 for a 4 m edge (how plans are dimensioned).</p>
+      <div class="dim-wrap">
+        <div class="field-grid" id="dims"><!-- dimension fields injected by JS --></div>
+        <div class="seg seg--compact unit-seg" role="group" aria-label="Dimension units" id="unitSeg">
+          <button type="button" data-unit="mm" aria-pressed="true">mm</button>
+          <button type="button" data-unit="cm" aria-pressed="false">cm</button>
+        </div>
+      </div>
       <div class="field-grid" style="margin-top:14px">
         <div class="field">
           <label for="qty">How many?</label>
@@ -126,15 +136,15 @@
       <label class="switch"><input type="checkbox" id="reoToggle"><span class="switch-track"></span><span class="switch-label">Add steel mesh &amp; chairs estimate</span></label>
       <div id="reoOpts" hidden style="margin-top:12px">
         <div class="seg" role="group" aria-label="Mesh grade" id="meshSeg">
-          <button type="button" data-mesh="SL72" aria-pressed="true">SL72</button>
-          <button type="button" data-mesh="SL82" aria-pressed="false">SL82</button>
-          <button type="button" data-mesh="SL92" aria-pressed="false">SL92</button>
+          <button type="button" data-mesh="SL72" aria-pressed="true">Paths · SL72</button>
+          <button type="button" data-mesh="SL82" aria-pressed="false">Driveways · SL82</button>
+          <button type="button" data-mesh="SL92" aria-pressed="false">Heavy · SL92</button>
         </div>
         <p class="hint" id="meshHint" style="margin-top:8px">SL72 — paths, shed floors, light 100 mm slabs</p>
       </div>
 
       <div class="divider"></div>
-      <button type="submit" class="btn btn-primary">Recalculate ↻</button>
+      <button type="submit" class="btn btn-ghost">See full breakdown ↓</button>
     </form>
 
     <!-- result slab -->
@@ -274,6 +284,16 @@
     SL82:'SL82 — driveways, garage & carport slabs',
     SL92:'SL92 — heavy-duty &amp; commercial slabs'
   };
+  var DIM_PH={
+    slab:     {mm:['4000','3000','100'], cm:['400','300','10']},
+    footing:  {mm:['6000','450','300'],  cm:['600','45','30']},
+    cylinder: {mm:['300','1200'],       cm:['30','120']}
+  };
+  var SHAPE_HINT={
+    slab:'Flat pad or floor. Turn on reinforcement below for slab mesh.',
+    footing:'Strip or pad footing — same dimensions as a slab; uses trench mesh instead of sheet mesh.',
+    cylinder:'Round column, post hole or pier — diameter and height/depth.'
+  };
 
   var SHAPES={
     'slab':     {dims:[['L','Length','mm'],['W','Width','mm'],['T','Thickness','mm']], calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);}, qty:'Identical slabs',    reo:'mesh',   area:function(d){return (d.L/1000)*(d.W/1000);}},
@@ -281,7 +301,7 @@
     'cylinder': {dims:[['D','Diameter','mm'],['H','Height / depth','mm']], calc:function(d){return Math.PI*Math.pow((d.D/1000)/2,2)*(d.H/1000);}, qty:'Number of columns / posts', reo:'none'}
   };
 
-  var state={shape:'slab', mode:'bags', bag:20, mesh:'SL72', reoOn:false, basebag:9.5};
+  var state={shape:'slab', mode:'bags', bag:20, mesh:'SL72', reoOn:false, basebag:9.5, unit:'mm'};
   var $=function(id){return document.getElementById(id);};
   var errEl=$('err');
 
@@ -289,15 +309,33 @@
   function money(n){ return '$'+Math.round(n).toLocaleString('en-AU'); }
   function show(el,on){ el.hidden=!on; }
 
+  function updateDimHint(){
+    $('dimHint').textContent=state.unit==='mm'
+      ? 'Enter in millimetres — e.g. 4000 for a 4 m edge (how plans are dimensioned).'
+      : 'Enter in centimetres — e.g. 400 for a 4 m edge.';
+  }
+  function updateShapeHint(){ $('shapeHint').textContent=SHAPE_HINT[state.shape]; }
+
   function renderDims(){
-    var s=SHAPES[state.shape], html='';
+    var s=SHAPES[state.shape], saved={}, ph=DIM_PH[state.shape][state.unit], html='';
     s.dims.forEach(function(f){
+      var el=$('dim-'+f[0]); if(el) saved[f[0]]=el.value;
+    });
+    s.dims.forEach(function(f,i){
       html+='<div class="field"><label for="dim-'+f[0]+'">'+f[1]+'</label>'+
-            '<div class="input"><input id="dim-'+f[0]+'" type="number" inputmode="decimal" min="0" step="any" placeholder="0">'+
-            '<span class="unit">'+f[2]+'</span></div></div>';
+            '<div class="input input--dim"><input id="dim-'+f[0]+'" type="number" inputmode="decimal" min="0" step="any" placeholder="'+ph[i]+'"></div></div>';
     });
     $('dims').innerHTML=html;
+    s.dims.forEach(function(f){ if(saved[f[0]]!==undefined) $('dim-'+f[0]).value=saved[f[0]]; });
     $('qtyHint').textContent=s.qty;
+    updateDimHint(); updateShapeHint();
+  }
+
+  function flashPrices(){
+    ['bagPriceField','premixPriceField'].forEach(function(id){
+      var el=$(id); el.classList.add('price-flash');
+      setTimeout(function(){ el.classList.remove('price-flash'); }, 1200);
+    });
   }
 
   function applyState(){
@@ -310,11 +348,11 @@
   function compute(){
     var s=SHAPES[state.shape], d={}, missing=false, anyEntered=false;
     s.dims.forEach(function(f){
-      var el=$('dim-'+f[0]), v=parseFloat(el.value);
+      var el=$('dim-'+f[0]), v=parseFloat(el.value), scale=state.unit==='cm'?10:1;
       if(el.value!=='') anyEntered=true;
       if(isNaN(v)||v<=0){missing=true; el.parentElement.classList.toggle('is-error', el.value!=='');}
       else el.parentElement.classList.remove('is-error');
-      d[f[0]]=v;
+      d[f[0]]=v*scale;
     });
     if(missing){ errEl.textContent=anyEntered?'Enter a value above 0 in every dimension.':''; blank(); return; }
     errEl.textContent='';
@@ -414,13 +452,24 @@
   bindSeg('shapeSeg','data-shape','shape', renderDims);
   bindSeg('bagSeg','data-bag','bag', function(){ state.bag=parseInt(state.bag,10); applyBagSize(); });
   bindSeg('meshSeg','data-mesh','mesh', function(){ $('meshHint').innerHTML=MESH_HINT[state.mesh]; });
+  bindSeg('unitSeg','data-unit','unit', function(){
+    var s=SHAPES[state.shape];
+    s.dims.forEach(function(f){
+      var el=$('dim-'+f[0]);
+      if(el && el.value!==''){
+        var v=parseFloat(el.value);
+        if(!isNaN(v)) el.value=String(state.unit==='cm'?v/10:v*10);
+      }
+    });
+    renderDims();
+  });
   bindSeg('modeSeg','data-mode','mode', function(){
     var bags=state.mode==='bags';
     show($('bagOpts'),bags); show($('bagPriceField'),bags);
     show($('premixPriceField'),!bags); show($('premixHint'),!bags);
   });
 
-  $('stateSel').addEventListener('change', function(){ applyState(); compute(); });
+  $('stateSel').addEventListener('change', function(){ applyState(); flashPrices(); compute(); });
   $('reoToggle').addEventListener('change', function(){ state.reoOn=this.checked; show($('reoOpts'),this.checked); compute(); });
   document.addEventListener('input', function(e){ if(e.target.matches('input')) compute(); });
   $('calc').addEventListener('submit', function(e){ e.preventDefault(); compute(); document.querySelector('.slab').scrollIntoView({behavior:'smooth',block:'nearest'}); });
