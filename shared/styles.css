@@ -1,0 +1,278 @@
+/* ============================================================
+   Reckoner — shared design system  ("Site-grade instrument")
+   Single source of truth: ../../brand/design-system.md
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root{
+  /* palette */
+  --paper:#F4F4F1;
+  --concrete:#E4E4DF;
+  --concrete-2:#EDEDE9;
+  --steel:#6B7075;
+  --steel-line:#C9C9C2;
+  --ink:#1B1D20;
+  --ink-2:#2A2D31;
+  --hi-vis:#F3C300;
+  --hi-vis-deep:#D9A800;
+
+  /* type */
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Hanken Grotesk',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+
+  /* space + form */
+  --r:10px;
+  --r-lg:16px;
+  --pad:clamp(16px,4vw,28px);
+  --maxw:1160px;
+  --shadow:0 1px 0 rgba(27,29,32,.04), 0 12px 28px -18px rgba(27,29,32,.35);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--body);
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.55;
+  font-size:17px;
+  /* signature: faint reinforcing-mesh grid (steel mesh inside a slab) */
+  background-image:
+    linear-gradient(rgba(27,29,32,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27,29,32,.035) 1px, transparent 1px);
+  background-size:34px 34px;
+  background-position:-1px -1px;
+}
+
+.wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad)}
+
+/* ---------- type ---------- */
+h1,h2,h3{font-family:var(--display);line-height:1.04;letter-spacing:-.02em;font-weight:800}
+h1{font-size:clamp(2rem,5.5vw,3.4rem)}
+h2{font-size:clamp(1.5rem,3.4vw,2.1rem);letter-spacing:-.015em}
+h3{font-size:1.15rem;font-weight:700;letter-spacing:-.01em}
+p{max-width:64ch}
+a{color:inherit}
+
+.eyebrow{
+  font-family:var(--mono);font-weight:700;font-size:.72rem;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--steel);
+  display:inline-flex;align-items:center;gap:.55em;
+}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--hi-vis-deep)}
+
+.lede{font-size:clamp(1.05rem,2vw,1.22rem);color:var(--ink-2)}
+
+/* two-line brand tagline (no leading dash) */
+.kicker{font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);line-height:1.7;margin:0}
+
+/* ---------- site chrome ---------- */
+.masthead{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding-block:18px;border-bottom:1px solid var(--steel-line);
+}
+/* ---------- SlabSet logo lockup (Stabila-style tool brand) ---------- */
+.logo{display:inline-flex;align-items:center;gap:12px;text-decoration:none}
+.logo-mark{width:40px;height:40px;flex:0 0 auto;display:block}
+.logo-word{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.035em;color:var(--ink);line-height:1}
+.logo-word .set{background:var(--hi-vis);color:var(--ink);padding:.02em .2em .04em;border-radius:3px;margin-left:.08em}
+.logo-tag{font-family:var(--mono);font-weight:500;font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);align-self:center;padding-left:12px;border-left:1px solid var(--steel-line)}
+@media(max-width:520px){.logo-tag{display:none}}
+.masthead nav{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--steel);text-transform:uppercase}
+.masthead nav a{text-decoration:none}
+.masthead nav a:hover{color:var(--ink)}
+
+.foot{border-top:1px solid var(--steel-line);margin-top:64px;padding-block:32px;color:var(--steel);font-size:.86rem}
+.foot .mono{font-family:var(--mono)}
+
+/* ---------- panels ---------- */
+.panel{
+  background:var(--concrete-2);border:1px solid var(--steel-line);
+  border-radius:var(--r-lg);box-shadow:var(--shadow);
+}
+
+/* ---------- calculator layout ---------- */
+.calc{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(18px,2.5vw,30px);align-items:start}
+@media (max-width:840px){.calc{grid-template-columns:1fr}}
+
+.controls{padding:clamp(18px,3vw,28px)}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+@media (max-width:460px){.field-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-weight:600;font-size:.9rem}
+.field .hint{font-size:.78rem;color:var(--steel)}
+
+.input{position:relative;display:flex;align-items:center}
+.input input,.input select{
+  width:100%;font-family:var(--mono);font-weight:500;font-size:1.05rem;color:var(--ink);
+  background:#fff;border:1.5px solid var(--steel-line);border-radius:var(--r);
+  padding:12px 14px;transition:border-color .12s, box-shadow .12s;
+}
+.input input{padding-right:46px}
+.input select{appearance:none;font-family:var(--body);font-weight:600;cursor:pointer}
+.input .unit{position:absolute;right:14px;font-family:var(--mono);font-size:.85rem;color:var(--steel);pointer-events:none}
+.input input:focus,.input select:focus,.seg button:focus-visible{
+  outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(243,195,0,.45)
+}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* segmented toggles (shape, mode, bag size) */
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px;background:var(--concrete);border:1px solid var(--steel-line);border-radius:var(--r);padding:5px}
+.seg button{
+  font-family:var(--body);font-weight:600;font-size:.86rem;color:var(--steel);
+  background:transparent;border:0;border-radius:7px;padding:8px 13px;cursor:pointer;transition:.12s;
+}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-top:4px}
+.block-label{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-bottom:8px;display:block}
+.divider{height:1px;background:var(--steel-line);margin:22px 0}
+
+.btn{
+  font-family:var(--display);font-weight:700;font-size:.98rem;letter-spacing:-.01em;
+  border:0;border-radius:var(--r);padding:13px 22px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.5ch;
+}
+.btn-primary{background:var(--hi-vis);color:var(--ink);box-shadow:0 6px 16px -8px var(--hi-vis-deep)}
+.btn-primary:hover{background:var(--hi-vis-deep)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--steel-line)}
+.btn-ghost:hover{border-color:var(--ink)}
+
+/* ---------- the result "slab" (signature) ---------- */
+.slab{
+  position:sticky;top:18px;background:var(--ink);color:#fff;border-radius:var(--r-lg);
+  padding:clamp(20px,3vw,30px);overflow:hidden;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+@media (max-width:840px){.slab{position:static}}
+.slab .block-label{color:rgba(255,255,255,.55)}
+.slab-headline{display:flex;align-items:baseline;gap:.5ch;flex-wrap:wrap;margin:6px 0 2px}
+.slab-figure{
+  font-family:var(--mono);font-weight:700;font-size:clamp(2.7rem,8vw,3.9rem);
+  line-height:1;letter-spacing:-.03em;color:#fff;
+  /* hi-vis measurement tick under the figure */
+  padding-bottom:6px;box-shadow:inset 0 -4px 0 var(--hi-vis);
+}
+.slab-unit{font-family:var(--mono);font-weight:500;font-size:1.4rem;color:var(--hi-vis)}
+.slab-note{color:rgba(255,255,255,.6);font-size:.84rem;margin-top:14px}
+
+.readouts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.12);border-radius:var(--r);overflow:hidden;margin-top:20px}
+.readout{background:var(--ink-2);padding:14px 15px}
+.readout .k{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.readout .v{font-family:var(--mono);font-weight:700;font-size:1.32rem;margin-top:4px}
+.readout .v small{font-weight:500;font-size:.8rem;color:rgba(255,255,255,.6)}
+
+/* working / breakdown */
+.working{list-style:none;display:flex;flex-direction:column;gap:9px;margin-top:8px}
+.working li{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem;padding-bottom:9px;border-bottom:1px dashed var(--steel-line)}
+.working li:last-child{border-bottom:0}
+.working .n{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.working .lbl{color:var(--steel)}
+
+/* prose sections */
+.section{margin-top:clamp(40px,7vw,72px)}
+.prose h3{margin:26px 0 8px}
+.prose p{margin-bottom:12px}
+.formula{font-family:var(--mono);font-size:.92rem;background:var(--concrete);border-left:3px solid var(--hi-vis-deep);border-radius:0 8px 8px 0;padding:12px 16px;margin:10px 0;overflow-x:auto}
+
+.faq details{border:1px solid var(--steel-line);border-radius:var(--r);background:var(--concrete-2);padding:2px 18px;margin-bottom:10px}
+.faq summary{font-family:var(--display);font-weight:700;font-size:1.02rem;padding:15px 0;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:1rem;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--mono);color:var(--hi-vis-deep);font-size:1.3rem}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding-bottom:16px;color:var(--ink-2)}
+
+/* hub catalog cards */
+.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:8px}
+.card{
+  display:flex;flex-direction:column;gap:8px;text-decoration:none;
+  background:var(--concrete-2);border:1px solid var(--steel-line);border-radius:var(--r-lg);
+  padding:20px;transition:transform .12s, border-color .12s, box-shadow .12s;
+}
+.card[href]:hover{transform:translateY(-3px);border-color:var(--ink);box-shadow:var(--shadow)}
+.card .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+.card h3{font-size:1.18rem}
+.card p{font-size:.9rem;color:var(--steel);margin:0}
+.card.soon{opacity:.62}
+.card .pill{margin-top:auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--hi-vis-deep);font-weight:700}
+.card.soon .pill{color:var(--steel)}
+
+.is-error{border-color:#c0392b!important}
+.err-msg{color:#c0392b;font-size:.85rem;min-height:1em}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- v2: toggle switch ---------- */
+.switch{display:flex;align-items:center;gap:11px;cursor:pointer;font-weight:600;font-size:.95rem;-webkit-tap-highlight-color:transparent}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.switch-track{position:relative;flex:0 0 auto;width:46px;height:27px;border-radius:99px;background:var(--steel-line);transition:background .15s}
+.switch-track::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked + .switch-track{background:var(--hi-vis-deep)}
+.switch input:checked + .switch-track::after{transform:translateX(19px)}
+.switch input:focus-visible + .switch-track{box-shadow:0 0 0 3px rgba(243,195,0,.45)}
+
+/* ---------- v2: best-buy verdict + warning ---------- */
+.verdict{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;padding:13px 15px;border-radius:var(--r);background:rgba(243,195,0,.12);border:1px solid rgba(243,195,0,.4)}
+.verdict-tag{font-family:var(--mono);font-weight:700;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--hi-vis);padding:4px 8px;border-radius:5px;flex:0 0 auto}
+.verdict #verdictText,.verdict span:last-child{font-size:.92rem;color:#fff;line-height:1.4}
+.slab .verdict #verdictText{color:#fff}
+.warn{display:flex;gap:8px;margin-top:12px;padding:11px 14px;border-radius:var(--r);background:rgba(255,255,255,.06);border-left:3px solid var(--hi-vis);font-size:.85rem;color:rgba(255,255,255,.82);line-height:1.45}
+.warn::before{content:"!";font-family:var(--mono);font-weight:700;color:var(--hi-vis);flex:0 0 auto}
+
+/* ---------- v2: mobile live readout bar (the instrument) ---------- */
+.readbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:none;align-items:center;gap:12px;
+  padding:9px 16px calc(9px + env(safe-area-inset-bottom));
+  background:var(--ink);color:#fff;border-top:2px solid var(--hi-vis);
+  box-shadow:0 -10px 28px -14px rgba(0,0,0,.6);
+  background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:24px 24px}
+.readbar-fig{font-family:var(--mono);font-weight:700;font-size:1.9rem;line-height:1;display:flex;align-items:baseline;gap:3px;box-shadow:inset 0 -3px 0 var(--hi-vis);padding-bottom:3px}
+.readbar-unit{font-size:.78rem;color:var(--hi-vis);font-weight:500}
+.readbar-sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.02em;color:rgba(255,255,255,.62);margin-left:auto;text-align:right;line-height:1.35;max-width:46%}
+.readbar-jump{flex:0 0 auto;width:38px;height:38px;border:0;border-radius:9px;background:var(--hi-vis);color:var(--ink);font-size:1.1rem;font-weight:700;cursor:pointer}
+
+/* ---------- v2: mobile-first instrument polish ---------- */
+@media (max-width:840px){
+  .readbar{display:flex}
+  body{padding-bottom:78px}
+  .calc{gap:20px}
+  .controls{padding:18px 16px}
+  /* bigger, tactile targets */
+  .input input,.input select{font-size:16px;padding:14px 14px;min-height:52px}
+  .input input{padding-right:46px}
+  .seg{width:100%;gap:5px;flex-wrap:nowrap}
+  .seg button{flex:1 1 0;min-width:0;padding:11px 8px;font-size:.9rem;min-height:46px;white-space:nowrap}
+  .btn{width:100%;justify-content:center;padding:16px;font-size:1.05rem}
+  /* the result reads as a panel-mounted gauge */
+  .slab{border-radius:14px}
+  .slab-figure{font-size:3.4rem}
+  .readouts .v{font-size:1.24rem}
+}
+
+/* ensure [hidden] always wins over component display rules */
+[hidden]{display:none!important}
+
+/* ---------- v2.1: iPhone fit hardening ---------- */
+/* NOTE: do NOT put overflow-x:hidden on html/body — it breaks position:fixed
+   (the readout bar) on iOS Safari. Overflow is contained at the source instead. */
+.calc,.controls,.slab,.panel,.readouts{min-width:0;max-width:100%}
+.working li{flex-wrap:wrap}
+img,svg{max-width:100%}
+
+/* readout bar: fixed width = viewport; let the sub text shrink, never overflow */
+.readbar{overflow:hidden}
+.readbar-fig{flex:0 0 auto;white-space:nowrap}
+.readbar-jump{flex:0 0 auto}
+.readbar-sub{flex:1 1 auto;min-width:0;max-width:none;margin-left:auto;
+  overflow:hidden;text-overflow:ellipsis}
+
+@media (max-width:840px){
+  .wrap{padding-inline:15px}
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  .readbar-fig{font-size:1.7rem}
+}

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concrete Calculator (Australia) — How Much Concrete Do I Need? | SlabSet</title>
+<link rel="icon" type="image/svg+xml" href="shared/slabset-mark.svg">
+<meta name="description" content="SlabSet is the free Australian metric concrete calculator. Instantly calculate volume, bags, cost and materials for slabs, driveways, footings and more — with local pricing and waste factors.">
+<link rel="canonical" href="https://slabset.au/">
+<meta property="og:title" content="SlabSet — Accurate Metric Concrete Calculator, Built for Australia">
+<meta property="og:description" content="Free Australian concrete calculator. Volume, bags, cost and reinforcement for slabs, driveways and footings — with local pricing and wastage.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="shared/styles.css?v=3">
+</head>
+<body>
+<header class="wrap masthead">
+  <span class="logo" aria-label="SlabSet — Concrete Calculator">
+    <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+      <polygon points="32,8 54,20 32,32 10,20" fill="#F3C300"/>
+      <polygon points="10,20 32,32 32,40 10,28" fill="#D9A800"/>
+      <polygon points="32,32 54,20 54,28 32,40" fill="#BB8F00"/>
+      <polygon points="10,28 32,40 32,48 10,36" fill="#787D82"/>
+      <polygon points="32,40 54,28 54,36 32,48" fill="#5A5E63"/>
+      <polygon points="10,36 32,48 32,56 10,44" fill="#2E3135"/>
+      <polygon points="32,48 54,36 54,44 32,56" fill="#1B1D20"/>
+    </svg>
+    <span class="logo-word">Slab<span class="set">Set</span></span>
+    <span class="logo-tag">Concrete Calculator</span>
+  </span>
+</header>
+
+<main class="wrap">
+  <section class="section" style="margin-top:clamp(28px,5vw,52px)">
+    <h1 style="margin:0;max-width:18ch">How much concrete do I need?</h1>
+    <p class="lede" style="margin-top:14px;max-width:58ch">The free Australian concrete calculator — volume, bags, cost and materials, with local pricing and wastage built in.</p>
+  </section>
+
+  <!-- ============ CALCULATOR ============ -->
+  <section class="section calc" style="margin-top:30px" aria-label="Concrete calculator">
+
+    <!-- controls -->
+    <form class="panel controls" id="calc" novalidate>
+      <span class="block-label">1 · What are you pouring?</span>
+      <div class="seg" role="group" aria-label="Shape" id="shapeSeg">
+        <button type="button" data-shape="slab" aria-pressed="true">Slab</button>
+        <button type="button" data-shape="footing" aria-pressed="false">Footing</button>
+        <button type="button" data-shape="cylinder" aria-pressed="false">Cylinder</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <span class="block-label">2 · Dimensions</span>
+      <div class="field-grid" id="dims"><!-- dimension fields injected by JS --></div>
+      <div class="field-grid" style="margin-top:14px">
+        <div class="field">
+          <label for="qty">How many?</label>
+          <div class="input"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1"><span class="unit">×</span></div>
+          <span class="hint" id="qtyHint">Identical posts / piers / slabs</span>
+        </div>
+        <div class="field">
+          <label for="wastage">Wastage allowance</label>
+          <div class="input"><input id="wastage" type="number" inputmode="decimal" min="0" step="1" value="10"><span class="unit">%</span></div>
+          <span class="hint">10% covers spillage &amp; uneven base</span>
+        </div>
+      </div>
+      <p class="err-msg" id="err" role="alert"></p>
+
+      <div class="divider"></div>
+
+      <span class="block-label">3 · Buy it as</span>
+      <div class="seg" role="group" aria-label="Supply mode" id="modeSeg">
+        <button type="button" data-mode="bags" aria-pressed="true">Bagged mix</button>
+        <button type="button" data-mode="premix" aria-pressed="false">Premix (truck)</button>
+      </div>
+
+      <div class="field-grid" style="margin-top:14px">
+        <div class="field">
+          <label for="stateSel">Your state <span class="hint" style="display:inline">— sets local prices</span></label>
+          <div class="input"><select id="stateSel" aria-label="State">
+            <option value="NSW">NSW</option><option value="VIC">VIC</option>
+            <option value="QLD">QLD</option><option value="WA">WA</option>
+            <option value="SA">SA</option><option value="TAS">TAS</option>
+            <option value="ACT">ACT</option><option value="NT">NT</option>
+          </select></div>
+        </div>
+
+        <div class="field" id="bagPriceField">
+          <label for="bagPrice">Price per bag</label>
+          <div class="input"><span class="unit" style="left:14px;right:auto">$</span><input id="bagPrice" type="number" inputmode="decimal" min="0" step="0.5" value="9.50" style="padding-left:30px;padding-right:14px"></div>
+        </div>
+        <div class="field" id="premixPriceField" hidden>
+          <label for="premixPrice">Premix price</label>
+          <div class="input"><span class="unit" style="left:14px;right:auto">$</span><input id="premixPrice" type="number" inputmode="decimal" min="0" step="10" value="340" style="padding-left:30px;padding-right:52px"><span class="unit">/m³</span></div>
+        </div>
+      </div>
+
+      <div id="bagOpts" style="margin-top:14px">
+        <span class="block-label" style="margin-bottom:8px">Bag size</span>
+        <div class="seg" role="group" aria-label="Bag size" id="bagSeg">
+          <button type="button" data-bag="20" aria-pressed="true">20 kg</button>
+          <button type="button" data-bag="30" aria-pressed="false">30 kg</button>
+        </div>
+      </div>
+      <p class="hint" id="premixHint" hidden style="margin-top:10px">Premix is ex delivery &amp; pump, sold in 0.1 m³ steps. Prices are indicative — edit for a quote.</p>
+
+      <div class="divider"></div>
+
+      <span class="block-label">4 · Reinforcement <span class="hint" style="display:inline">— optional</span></span>
+      <label class="switch"><input type="checkbox" id="reoToggle"><span class="switch-track"></span><span class="switch-label">Add steel mesh &amp; chairs estimate</span></label>
+      <div id="reoOpts" hidden style="margin-top:12px">
+        <div class="seg" role="group" aria-label="Mesh grade" id="meshSeg">
+          <button type="button" data-mesh="SL72" aria-pressed="true">SL72</button>
+          <button type="button" data-mesh="SL82" aria-pressed="false">SL82</button>
+          <button type="button" data-mesh="SL92" aria-pressed="false">SL92</button>
+        </div>
+        <p class="hint" id="meshHint" style="margin-top:8px">SL72 — paths, shed floors, light 100 mm slabs</p>
+      </div>
+
+      <div class="divider"></div>
+      <button type="submit" class="btn btn-primary">Recalculate ↻</button>
+    </form>
+
+    <!-- result slab -->
+    <aside class="slab" aria-live="polite" aria-atomic="true">
+      <span class="block-label">Concrete to order</span>
+      <div class="slab-headline">
+        <span class="slab-figure" id="figVol">—</span>
+        <span class="slab-unit">m³</span>
+      </div>
+      <p class="slab-note" id="figNote">Includes wastage. Enter dimensions to start.</p>
+
+      <div class="readouts" id="readouts">
+        <div class="readout"><div class="k" id="r1k">Bags (20 kg)</div><div class="v" id="r1v">—</div></div>
+        <div class="readout"><div class="k" id="r2k">Estimated cost</div><div class="v" id="r2v">—</div></div>
+        <div class="readout"><div class="k">Concrete weight</div><div class="v" id="r3v">—</div></div>
+        <div class="readout"><div class="k">Before wastage</div><div class="v" id="r4v">—</div></div>
+      </div>
+
+      <div class="verdict" id="verdict" hidden>
+        <span class="verdict-tag">Best buy</span>
+        <span id="verdictText"></span>
+      </div>
+      <p class="warn" id="warn" hidden></p>
+
+      <div id="reoPanel" hidden>
+        <span class="block-label" style="margin-top:22px">Reinforcement</span>
+        <div class="readouts" id="reoReadouts">
+          <div class="readout"><div class="k" id="reo1k">Mesh sheets</div><div class="v" id="reo1v">—</div></div>
+          <div class="readout"><div class="k" id="reo2k">Bar chairs</div><div class="v" id="reo2v">—</div></div>
+        </div>
+        <p class="slab-note" id="reoNote"></p>
+      </div>
+
+      <span class="block-label" style="margin-top:22px">The working</span>
+      <ul class="working" id="working"><li><span class="lbl">Fill in the dimensions to see the breakdown.</span></li></ul>
+    </aside>
+  </section>
+
+  <!-- ============ HOW IT'S WORKED OUT ============ -->
+  <section class="section prose" style="max-width:70ch">
+    <span class="eyebrow">No black box</span>
+    <h2 style="margin-top:12px">How it's worked out</h2>
+    <p>Concrete is sold by volume — cubic metres (m³). You measure the space you're filling, work out its volume, add a bit for wastage, then convert that to bags or a premix order.</p>
+
+    <h3>Volume by shape</h3>
+    <div class="formula">Slab / footing&nbsp;&nbsp;=&nbsp; length × width × thickness</div>
+    <div class="formula">Cylinder (column / post)&nbsp;&nbsp;=&nbsp; π × (diameter ÷ 2)² × height</div>
+    <p>Every dimension is entered in <strong>millimetres</strong> (how building plans are dimensioned) and converted to metres before the maths — so a 4 m slab edge is 4000 mm. Pouring more than one identical thing? Multiply by the quantity.</p>
+
+    <h3>Wastage</h3>
+    <p>Real sites lose concrete to spillage, an uneven sub-base and over-dug holes. A 10% allowance is standard — bump it up for rough ground, drop it for tidy formwork. Your total to order is <span class="formula" style="display:inline-block;padding:2px 8px;margin:0">volume × (1 + wastage%)</span>.</p>
+
+    <h3>Bags or premix</h3>
+    <p>A 20&nbsp;kg bag of pre-mixed concrete yields about 9.8&nbsp;litres (0.0098&nbsp;m³), so it takes roughly 102 bags to fill a cubic metre. We round bags <strong>up</strong> — running short mid-pour means a cold joint. Premix from a truck is sold by the cubic metre in 0.1&nbsp;m³ steps, so the order is rounded up to the next 0.1&nbsp;m³. The <strong>Best buy</strong> line compares the cost both ways and flags the cheaper option; under about 0.5&nbsp;m³ most plants charge a short-load fee, so bags often win.</p>
+
+    <h3>Steel reinforcement</h3>
+    <p>Turn on reinforcement to size the steel. For slabs we use standard <strong>6.0 × 2.4&nbsp;m mesh sheets</strong> (SL72 for paths and shed floors, SL82 for driveways, SL92 for heavy use) and add 10% for laps, plus bar chairs at roughly 1.5 per m² to hold the mesh at the right height. Footings use <strong>trench mesh</strong> in 6&nbsp;m lengths with a 15% lap allowance. Always defer to your engineer's drawings for anything structural.</p>
+
+    <h3>Local prices</h3>
+    <p>Pick your state to load an indicative metro price for premix and bags — then edit it to match your own quote. These are starting points, not a guarantee.</p>
+    <p class="mono" style="font-size:.84rem;color:var(--steel)">Weight assumes 2400 kg/m³. Costs use the prices you enter and are estimates only — confirm with your supplier.</p>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section faq" style="max-width:70ch">
+    <span class="eyebrow">Questions</span>
+    <h2 style="margin:12px 0 18px">Concrete FAQs</h2>
+
+    <details open><summary>How many 20 kg bags of concrete are in a cubic metre?</summary>
+      <p>About <strong>102 bags</strong>. A 20 kg bag yields roughly 0.0098 m³ (9.8 litres), so 1 ÷ 0.0098 ≈ 102. Always round up and keep a spare bag or two on hand — it's cheaper than a failed pour.</p></details>
+
+    <details><summary>How thick should a concrete slab be?</summary>
+      <p>A typical domestic path or shed slab is <strong>100 mm</strong>. Driveways that take cars are usually 100–125 mm; heavier loads (trucks, large sheds) go to 150 mm or more. Check your council and engineering requirements for anything structural.</p></details>
+
+    <details><summary>Should I use bags or order premix?</summary>
+      <p>As a rough guide, under about <strong>0.5 m³</strong> (a few post holes or a small pad) bags are easiest. Above that, mixing by hand becomes a slog and premix from a truck is cheaper per cubic metre and far less work. This calculator costs both so you can compare.</p></details>
+
+    <details><summary>How much extra concrete should I allow for wastage?</summary>
+      <p><strong>10%</strong> is the standard allowance for spillage, an uneven sub-base and over-dug footings. On rough ground or hand-dug holes, 15% is safer. Tidy formwork on a level base can drop to 5%.</p></details>
+
+    <details><summary>How much reo mesh do I need for a slab?</summary>
+      <p>Reo mesh comes in <strong>6.0 × 2.4 m sheets</strong> (14.4 m²). Divide your slab area by 14.4 and add ~10% for overlaps — so a 15 m² slab needs 2 sheets. Turn on reinforcement above to get sheets, bar chairs and an indicative cost. Use SL72 for paths and shed floors, SL82 for driveways.</p></details>
+
+    <details><summary>How much does a cubic metre of concrete weigh?</summary>
+      <p>About <strong>2.4 tonnes</strong> (2400 kg). That's why even a modest slab is a serious amount of material — and why getting the order right matters.</p></details>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p style="max-width:68ch"><strong>SlabSet</strong> helps Australian homeowners and builders accurately estimate concrete needs for any project — designed specifically for metric measurements, local suppliers, and real Australian conditions. Fast, free, and no signup required.</p>
+  <p style="margin-top:10px">This calculator gives estimates; confirm critical quantities and costs with your supplier or engineer.</p>
+  <p class="mono" style="margin-top:10px">SlabSet · concrete calculator · metric · v2</p>
+</footer>
+
+<!-- mobile live readout (instrument) — body-level so position:fixed pins to the viewport -->
+<div class="readbar" id="readbar" role="status" aria-live="polite">
+  <div class="readbar-fig"><span id="rbFig">—</span><span class="readbar-unit">m³</span></div>
+  <div class="readbar-sub" id="rbSub">Enter dimensions</div>
+  <button class="readbar-jump" id="rbJump" type="button" aria-label="See full breakdown">↓</button>
+</div>
+
+<!-- JSON-LD: WebApplication + FAQPage -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {"@type":"WebApplication","name":"Concrete Calculator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"AUD"},"description":"Calculate how much concrete you need for slabs, footings, post holes and columns in cubic metres, bags or premix, with cost.","inLanguage":"en-AU"},
+    {"@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"How many 20 kg bags of concrete are in a cubic metre?","acceptedAnswer":{"@type":"Answer","text":"About 102 bags. A 20 kg bag yields roughly 0.0098 cubic metres (9.8 litres), so 1 ÷ 0.0098 ≈ 102. Always round up."}},
+      {"@type":"Question","name":"How thick should a concrete slab be?","acceptedAnswer":{"@type":"Answer","text":"A typical domestic path or shed slab is 100 mm. Driveways are usually 100–125 mm; heavier loads go to 150 mm or more. Check council and engineering requirements for structural work."}},
+      {"@type":"Question","name":"Should I use bags or order premix?","acceptedAnswer":{"@type":"Answer","text":"Under about 0.5 cubic metres, bags are easiest. Above that, premix from a truck is cheaper per cubic metre and far less work."}},
+      {"@type":"Question","name":"How much extra concrete should I allow for wastage?","acceptedAnswer":{"@type":"Answer","text":"10% is standard for spillage and uneven ground. Use 15% on rough or hand-dug sites, 5% with tidy formwork on a level base."}},
+      {"@type":"Question","name":"How much reo mesh do I need for a slab?","acceptedAnswer":{"@type":"Answer","text":"Reo mesh comes in 6.0 x 2.4 m sheets (14.4 square metres). Divide your slab area by 14.4 and add about 10% for overlaps. A 15 square metre slab needs 2 sheets. Use SL72 for paths and shed floors, SL82 for driveways."}},
+      {"@type":"Question","name":"How much does a cubic metre of concrete weigh?","acceptedAnswer":{"@type":"Answer","text":"About 2.4 tonnes (2400 kg)."}}
+    ]}
+  ]
+}
+</script>
+
+<script>
+/* ---- Concrete Volume v2 — logic mirrors stages/01-spec/output/concrete-volume.md ---- */
+(function(){
+  "use strict";
+  var BAG_YIELD_20=0.0098, DENSITY=2400;
+  var MESH_SHEET=14.4, MESH_LAP=1.10, CHAIRS_PER_M2=1.5;     // reo: mesh
+  var TRENCH_LAP=1.15, TRENCH_LEN=6;                          // reo: trench mesh
+  var MIN_LOAD=0.5;                                           // premix short-load threshold
+  var MESH_PRICE=58, CHAIR_PRICE=0.35, TRENCH_PRICE=7;        // indicative reo $
+
+  var STATE={
+    NSW:{premix:340,bag:9.5}, VIC:{premix:330,bag:9.5}, QLD:{premix:320,bag:9.0},
+    WA:{premix:355,bag:10.5}, SA:{premix:320,bag:9.0}, TAS:{premix:360,bag:11.0},
+    ACT:{premix:345,bag:10.0}, NT:{premix:395,bag:12.0}
+  };
+  var MESH_HINT={
+    SL72:'SL72 — paths, shed floors, light 100 mm slabs',
+    SL82:'SL82 — driveways, garage & carport slabs',
+    SL92:'SL92 — heavy-duty &amp; commercial slabs'
+  };
+
+  var SHAPES={
+    'slab':     {dims:[['L','Length','mm'],['W','Width','mm'],['T','Thickness','mm']], calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);}, qty:'Identical slabs',    reo:'mesh',   area:function(d){return (d.L/1000)*(d.W/1000);}},
+    'footing':  {dims:[['L','Length','mm'],['W','Width','mm'],['T','Depth','mm']],     calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);}, qty:'Identical footings', reo:'trench', len:function(d){return d.L/1000;}},
+    'cylinder': {dims:[['D','Diameter','mm'],['H','Height / depth','mm']], calc:function(d){return Math.PI*Math.pow((d.D/1000)/2,2)*(d.H/1000);}, qty:'Number of columns / posts', reo:'none'}
+  };
+
+  var state={shape:'slab', mode:'bags', bag:20, mesh:'SL72', reoOn:false, basebag:9.5};
+  var $=function(id){return document.getElementById(id);};
+  var errEl=$('err');
+
+  function fmt(n,dp){ if(dp===undefined)dp=2; return n.toLocaleString('en-AU',{minimumFractionDigits:dp,maximumFractionDigits:dp}); }
+  function money(n){ return '$'+Math.round(n).toLocaleString('en-AU'); }
+  function show(el,on){ el.hidden=!on; }
+
+  function renderDims(){
+    var s=SHAPES[state.shape], html='';
+    s.dims.forEach(function(f){
+      html+='<div class="field"><label for="dim-'+f[0]+'">'+f[1]+'</label>'+
+            '<div class="input"><input id="dim-'+f[0]+'" type="number" inputmode="decimal" min="0" step="any" placeholder="0">'+
+            '<span class="unit">'+f[2]+'</span></div></div>';
+    });
+    $('dims').innerHTML=html;
+    $('qtyHint').textContent=s.qty;
+  }
+
+  function applyState(){
+    var st=STATE[$('stateSel').value]; state.basebag=st.bag;
+    $('premixPrice').value=st.premix;
+    $('bagPrice').value=(state.basebag*(state.bag/20)).toFixed(2);
+  }
+  function applyBagSize(){ $('bagPrice').value=(state.basebag*(state.bag/20)).toFixed(2); }
+
+  function compute(){
+    var s=SHAPES[state.shape], d={}, missing=false, anyEntered=false;
+    s.dims.forEach(function(f){
+      var el=$('dim-'+f[0]), v=parseFloat(el.value);
+      if(el.value!=='') anyEntered=true;
+      if(isNaN(v)||v<=0){missing=true; el.parentElement.classList.toggle('is-error', el.value!=='');}
+      else el.parentElement.classList.remove('is-error');
+      d[f[0]]=v;
+    });
+    if(missing){ errEl.textContent=anyEntered?'Enter a value above 0 in every dimension.':''; blank(); return; }
+    errEl.textContent='';
+
+    var n=Math.max(1, parseInt($('qty').value,10)||1);
+    var wPct=Math.max(0, parseFloat($('wastage').value)||0);
+    var V1=s.calc(d), Vbase=V1*n, Vtotal=Vbase*(1+wPct/100);
+    var weight=Vtotal*DENSITY;
+    var bagYield=(state.bag/20)*BAG_YIELD_20;
+    var bags=Math.ceil(Vtotal/bagYield);
+    var bagPrice=parseFloat($('bagPrice').value)||0, bagCost=bags*bagPrice;
+    var premix=Math.ceil(Vtotal*10)/10;
+    var premixPrice=parseFloat($('premixPrice').value)||0, premixCost=premix*premixPrice;
+
+    $('figVol').textContent=fmt(Vtotal);
+    $('figNote').textContent='Includes '+wPct+'% wastage'+(n>1?' · '+n+' × '+fmt(V1,3)+' m³':'')+'.';
+
+    if(state.mode==='bags'){
+      $('r1k').textContent='Bags ('+state.bag+' kg)'; $('r1v').textContent=bags;
+      $('r2k').textContent='Estimated cost'; $('r2v').textContent=money(bagCost);
+    } else {
+      $('r1k').textContent='Order (premix)'; $('r1v').innerHTML=fmt(premix,1)+' <small>m³</small>';
+      $('r2k').textContent='Estimated cost'; $('r2v').textContent=money(premixCost);
+    }
+    $('r3v').innerHTML=fmt(weight/1000)+' <small>t</small>';
+    $('r4v').innerHTML=fmt(Vbase)+' <small>m³</small>';
+
+    /* verdict — bags vs premix */
+    var cheaper=bagCost<=premixCost?'Bags':'Premix', save=Math.abs(bagCost-premixCost);
+    var practical = Vtotal<0.2 ? 'bags are simplest for this much'
+                  : Vtotal>0.6 ? 'premix usually wins on cost and effort above ~0.5 m³'
+                  : 'either works at this size';
+    $('verdictText').innerHTML = (save<1 ? 'Line-ball on cost — '+practical
+        : '<strong>'+cheaper+'</strong> — saves ~'+money(save)+' vs '+(cheaper==='Bags'?'premix':'bags')+' · '+practical) + '.';
+    show($('verdict'),true);
+
+    /* min-order warning */
+    if(premix<MIN_LOAD){
+      $('warn').textContent='Premix order is only '+fmt(premix,1)+' m³. Many plants have a ~0.5 m³ minimum or charge a short-load fee — bags may work out better.';
+      show($('warn'),true);
+    } else show($('warn'),false);
+
+    /* reinforcement */
+    if(state.reoOn){
+      show($('reoPanel'),true);
+      if(s.reo==='mesh'){
+        var A=s.area(d)*n, sheets=Math.ceil(A*MESH_LAP/MESH_SHEET), chairs=Math.ceil(A*CHAIRS_PER_M2);
+        show($('reoReadouts'),true);
+        $('reo1k').textContent='Mesh sheets'; $('reo1v').innerHTML=sheets+' <small>6.0×2.4 m</small>';
+        $('reo2k').textContent='Bar chairs'; $('reo2v').textContent=chairs;
+        $('reoNote').innerHTML='≈ '+fmt(A)+' m² · '+state.mesh+' · incl. 10% laps. Indicative reo cost '+money(sheets*MESH_PRICE+chairs*CHAIR_PRICE)+'.';
+      } else if(s.reo==='trench'){
+        var L=s.len(d)*n, mlen=L*TRENCH_LAP, lengths=Math.ceil(mlen/TRENCH_LEN);
+        show($('reoReadouts'),true);
+        $('reo1k').textContent='Trench mesh'; $('reo1v').innerHTML=fmt(mlen,1)+' <small>m</small>';
+        $('reo2k').textContent='6 m lengths'; $('reo2v').textContent=lengths;
+        $('reoNote').innerHTML='≈ '+fmt(L,1)+' m run · incl. 15% laps. Indicative reo cost '+money(mlen*TRENCH_PRICE)+'.';
+      } else {
+        show($('reoReadouts'),false);
+        $('reoNote').textContent="Cylinders (columns, posts, piers) use vertical bars (N12–N16) + ties — size to your engineer's spec.";
+      }
+    } else show($('reoPanel'),false);
+
+    /* working */
+    var w=[];
+    w.push(['Volume of one','<span class="n">'+fmt(V1,3)+' m³</span>']);
+    if(n>1) w.push(['× quantity ('+n+')','<span class="n">'+fmt(Vbase,3)+' m³</span>']);
+    w.push(['+ '+wPct+'% wastage','<span class="n">'+fmt(Vtotal)+' m³</span>']);
+    if(state.mode==='bags') w.push(['÷ '+fmt(bagYield,4)+' m³ / bag','<span class="n">'+bags+' bags</span>']);
+    else w.push(['rounded up to 0.1 m³','<span class="n">'+fmt(premix,1)+' m³</span>']);
+    $('working').innerHTML=w.map(function(r){return '<li><span class="lbl">'+r[0]+'</span>'+r[1]+'</li>';}).join('');
+
+    /* mobile instrument readout */
+    $('rbFig').textContent=fmt(Vtotal);
+    var primary = state.mode==='bags' ? bags+' × '+state.bag+'kg bags' : 'Premix '+fmt(premix,1)+' m³';
+    $('rbSub').innerHTML=primary+'<br>'+cheaper.toLowerCase()+' cheaper';
+  }
+
+  function blank(){
+    $('figVol').textContent='—';
+    $('figNote').textContent='Includes wastage. Enter dimensions to start.';
+    ['r1v','r2v','r3v','r4v'].forEach(function(id){$(id).textContent='—';});
+    show($('verdict'),false); show($('warn'),false); show($('reoPanel'),false);
+    $('working').innerHTML='<li><span class="lbl">Fill in the dimensions to see the breakdown.</span></li>';
+    $('rbFig').textContent='—'; $('rbSub').textContent='Enter dimensions';
+  }
+
+  function bindSeg(segId, attr, key, after){
+    $(segId).addEventListener('click', function(e){
+      var b=e.target.closest('button'); if(!b)return;
+      [].forEach.call(this.querySelectorAll('button'), function(x){x.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed','true');
+      state[key]=b.getAttribute(attr); if(after)after(); compute();
+    });
+  }
+
+  bindSeg('shapeSeg','data-shape','shape', renderDims);
+  bindSeg('bagSeg','data-bag','bag', function(){ state.bag=parseInt(state.bag,10); applyBagSize(); });
+  bindSeg('meshSeg','data-mesh','mesh', function(){ $('meshHint').innerHTML=MESH_HINT[state.mesh]; });
+  bindSeg('modeSeg','data-mode','mode', function(){
+    var bags=state.mode==='bags';
+    show($('bagOpts'),bags); show($('bagPriceField'),bags);
+    show($('premixPriceField'),!bags); show($('premixHint'),!bags);
+  });
+
+  $('stateSel').addEventListener('change', function(){ applyState(); compute(); });
+  $('reoToggle').addEventListener('change', function(){ state.reoOn=this.checked; show($('reoOpts'),this.checked); compute(); });
+  document.addEventListener('input', function(e){ if(e.target.matches('input')) compute(); });
+  $('calc').addEventListener('submit', function(e){ e.preventDefault(); compute(); document.querySelector('.slab').scrollIntoView({behavior:'smooth',block:'nearest'}); });
+  $('rbJump').addEventListener('click', function(){ document.querySelector('.slab').scrollIntoView({behavior:'smooth',block:'center'}); });
+
+  renderDims(); applyState(); blank();
+})();
+</script>
+</body>
+</html>
