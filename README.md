@@ -4,7 +4,7 @@ The free Australian metric concrete calculator. Work out volume, bags, cost and
 reinforcement for slabs, footings and cylinders (columns/posts) — with state-based
 local pricing and wastage built in.
 
-- **Live:** https://slabset.au/ (custom domain via GitHub Pages)
+- **Live:** https://slabset.online/ (custom domain via GitHub Pages)
 - **Stack:** plain HTML/CSS/JS, no build step, no dependencies (Google Fonts only).
 - **Units:** metric, all dimensions entered in millimetres.
 
