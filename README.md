@@ -11,8 +11,12 @@ local pricing and wastage built in.
 ## Structure
 ```
 index.html            ← the calculator (site root)
+robots.txt            ← crawler directives
+sitemap.xml           ← URL list for search engines
 shared/styles.css     ← design system ("site-grade instrument")
 shared/slabset-mark.svg ← logo mark / favicon
+shared/og-image.png   ← social preview (1200×630)
+shared/og-render.html   ← source template to regenerate og-image.png
 ```
 
 Built with the Calculator Studio pipeline. Estimates only — confirm critical

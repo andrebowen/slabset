@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@800&family=Hanken+Grotesk:wght@500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: #F4F4F1;
+    background-image:
+      linear-gradient(rgba(201,201,194,.35) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,201,194,.35) 1px, transparent 1px);
+    background-size: 48px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Hanken Grotesk', system-ui, sans-serif;
+    color: #1B1D20;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .logo-mark {
+    width: 120px;
+    height: 120px;
+    flex: 0 0 auto;
+    display: block;
+  }
+  .logo-word {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: 96px;
+    letter-spacing: -0.035em;
+    color: #1B1D20;
+    line-height: 1;
+  }
+  .logo-word .set {
+    background: #F3C300;
+    color: #1B1D20;
+    padding: 0.02em 0.18em 0.06em;
+    border-radius: 10px;
+    margin-left: 0.08em;
+  }
+  .tagline {
+    margin-top: 36px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6B7075;
+  }
+  .sub {
+    margin-top: 18px;
+    font-size: 28px;
+    font-weight: 500;
+    color: #2A2D31;
+    letter-spacing: -0.01em;
+  }
+</style>
+</head>
+<body>
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+      <polygon points="32,8 54,20 32,32 10,20" fill="#F3C300"/>
+      <polygon points="10,20 32,32 32,40 10,28" fill="#D9A800"/>
+      <polygon points="32,32 54,20 54,28 32,40" fill="#BB8F00"/>
+      <polygon points="10,28 32,40 32,48 10,36" fill="#787D82"/>
+      <polygon points="32,40 54,28 54,36 32,48" fill="#5A5E63"/>
+      <polygon points="10,36 32,48 32,56 10,44" fill="#2E3135"/>
+      <polygon points="32,48 54,36 54,44 32,56" fill="#1B1D20"/>
+    </svg>
+    <span class="logo-word">Slab<span class="set">Set</span></span>
+  </div>
+  <p class="tagline">Concrete Calculator</p>
+  <p class="sub">Accurate metric concrete calculator — built for Australia</p>
+</body>
+</html>
