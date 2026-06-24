@@ -117,6 +117,11 @@ a{color:inherit}
 .input input:focus,.input select:focus,.seg button:focus-visible{
   outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(243,195,0,.45)
 }
+@media (min-width:841px){
+  #dims input[type=number]::-webkit-inner-spin-button,
+  #dims input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  #dims input[type=number]{-moz-appearance:textfield;appearance:textfield}
+}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 /* segmented toggles (shape, mode, bag size) */
