@@ -3,24 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Concrete Calculator (Australia) — How Much Concrete Do I Need? | SlabSet</title>
+<title>Concrete Calculator for Australia | SlabSet</title>
 <link rel="icon" type="image/svg+xml" href="shared/slabset-mark.svg">
-<meta name="description" content="SlabSet is the free Australian metric concrete calculator. Instantly calculate volume, bags, cost and materials for slabs, driveways, footings and more — with local pricing and waste factors.">
+<meta name="description" content="SlabSet is the free Australian metric concrete calculator. Work out volume, bags, cost and materials for slabs, driveways, footings and more, with local pricing and waste factors.">
 <link rel="canonical" href="https://slabset.online/">
-<meta property="og:title" content="SlabSet — Accurate Metric Concrete Calculator, Built for Australia">
-<meta property="og:description" content="Free Australian concrete calculator. Volume, bags, cost and reinforcement for slabs, driveways and footings — with local pricing and wastage.">
+<meta property="og:title" content="SlabSet. Accurate Metric Concrete Calculator, Built for Australia">
+<meta property="og:description" content="Free Australian concrete calculator. Volume, bags, cost and reinforcement for slabs, driveways and footings, with local pricing and wastage.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://slabset.online/">
 <meta property="og:image" content="https://slabset.online/shared/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="SlabSet — Australian metric concrete calculator for slabs, driveways and footings">
+<meta property="og:image:alt" content="SlabSet. Australian metric concrete calculator for slabs, driveways and footings">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SlabSet — Accurate Metric Concrete Calculator, Built for Australia">
-<meta name="twitter:description" content="Free Australian concrete calculator. Volume, bags, cost and reinforcement for slabs, driveways and footings — with local pricing and wastage.">
+<meta name="twitter:title" content="SlabSet. Accurate Metric Concrete Calculator, Built for Australia">
+<meta name="twitter:description" content="Free Australian concrete calculator. Volume, bags, cost and reinforcement for slabs, driveways and footings, with local pricing and wastage.">
 <meta name="twitter:image" content="https://slabset.online/shared/og-image.png">
-<link rel="stylesheet" href="shared/styles.css?v=9">
-<!-- Google Analytics (GA4) -->
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="shared/styles.css?v=48">
+<script>
+(function(){
+  var t=localStorage.getItem('slabset-theme');
+  if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t);
+})();
+</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-PPKFHXV1DS"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -31,8 +37,8 @@
 </head>
 <body>
 <header class="wrap masthead">
-  <span class="logo" aria-label="SlabSet — Concrete Calculator">
-    <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+  <span class="logo" aria-label="SlabSet concrete calculator">
+    <svg class="logo-mark" viewBox="6 6 52 52" aria-hidden="true">
       <polygon points="32,8 54,20 32,32 10,20" fill="#F3C300"/>
       <polygon points="10,20 32,32 32,40 10,28" fill="#D9A800"/>
       <polygon points="32,32 54,20 54,28 32,40" fill="#BB8F00"/>
@@ -44,201 +50,241 @@
     <span class="logo-word">Slab<span class="set">Set</span></span>
     <span class="logo-tag">Concrete Calculator</span>
   </span>
+  <div class="seg seg-inline theme-seg" role="group" aria-label="Colour theme" id="themeSeg">
+    <button type="button" data-theme="light" aria-pressed="true">Light</button>
+    <button type="button" data-theme="dark" aria-pressed="false">Dark</button>
+  </div>
 </header>
 
 <main class="wrap">
-  <section class="section" style="margin-top:clamp(28px,5vw,52px)">
-    <h1 style="margin:0;max-width:18ch">How much concrete do I need?</h1>
-    <p class="lede" style="margin-top:14px;max-width:58ch">The free Australian concrete calculator — volume, bags, cost and materials, with local pricing and wastage built in.</p>
+  <section class="hero">
+    <p class="eyebrow hero-eyebrow">Metric concrete calculator · Built for Australia</p>
+    <h1>How much concrete do I need?</h1>
   </section>
 
-  <!-- ============ CALCULATOR ============ -->
-  <section class="section calc" style="margin-top:30px" aria-label="Concrete calculator">
-
-    <!-- controls -->
-    <form class="panel controls" id="calc" novalidate>
-      <span class="block-label">1 · What are you pouring?</span>
-      <div class="seg" role="group" aria-label="Shape" id="shapeSeg">
-        <button type="button" data-shape="slab" aria-pressed="true">Slab</button>
-        <button type="button" data-shape="footing" aria-pressed="false">Footing</button>
-        <button type="button" data-shape="cylinder" aria-pressed="false">Cylinder</button>
-      </div>
-      <p class="hint shape-hint" id="shapeHint">Flat pad or floor. Turn on reinforcement below for slab mesh.</p>
-
-      <div class="divider"></div>
-
-      <span class="block-label">2 · Dimensions</span>
-      <p class="hint dim-hint">Enter in millimetres — e.g. 4000 for a 4 m edge (how plans are dimensioned).</p>
-      <div class="field-grid" id="dims"><!-- dimension fields injected by JS --></div>
-      <div class="field-grid" style="margin-top:14px">
-        <div class="field">
-          <label for="qty">How many?</label>
-          <div class="input"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1"><span class="unit">×</span></div>
-          <span class="hint" id="qtyHint">Identical posts / piers / slabs</span>
+  <form class="calc-shell" id="calc" novalidate aria-label="Concrete calculator">
+    <div class="calc-above">
+      <div class="panel controls-primary">
+        <span class="block-label">Shape</span>
+        <div class="seg seg-full" role="group" aria-label="Shape" id="shapeSeg">
+          <button type="button" data-shape="slab" aria-pressed="true">Slab</button>
+          <button type="button" data-shape="footing" aria-pressed="false">Footing</button>
+          <button type="button" data-shape="cylinder" aria-pressed="false">Cylinder</button>
         </div>
-        <div class="field">
-          <label for="wastage">Wastage allowance</label>
-          <div class="input"><input id="wastage" type="number" inputmode="decimal" min="0" step="1" value="10"><span class="unit">%</span></div>
-          <span class="hint">10% covers spillage &amp; uneven base</span>
-        </div>
-      </div>
-      <p class="err-msg" id="err" role="alert"></p>
+        <p class="shape-desc" id="shapeDesc">Flat pad, floor, driveway</p>
 
-      <div class="divider"></div>
-
-      <span class="block-label">3 · Buy it as</span>
-      <div class="seg" role="group" aria-label="Supply mode" id="modeSeg">
-        <button type="button" data-mode="bags" aria-pressed="true">Bagged mix</button>
-        <button type="button" data-mode="premix" aria-pressed="false">Premix (truck)</button>
-      </div>
-
-      <div class="field-grid" style="margin-top:14px">
-        <div class="field">
-          <label for="stateSel">Your state <span class="hint" style="display:inline">— sets local prices</span></label>
-          <div class="input"><select id="stateSel" aria-label="State">
-            <option value="NSW">NSW</option><option value="VIC">VIC</option>
-            <option value="QLD">QLD</option><option value="WA">WA</option>
-            <option value="SA">SA</option><option value="TAS">TAS</option>
-            <option value="ACT">ACT</option><option value="NT">NT</option>
-          </select></div>
+        <div class="dim-section">
+          <div class="dim-section-head">
+            <span class="block-label">Dimensions</span>
+            <figure class="shape-diagram" id="shapeDiagram" aria-hidden="true">
+              <svg class="shape-icons" viewBox="0 0 88 56" role="img" aria-label="Shape diagram">
+                <!-- Slab: flat pad wireframe -->
+                <g class="shape-icon is-active" data-shape="slab" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round">
+                  <path d="M8 30 L44 16 L80 30 L44 44 Z"/>
+                  <path d="M8 30 L44 44 L44 47 L8 33 Z"/>
+                  <path d="M44 44 L80 30 L80 33 L44 47 Z"/>
+                </g>
+                <!-- Footing: cube wireframe -->
+                <g class="shape-icon" data-shape="footing" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round">
+                  <path d="M26 22 L44 12 L62 22 L62 40 L44 50 L26 40 Z"/>
+                  <path d="M44 32 L44 50"/>
+                  <path d="M44 32 L62 22"/>
+                  <path d="M26 22 L44 32"/>
+                </g>
+                <!-- Cylinder: isometric column (same viewing angle as slab/footing) -->
+                <g class="shape-icon" data-shape="cylinder" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round">
+                  <ellipse cx="44" cy="22" rx="14.4" ry="8"/>
+                  <ellipse cx="44" cy="45" rx="14.4" ry="8"/>
+                  <path d="M29.6 22 L29.6 45"/>
+                  <path d="M58.4 22 L58.4 45"/>
+                </g>
+              </svg>
+            </figure>
+          </div>
+          <div class="unit-rail" id="lwUnitRail" aria-hidden="false">
+            <div class="seg seg-full" role="group" aria-label="Length and width units" id="lwUnitSeg">
+              <button type="button" data-unit="m" aria-pressed="true">m</button>
+              <button type="button" data-unit="mm" aria-pressed="false">mm</button>
+            </div>
+          </div>
+          <div class="dim-stack" id="dimsPrefix"></div>
         </div>
 
-        <div class="field" id="bagPriceField">
-          <label for="bagPrice">Price per bag</label>
-          <div class="input"><span class="unit" style="left:14px;right:auto">$</span><input id="bagPrice" type="number" inputmode="decimal" min="0" step="0.5" value="9.50" style="padding-left:30px;padding-right:14px"></div>
+        <span class="block-label waste-label">Waste factor</span>
+        <div class="seg seg-full waste-seg" role="group" aria-label="Waste factor" id="wasteSeg">
+          <button type="button" data-waste="0" aria-pressed="false">None</button>
+          <button type="button" data-waste="5" aria-pressed="false">5%</button>
+          <button type="button" data-waste="10" aria-pressed="true">10%</button>
+          <button type="button" data-waste="15" aria-pressed="false">15%</button>
         </div>
-        <div class="field" id="premixPriceField" hidden>
-          <label for="premixPrice">Premix price</label>
-          <div class="input"><span class="unit" style="left:14px;right:auto">$</span><input id="premixPrice" type="number" inputmode="decimal" min="0" step="10" value="340" style="padding-left:30px;padding-right:52px"><span class="unit">/m³</span></div>
+        <p class="waste-desc" id="wasteDesc">Add 10% extra for waste, spills and uneven surfaces</p>
+        <p class="err-msg" id="err" role="alert"></p>
+      </div>
+
+      <aside class="slab is-empty" id="slabPanel" aria-live="polite" aria-atomic="true">
+        <span class="block-label">To order</span>
+        <div class="slab-headline">
+          <span class="slab-figure" id="figVol">—</span>
+          <span class="slab-unit">m³</span>
+        </div>
+        <p class="slab-note" id="figNote">Enter dimensions to start</p>
+        <p class="formula-strip" id="formulaStrip" hidden></p>
+        <p class="slab-assumptions" id="slabAssumptions" hidden>2400 kg/m³ · bags rounded up · premix in 0.1 m³ steps</p>
+
+        <div class="readouts" id="readouts" hidden>
+          <div class="supply-compare" aria-label="Bags vs premix">
+            <div class="supply-row" id="supplyBags">
+              <span class="supply-label" id="bagsLabel">Bags (20 kg)</span>
+              <span class="supply-qty" id="bagsQty">—</span>
+              <span class="supply-cost" id="bagsCost">—</span>
+            </div>
+            <div class="supply-row" id="supplyPremix">
+              <span class="supply-label">Premix</span>
+              <span class="supply-qty" id="premixQty">—</span>
+              <span class="supply-cost" id="premixCost">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="verdict" id="verdict" hidden>
+          <span class="verdict-tag">Lower cost</span>
+          <span id="verdictText"></span>
+        </div>
+        <p class="warn" id="warn" hidden></p>
+        <div class="slab-actions">
+          <button type="button" class="btn-copy-slab" id="copySpecsSlabBtn" disabled>Copy specs</button>
+          <p class="copy-toast-slab" id="copyToastSlab" role="status" aria-live="polite"></p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="calc-below">
+      <div class="panel controls-secondary">
+        <span class="block-label">Local prices</span>
+        <p class="hint" style="margin-bottom:8px">Edit to match your quote. Both options are costed in the result above.</p>
+        <p class="state-provenance" id="stateProvenance"></p>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="stateSel">Your state</label>
+            <div class="input"><select id="stateSel" aria-label="State">
+              <option value="NSW">NSW</option><option value="VIC">VIC</option>
+              <option value="QLD">QLD</option><option value="WA">WA</option>
+              <option value="SA">SA</option><option value="TAS">TAS</option>
+              <option value="ACT">ACT</option><option value="NT">NT</option>
+            </select></div>
+            <span class="hint">Sets local prices</span>
+          </div>
+
+          <div class="field" id="bagPriceField">
+            <label for="bagPrice">Price per bag</label>
+            <div class="input"><span class="unit" style="left:14px;right:auto">$</span><input id="bagPrice" type="number" inputmode="decimal" min="0" step="0.5" value="9.50" style="padding-left:30px;padding-right:14px"></div>
+          </div>
+          <div class="field" id="premixPriceField">
+            <label for="premixPrice">Premix price</label>
+            <div class="input"><span class="unit" style="left:14px;right:auto">$</span><input id="premixPrice" type="number" inputmode="decimal" min="0" step="10" value="340" style="padding-left:30px;padding-right:52px"><span class="unit">/m³</span></div>
+          </div>
+        </div>
+
+        <div id="bagOpts" style="margin-top:14px">
+          <span class="block-label" style="margin-bottom:8px">Bag size</span>
+          <div class="seg seg-full" role="group" aria-label="Bag size" id="bagSeg">
+            <button type="button" data-bag="20" aria-pressed="true">20 kg</button>
+            <button type="button" data-bag="30" aria-pressed="false">30 kg</button>
+          </div>
+        </div>
+        <p class="hint" id="premixHint" style="margin-top:10px">Premix is ex delivery and pump. Sold in 0.1 m³ steps.</p>
+
+        <div class="divider"></div>
+
+        <span class="block-label">Reinforcement</span>
+        <label class="switch"><input type="checkbox" id="reoToggle"><span class="switch-track"></span><span class="switch-label">Steel mesh and chairs estimate</span></label>
+        <div id="reoOpts" hidden style="margin-top:12px">
+          <div class="seg seg-full" role="group" aria-label="Mesh grade" id="meshSeg">
+            <button type="button" data-mesh="SL72" aria-pressed="true">Paths · SL72</button>
+            <button type="button" data-mesh="SL82" aria-pressed="false">Driveways · SL82</button>
+            <button type="button" data-mesh="SL92" aria-pressed="false">Heavy · SL92</button>
+          </div>
+          <p class="hint" id="meshHint" style="margin-top:8px">SL72 for paths, shed floors and light 100 mm slabs</p>
+          <div id="reoPanel" hidden style="margin-top:14px">
+            <div class="readouts reo-readouts" id="reoReadouts">
+              <div class="readout light"><div class="k" id="reo1k">Mesh sheets</div><div class="v" id="reo1v">—</div></div>
+              <div class="readout light"><div class="k" id="reo2k">Bar chairs</div><div class="v" id="reo2v">—</div></div>
+            </div>
+            <p class="hint" id="reoNote" style="margin-top:8px"></p>
+          </div>
         </div>
       </div>
 
-      <div id="bagOpts" style="margin-top:14px">
-        <span class="block-label" style="margin-bottom:8px">Bag size</span>
-        <div class="seg" role="group" aria-label="Bag size" id="bagSeg">
-          <button type="button" data-bag="20" aria-pressed="true">20 kg</button>
-          <button type="button" data-bag="30" aria-pressed="false">30 kg</button>
+      <div class="panel spec-panel" id="specPanel" hidden>
+        <div class="spec-head">
+          <span class="block-label">Spec sheet</span>
+          <button type="button" class="btn-copy" id="copySpecsBtn" disabled>Copy specs</button>
         </div>
+        <dl class="spec-sheet" id="specSheet"></dl>
+        <p class="copy-toast" id="copyToast" role="status" aria-live="polite"></p>
       </div>
-      <p class="hint" id="premixHint" hidden style="margin-top:10px">Premix is ex delivery &amp; pump, sold in 0.1 m³ steps. Prices are indicative — edit for a quote.</p>
+    </div>
+  </form>
 
-      <div class="divider"></div>
-
-      <span class="block-label">4 · Reinforcement <span class="hint" style="display:inline">— optional</span></span>
-      <label class="switch"><input type="checkbox" id="reoToggle"><span class="switch-track"></span><span class="switch-label">Add steel mesh &amp; chairs estimate</span></label>
-      <div id="reoOpts" hidden style="margin-top:12px">
-        <div class="seg" role="group" aria-label="Mesh grade" id="meshSeg">
-          <button type="button" data-mesh="SL72" aria-pressed="true">Paths · SL72</button>
-          <button type="button" data-mesh="SL82" aria-pressed="false">Driveways · SL82</button>
-          <button type="button" data-mesh="SL92" aria-pressed="false">Heavy · SL92</button>
-        </div>
-        <p class="hint" id="meshHint" style="margin-top:8px">SL72 — paths, shed floors, light 100 mm slabs</p>
-      </div>
-
-      <div class="divider"></div>
-      <button type="submit" class="btn btn-ghost">See full breakdown ↓</button>
-    </form>
-
-    <!-- result slab -->
-    <aside class="slab" aria-live="polite" aria-atomic="true">
-      <span class="block-label">Concrete to order</span>
-      <div class="slab-headline">
-        <span class="slab-figure" id="figVol">—</span>
-        <span class="slab-unit">m³</span>
-      </div>
-      <p class="slab-note" id="figNote">Includes wastage. Enter dimensions to start.</p>
-
-      <div class="readouts" id="readouts">
-        <div class="readout"><div class="k" id="r1k">Bags (20 kg)</div><div class="v" id="r1v">—</div></div>
-        <div class="readout"><div class="k" id="r2k">Estimated cost</div><div class="v" id="r2v">—</div></div>
-        <div class="readout"><div class="k">Concrete weight</div><div class="v" id="r3v">—</div></div>
-        <div class="readout"><div class="k">Before wastage</div><div class="v" id="r4v">—</div></div>
-      </div>
-
-      <div class="verdict" id="verdict" hidden>
-        <span class="verdict-tag">Best buy</span>
-        <span id="verdictText"></span>
-      </div>
-      <p class="warn" id="warn" hidden></p>
-
-      <div id="reoPanel" hidden>
-        <span class="block-label" style="margin-top:22px">Reinforcement</span>
-        <div class="readouts" id="reoReadouts">
-          <div class="readout"><div class="k" id="reo1k">Mesh sheets</div><div class="v" id="reo1v">—</div></div>
-          <div class="readout"><div class="k" id="reo2k">Bar chairs</div><div class="v" id="reo2v">—</div></div>
-        </div>
-        <p class="slab-note" id="reoNote"></p>
-      </div>
-
-      <span class="block-label" style="margin-top:22px">The working</span>
-      <ul class="working" id="working"><li><span class="lbl">Fill in the dimensions to see the breakdown.</span></li></ul>
-    </aside>
-  </section>
-
-  <!-- ============ HOW IT'S WORKED OUT ============ -->
   <section class="section prose" style="max-width:70ch">
-    <span class="eyebrow">No black box</span>
-    <h2 style="margin-top:12px">How it's worked out</h2>
-    <p>Concrete is sold by volume — cubic metres (m³). You measure the space you're filling, work out its volume, add a bit for wastage, then convert that to bags or a premix order.</p>
+    <h2>How it's worked out</h2>
+    <p>Concrete is sold by volume in cubic metres (m³). Measure the space you are filling, work out its volume, add wastage, then convert to bags or a premix order.</p>
 
     <h3>Volume by shape</h3>
     <div class="formula">Slab / footing&nbsp;&nbsp;=&nbsp; length × width × thickness</div>
     <div class="formula">Cylinder (column / post)&nbsp;&nbsp;=&nbsp; π × (diameter ÷ 2)² × height</div>
-    <p>Every dimension is entered in <strong>millimetres</strong> (how building plans are dimensioned) and converted to metres before the maths — so a 4 m slab edge is 4000 mm. Pouring more than one identical thing? Multiply by the quantity.</p>
+    <p>For slabs, length and width default to metres and thickness stays in millimetres. Footings and cylinders use millimetres throughout. Pouring more than one identical item? Multiply by the quantity.</p>
 
     <h3>Wastage</h3>
-    <p>Real sites lose concrete to spillage, an uneven sub-base and over-dug holes. A 10% allowance is standard — bump it up for rough ground, drop it for tidy formwork. Your total to order is <span class="formula" style="display:inline-block;padding:2px 8px;margin:0">volume × (1 + wastage%)</span>.</p>
+    <p>Real sites lose concrete to spillage, an uneven sub-base and over-dug holes. 10% is standard. Bump it up for rough ground or drop it for tidy formwork. Your total to order is <span class="formula" style="display:inline-block;padding:2px 8px;margin:0">volume × (1 + wastage%)</span>.</p>
 
     <h3>Bags or premix</h3>
-    <p>A 20&nbsp;kg bag of pre-mixed concrete yields about 9.8&nbsp;litres (0.0098&nbsp;m³), so it takes roughly 102 bags to fill a cubic metre. We round bags <strong>up</strong> — running short mid-pour means a cold joint. Premix from a truck is sold by the cubic metre in 0.1&nbsp;m³ steps, so the order is rounded up to the next 0.1&nbsp;m³. The <strong>Best buy</strong> line compares the cost both ways and flags the cheaper option; under about 0.5&nbsp;m³ most plants charge a short-load fee, so bags often win.</p>
+    <p>A 20 kg bag yields about 9.8 litres (0.0098 m³), so roughly 102 bags fill a cubic metre. We round bags up. Premix from a truck is sold in 0.1 m³ steps. The Best buy line compares both options. Under about 0.5 m³ many plants charge a short-load fee, so bags often win.</p>
 
     <h3>Steel reinforcement</h3>
-    <p>Turn on reinforcement to size the steel. For slabs we use standard <strong>6.0 × 2.4&nbsp;m mesh sheets</strong> (SL72 for paths and shed floors, SL82 for driveways, SL92 for heavy use) and add 10% for laps, plus bar chairs at roughly 1.5 per m² to hold the mesh at the right height. Footings use <strong>trench mesh</strong> in 6&nbsp;m lengths with a 15% lap allowance. Always defer to your engineer's drawings for anything structural.</p>
+    <p>Turn on reinforcement to size the steel. Slabs use standard 6.0 × 2.4 m mesh sheets with 10% for laps, plus bar chairs at roughly 1.5 per m². Footings use trench mesh in 6 m lengths with a 15% lap allowance. Always defer to your engineer's drawings for anything structural.</p>
 
     <h3>Local prices</h3>
-    <p>Pick your state to load an indicative metro price for premix and bags — then edit it to match your own quote. These are starting points, not a guarantee.</p>
-    <p class="mono" style="font-size:.9rem;color:var(--steel)">Weight assumes 2400 kg/m³. Costs use the prices you enter and are estimates only — confirm with your supplier.</p>
+    <p>Pick your state to load an indicative metro price, then edit it to match your own quote. These are starting points, not a guarantee.</p>
+    <p class="mono" style="font-size:.9rem;color:var(--steel)">Weight assumes 2400 kg/m³. Costs use the prices you enter and are estimates only. Confirm with your supplier.</p>
   </section>
 
-  <!-- ============ FAQ ============ -->
   <section class="section faq" style="max-width:70ch">
-    <span class="eyebrow">Questions</span>
-    <h2 style="margin:12px 0 18px">Concrete FAQs</h2>
+    <h2 style="margin:0 0 18px">Concrete FAQs</h2>
 
     <details open><summary>How many 20 kg bags of concrete are in a cubic metre?</summary>
-      <p>About <strong>102 bags</strong>. A 20 kg bag yields roughly 0.0098 m³ (9.8 litres), so 1 ÷ 0.0098 ≈ 102. Always round up and keep a spare bag or two on hand — it's cheaper than a failed pour.</p></details>
+      <p>About <strong>102 bags</strong>. A 20 kg bag yields roughly 0.0098 m³ (9.8 litres), so 1 ÷ 0.0098 ≈ 102. Always round up and keep a spare bag or two on hand.</p></details>
 
     <details><summary>How thick should a concrete slab be?</summary>
-      <p>A typical domestic path or shed slab is <strong>100 mm</strong>. Driveways that take cars are usually 100–125 mm; heavier loads (trucks, large sheds) go to 150 mm or more. Check your council and engineering requirements for anything structural.</p></details>
+      <p>A typical domestic path or shed slab is <strong>100 mm</strong>. Driveways that take cars are usually 100–125 mm. Heavier loads go to 150 mm or more. Check council and engineering requirements for anything structural.</p></details>
 
     <details><summary>Should I use bags or order premix?</summary>
-      <p>As a rough guide, under about <strong>0.5 m³</strong> (a few post holes or a small pad) bags are easiest. Above that, mixing by hand becomes a slog and premix from a truck is cheaper per cubic metre and far less work. This calculator costs both so you can compare.</p></details>
+      <p>Under about <strong>0.5 m³</strong>, bags are easiest. Above that, premix from a truck is cheaper per cubic metre and far less work. This calculator costs both so you can compare.</p></details>
 
     <details><summary>How much extra concrete should I allow for wastage?</summary>
       <p><strong>10%</strong> is the standard allowance for spillage, an uneven sub-base and over-dug footings. On rough ground or hand-dug holes, 15% is safer. Tidy formwork on a level base can drop to 5%.</p></details>
 
     <details><summary>How much reo mesh do I need for a slab?</summary>
-      <p>Reo mesh comes in <strong>6.0 × 2.4 m sheets</strong> (14.4 m²). Divide your slab area by 14.4 and add ~10% for overlaps — so a 15 m² slab needs 2 sheets. Turn on reinforcement above to get sheets, bar chairs and an indicative cost. Use SL72 for paths and shed floors, SL82 for driveways.</p></details>
+      <p>Reo mesh comes in <strong>6.0 × 2.4 m sheets</strong> (14.4 m²). Divide your slab area by 14.4 and add about 10% for overlaps. A 15 m² slab needs 2 sheets. Turn on reinforcement below to get sheets, bar chairs and an indicative cost.</p></details>
 
     <details><summary>How much does a cubic metre of concrete weigh?</summary>
-      <p>About <strong>2.4 tonnes</strong> (2400 kg). That's why even a modest slab is a serious amount of material — and why getting the order right matters.</p></details>
+      <p>About <strong>2.4 tonnes</strong> (2400 kg).</p></details>
   </section>
 </main>
 
-<footer class="wrap foot">
-  <p style="max-width:68ch"><strong>SlabSet</strong> helps Australian homeowners and builders accurately estimate concrete needs for any project — designed specifically for metric measurements, local suppliers, and real Australian conditions. Fast, free, and no signup required.</p>
-  <p style="margin-top:10px">This calculator gives estimates; confirm critical quantities and costs with your supplier or engineer.</p>
-  <p class="mono" style="margin-top:10px">SlabSet · concrete calculator · metric · v2</p>
-</footer>
-
-<!-- mobile live readout (instrument) — body-level so position:fixed pins to the viewport -->
-<div class="readbar" id="readbar" role="status" aria-live="polite">
-  <div class="readbar-fig"><span id="rbFig">—</span><span class="readbar-unit">m³</span></div>
-  <div class="readbar-sub" id="rbSub">Enter dimensions</div>
-  <button class="readbar-jump" id="rbJump" type="button" aria-label="See full breakdown">↓</button>
+<div class="mobile-readout" id="mobileReadout" hidden>
+  <div class="mr-vol" id="mobileVol">— <small>m³</small></div>
+  <div class="mr-hint" id="mobileHint">Enter dimensions</div>
 </div>
 
-<!-- JSON-LD: WebApplication + FAQPage -->
+<footer class="wrap foot">
+  <p style="max-width:68ch"><strong>SlabSet</strong> helps Australian homeowners and builders estimate concrete for any project. Metric measurements, local suppliers, real site conditions. Free, no signup.</p>
+  <p style="margin-top:10px">Estimates only. Confirm critical quantities and costs with your supplier or engineer.</p>
+  <p style="margin-top:10px"><a href="mailto:metainstruments@icloud.com">Contact</a></p>
+  <p class="mono" style="margin-top:10px">SlabSet · metric concrete calculator designed in Australia</p>
+</footer>
+
 <script type="application/ld+json">
 {
   "@context":"https://schema.org",
@@ -246,10 +292,10 @@
     {"@type":"WebApplication","name":"SlabSet Concrete Calculator","url":"https://slabset.online/","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"AUD"},"description":"Calculate how much concrete you need for slabs, footings, post holes and columns in cubic metres, bags or premix, with cost.","inLanguage":"en-AU"},
     {"@type":"FAQPage","mainEntity":[
       {"@type":"Question","name":"How many 20 kg bags of concrete are in a cubic metre?","acceptedAnswer":{"@type":"Answer","text":"About 102 bags. A 20 kg bag yields roughly 0.0098 cubic metres (9.8 litres), so 1 ÷ 0.0098 ≈ 102. Always round up."}},
-      {"@type":"Question","name":"How thick should a concrete slab be?","acceptedAnswer":{"@type":"Answer","text":"A typical domestic path or shed slab is 100 mm. Driveways are usually 100–125 mm; heavier loads go to 150 mm or more. Check council and engineering requirements for structural work."}},
+      {"@type":"Question","name":"How thick should a concrete slab be?","acceptedAnswer":{"@type":"Answer","text":"A typical domestic path or shed slab is 100 mm. Driveways are usually 100–125 mm; heavier loads go to 150 mm or more."}},
       {"@type":"Question","name":"Should I use bags or order premix?","acceptedAnswer":{"@type":"Answer","text":"Under about 0.5 cubic metres, bags are easiest. Above that, premix from a truck is cheaper per cubic metre and far less work."}},
       {"@type":"Question","name":"How much extra concrete should I allow for wastage?","acceptedAnswer":{"@type":"Answer","text":"10% is standard for spillage and uneven ground. Use 15% on rough or hand-dug sites, 5% with tidy formwork on a level base."}},
-      {"@type":"Question","name":"How much reo mesh do I need for a slab?","acceptedAnswer":{"@type":"Answer","text":"Reo mesh comes in 6.0 x 2.4 m sheets (14.4 square metres). Divide your slab area by 14.4 and add about 10% for overlaps. A 15 square metre slab needs 2 sheets. Use SL72 for paths and shed floors, SL82 for driveways."}},
+      {"@type":"Question","name":"How much reo mesh do I need for a slab?","acceptedAnswer":{"@type":"Answer","text":"Reo mesh comes in 6.0 x 2.4 m sheets (14.4 square metres). Divide your slab area by 14.4 and add about 10% for overlaps."}},
       {"@type":"Question","name":"How much does a cubic metre of concrete weigh?","acceptedAnswer":{"@type":"Answer","text":"About 2.4 tonnes (2400 kg)."}}
     ]}
   ]
@@ -257,14 +303,13 @@
 </script>
 
 <script>
-/* ---- Concrete Volume v2 — logic mirrors stages/01-spec/output/concrete-volume.md ---- */
 (function(){
   "use strict";
   var BAG_YIELD_20=0.0098, DENSITY=2400;
-  var MESH_SHEET=14.4, MESH_LAP=1.10, CHAIRS_PER_M2=1.5;     // reo: mesh
-  var TRENCH_LAP=1.15, TRENCH_LEN=6;                          // reo: trench mesh
-  var MIN_LOAD=0.5;                                           // premix short-load threshold
-  var MESH_PRICE=58, CHAIR_PRICE=0.35, TRENCH_PRICE=7;        // indicative reo $
+  var MESH_SHEET=14.4, MESH_LAP=1.10, CHAIRS_PER_M2=1.5;
+  var TRENCH_LAP=1.15, TRENCH_LEN=6;
+  var MIN_LOAD=0.5;
+  var MESH_PRICE=58, CHAIR_PRICE=0.35, TRENCH_PRICE=7;
 
   var STATE={
     NSW:{premix:340,bag:9.5}, VIC:{premix:330,bag:9.5}, QLD:{premix:320,bag:9.0},
@@ -272,51 +317,267 @@
     ACT:{premix:345,bag:10.0}, NT:{premix:395,bag:12.0}
   };
   var MESH_HINT={
-    SL72:'SL72 — paths, shed floors, light 100 mm slabs',
-    SL82:'SL82 — driveways, garage & carport slabs',
-    SL92:'SL92 — heavy-duty &amp; commercial slabs'
+    SL72:'SL72 for paths, shed floors and light 100 mm slabs',
+    SL82:'SL82 for driveways, garage and carport slabs',
+    SL92:'SL92 for heavy-duty and commercial slabs'
+  };
+  var WASTE_DESC={
+    0:'No waste allowance. Exact formwork on level base.',
+    5:'Add 5% extra for tidy forms and minimal spillage.',
+    10:'Add 10% extra for waste, spills and uneven surfaces',
+    15:'Add 15% extra for rough ground or hand-dug sites.'
+  };
+  var SHAPE_DESC={
+    slab:'Flat pad, floor, driveway',
+    footing:'Strip, pad footing, pier',
+    cylinder:'Round column, post hole, pier'
   };
   var DIM_PH={
-    slab:['4000','3000','100'],
+    slab:{m:['4','3','100'], mm:['4000','3000','100']},
     footing:['6000','450','300'],
     cylinder:['300','1200']
   };
-  var SHAPE_HINT={
-    slab:'Flat pad or floor. Turn on reinforcement below for slab mesh.',
-    footing:'Strip or pad footing — same dimensions as a slab; uses trench mesh instead of sheet mesh.',
-    cylinder:'Round column, post hole or pier — diameter and height/depth.'
-  };
 
   var SHAPES={
-    'slab':     {dims:[['L','Length','mm'],['W','Width','mm'],['T','Thickness','mm']], calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);}, qty:'Identical slabs',    reo:'mesh',   area:function(d){return (d.L/1000)*(d.W/1000);}},
-    'footing':  {dims:[['L','Length','mm'],['W','Width','mm'],['T','Depth','mm']],     calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);}, qty:'Identical footings', reo:'trench', len:function(d){return d.L/1000;}},
-    'cylinder': {dims:[['D','Diameter','mm'],['H','Height / depth','mm']], calc:function(d){return Math.PI*Math.pow((d.D/1000)/2,2)*(d.H/1000);}, qty:'Number of columns / posts', reo:'none'}
+    slab:{
+      calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);},
+      qty:'Identical slabs', reo:'mesh',
+      area:function(d){return (d.L/1000)*(d.W/1000);}
+    },
+    footing:{
+      calc:function(d){return (d.L/1000)*(d.W/1000)*(d.T/1000);},
+      qty:'Identical footings', reo:'trench',
+      len:function(d){return d.L/1000;}
+    },
+    cylinder:{
+      calc:function(d){return Math.PI*Math.pow((d.D/1000)/2,2)*(d.H/1000);},
+      qty:'Columns / posts', reo:'none'
+    }
   };
 
-  var state={shape:'slab', mode:'bags', bag:20, mesh:'SL72', reoOn:false, basebag:9.5};
+  var state={shape:'slab', bag:20, mesh:'SL72', reoOn:false, basebag:9.5, lwUnit:'m', waste:10};
   var $=function(id){return document.getElementById(id);};
   var errEl=$('err');
+
+  var lastSpecPlain='', lastVol='', urlSyncTimer=null;
 
   function fmt(n,dp){ if(dp===undefined)dp=2; return n.toLocaleString('en-AU',{minimumFractionDigits:dp,maximumFractionDigits:dp}); }
   function money(n){ return '$'+Math.round(n).toLocaleString('en-AU'); }
   function show(el,on){ el.hidden=!on; }
 
-  function updateShapeHint(){ $('shapeHint').textContent=SHAPE_HINT[state.shape]; }
+  function pulseFigVol(){
+    var el=$('figVol');
+    el.classList.remove('is-tick');
+    void el.offsetWidth;
+    el.classList.add('is-tick');
+  }
+
+  function formulaText(d, n, wPct, Vtotal){
+    var parts=[], mult=1+wPct/100;
+    if(state.shape==='slab'||state.shape==='footing'){
+      parts.push(fmt(d.L/1000,1));
+      parts.push(fmt(d.W/1000,1));
+      parts.push(fmt(d.T/1000,3));
+    } else {
+      var r=(d.D/1000)/2;
+      return 'π × '+fmt(r,3)+'² × '+fmt(d.H/1000,2)+(n>1?' × '+n:'')+(wPct>0?' × '+fmt(mult,2):'')+' = '+fmt(Vtotal)+' m³';
+    }
+    var expr=parts.join(' × ');
+    if(n>1) expr+=' × '+n;
+    if(wPct>0) expr+=' × '+fmt(mult,2);
+    return expr+' = '+fmt(Vtotal)+' m³';
+  }
+
+  function updateStateProvenance(flash){
+    var st=$('stateSel').value;
+    $('stateProvenance').textContent=st+' indicative prices';
+    if(flash){
+      var el=$('stateProvenance');
+      el.classList.add('is-flash');
+      setTimeout(function(){ el.classList.remove('is-flash'); }, 1200);
+    }
+  }
+
+  function syncUrl(){
+    clearTimeout(urlSyncTimer);
+    urlSyncTimer=setTimeout(function(){
+      var parsed=readDims();
+      if(parsed.missing&&!parsed.anyEntered){
+        history.replaceState({}, '', location.pathname);
+        return;
+      }
+      var p=new URLSearchParams();
+      p.set('shape', state.shape);
+      p.set('waste', String(state.waste));
+      p.set('bag', String(state.bag));
+      p.set('mesh', state.mesh);
+      p.set('reo', state.reoOn?'1':'0');
+      if(state.shape==='slab') p.set('u', state.lwUnit);
+      ['L','W','T','D','H'].forEach(function(k){
+        var el=$('dim-'+k); if(el&&el.value!=='') p.set(k, el.value);
+      });
+      var q=$('qty'); if(q&&q.value!=='') p.set('qty', q.value);
+      p.set('state', $('stateSel').value);
+      p.set('bp', $('bagPrice').value);
+      p.set('pp', $('premixPrice').value);
+      history.replaceState({}, '', '?' + p.toString());
+    }, 400);
+  }
+
+  function loadFromUrl(){
+    var p=new URLSearchParams(location.search);
+    if(!p.has('shape')) return;
+    var sh=p.get('shape');
+    if(SHAPES[sh]) state.shape=sh;
+    if(p.has('waste')) state.waste=parseInt(p.get('waste'),10)||0;
+    if(p.has('bag')) state.bag=parseInt(p.get('bag'),10)||20;
+    if(p.has('mesh')) state.mesh=p.get('mesh');
+    if(p.has('reo')) state.reoOn=p.get('reo')==='1';
+    if(p.has('u')&&(p.get('u')==='m'||p.get('u')==='mm')) state.lwUnit=p.get('u');
+    [].forEach.call($('shapeSeg').querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', x.getAttribute('data-shape')===state.shape?'true':'false');
+    });
+    [].forEach.call($('wasteSeg').querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', x.getAttribute('data-waste')===String(state.waste)?'true':'false');
+    });
+    [].forEach.call($('bagSeg').querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', x.getAttribute('data-bag')===String(state.bag)?'true':'false');
+    });
+    [].forEach.call($('meshSeg').querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', x.getAttribute('data-mesh')===state.mesh?'true':'false');
+    });
+    $('reoToggle').checked=state.reoOn;
+    show($('reoOpts'), state.reoOn);
+    if(p.has('state')&&STATE[p.get('state')]) $('stateSel').value=p.get('state');
+    updateShapeDesc(); updateWasteDesc();
+    $('meshHint').textContent=MESH_HINT[state.mesh];
+    renderDims();
+    ['L','W','T','D','H'].forEach(function(k){
+      if(p.has(k)){ var el=$('dim-'+k); if(el) el.value=p.get(k); }
+    });
+    if(p.has('qty')) $('qty').value=p.get('qty');
+    if(p.has('u')){
+      [].forEach.call($('lwUnitSeg').querySelectorAll('button'), function(x){
+        x.setAttribute('aria-pressed', x.getAttribute('data-unit')===state.lwUnit?'true':'false');
+      });
+    }
+    applyState();
+    if(p.has('bp')) $('bagPrice').value=p.get('bp');
+    if(p.has('pp')) $('premixPrice').value=p.get('pp');
+  }
+
+  function copySpecs(){
+    if(!lastSpecPlain) return;
+    function copied(){
+      $('copyToast').textContent='Copied to clipboard';
+      $('copyToastSlab').textContent='Copied to clipboard';
+      setTimeout(function(){ $('copyToast').textContent=''; $('copyToastSlab').textContent=''; }, 2500);
+    }
+    function fallback(){
+      var ta=document.createElement('textarea');
+      ta.value=lastSpecPlain; ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); copied(); }
+      catch(e){
+        $('copyToast').textContent='Could not copy';
+        $('copyToastSlab').textContent='Could not copy';
+      }
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(lastSpecPlain).then(copied).catch(fallback);
+    } else fallback();
+  }
+  function setUnitRail(on){
+    var rail=$('lwUnitRail');
+    rail.classList.toggle('is-off', !on);
+    rail.setAttribute('aria-hidden', on ? 'false' : 'true');
+  }
+
+  function lwLabels(){
+    var u=state.lwUnit;
+    return [['L','Length',u],['W','Width',u],['T','Thickness','mm']];
+  }
+
+  function footingLabels(){
+    return [['L','Length','mm'],['W','Width','mm'],['T','Depth','mm']];
+  }
 
   function renderDims(){
-    var s=SHAPES[state.shape], saved={}, ph=DIM_PH[state.shape], html='';
-    s.dims.forEach(function(f){
-      var el=$('dim-'+f[0]); if(el) saved[f[0]]=el.value;
+    var saved={}, html='', ph, fields;
+    ['L','W','T','D','H'].forEach(function(k){
+      var el=$('dim-'+k); if(el) saved[k]=el.value;
     });
-    s.dims.forEach(function(f,i){
+
+    if(state.shape==='slab'){
+      fields=lwLabels();
+      ph=DIM_PH.slab[state.lwUnit];
+      setUnitRail(true);
+    } else if(state.shape==='footing'){
+      fields=footingLabels();
+      ph=DIM_PH.footing;
+      setUnitRail(false);
+    } else {
+      fields=[['D','Diameter','mm'],['H','Height','mm']];
+      ph=DIM_PH.cylinder;
+      setUnitRail(false);
+    }
+
+    fields.forEach(function(f,i){
       html+='<div class="field"><label for="dim-'+f[0]+'">'+f[1]+'</label>'+
             '<div class="input"><input id="dim-'+f[0]+'" type="number" inputmode="decimal" min="0" step="any" placeholder="'+ph[i]+'">'+
             '<span class="unit">'+f[2]+'</span></div></div>';
     });
-    $('dims').innerHTML=html;
-    s.dims.forEach(function(f){ if(saved[f[0]]!==undefined) $('dim-'+f[0]).value=saved[f[0]]; });
-    $('qtyHint').textContent=s.qty;
-    updateShapeHint();
+
+    html+='<div class="field"><label for="qty">Quantity</label>'+
+          '<div class="input"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1"><span class="unit">×</span></div></div>';
+
+    $('dimsPrefix').innerHTML=html;
+    Object.keys(saved).forEach(function(k){
+      var el=$('dim-'+k); if(el && saved[k]!==undefined) el.value=saved[k];
+    });
+  }
+
+  function convertLwUnit(next){
+    var lEl=$('dim-L'), wEl=$('dim-W');
+    if(!lEl||!wEl) return;
+    [lEl,wEl].forEach(function(el){
+      var v=parseFloat(el.value);
+      if(isNaN(v)||el.value==='') return;
+      el.value= next==='mm' ? Math.round(v*1000) : (v/1000).toString().replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+    });
+    state.lwUnit=next;
+    renderDims();
+    compute();
+  }
+
+  function readDims(){
+    var s=SHAPES[state.shape], d={}, missing=false, anyEntered=false;
+    var keys= state.shape==='cylinder' ? ['D','H'] : ['L','W','T'];
+    keys.forEach(function(k){
+      var el=$('dim-'+k), v=parseFloat(el.value);
+      if(el.value!=='') anyEntered=true;
+      if(isNaN(v)||v<=0){missing=true; el.parentElement.classList.toggle('is-error', el.value!=='');}
+      else el.parentElement.classList.remove('is-error');
+      d[k]=v;
+    });
+    if(state.shape==='slab' && state.lwUnit==='m'){
+      d.L=d.L*1000; d.W=d.W*1000;
+    }
+    return {d:d, missing:missing, anyEntered:anyEntered};
+  }
+
+  function updateShapeDesc(){
+    $('shapeDesc').textContent=SHAPE_DESC[state.shape];
+    [].forEach.call($('shapeDiagram').querySelectorAll('.shape-icon'), function(icon){
+      var on=icon.getAttribute('data-shape')===state.shape;
+      icon.classList.toggle('is-active', on);
+    });
+  }
+
+  function updateWasteDesc(){
+    $('wasteDesc').textContent=WASTE_DESC[state.waste];
   }
 
   function flashPrices(){
@@ -330,23 +591,104 @@
     var st=STATE[$('stateSel').value]; state.basebag=st.bag;
     $('premixPrice').value=st.premix;
     $('bagPrice').value=(state.basebag*(state.bag/20)).toFixed(2);
+    updateStateProvenance(false);
   }
   function applyBagSize(){ $('bagPrice').value=(state.basebag*(state.bag/20)).toFixed(2); }
 
+  function shapeTitle(){
+    return state.shape.charAt(0).toUpperCase()+state.shape.slice(1);
+  }
+
+  function dimSummaryLines(){
+    var lines=[];
+    function val(id){ var el=$(id); return el&&el.value!==''?el.value:null; }
+    if(state.shape==='slab'){
+      var u=state.lwUnit;
+      if(val('dim-L')) lines.push(['Length', val('dim-L')+' '+u]);
+      if(val('dim-W')) lines.push(['Width', val('dim-W')+' '+u]);
+      if(val('dim-T')) lines.push(['Thickness', val('dim-T')+' mm']);
+    } else if(state.shape==='footing'){
+      if(val('dim-L')) lines.push(['Length', val('dim-L')+' mm']);
+      if(val('dim-W')) lines.push(['Width', val('dim-W')+' mm']);
+      if(val('dim-T')) lines.push(['Depth', val('dim-T')+' mm']);
+    } else {
+      if(val('dim-D')) lines.push(['Diameter', val('dim-D')+' mm']);
+      if(val('dim-H')) lines.push(['Height', val('dim-H')+' mm']);
+    }
+    return lines;
+  }
+
+  function specSection(title){ return '<dt class="spec-section">'+title+'</dt>'; }
+  function specRow(label, value){ return '<dt>'+label+'</dt><dd>'+value+'</dd>'; }
+
+  function renderSpecSheet(opts){
+    var html='';
+    html+=specSection('Job');
+    html+=specRow('Shape', shapeTitle()+' · '+SHAPE_DESC[state.shape]);
+    opts.dims.forEach(function(r){ html+=specRow(r[0], r[1]); });
+    html+=specRow('Quantity', String(opts.qty));
+    html+=specRow('Waste factor', opts.wasteLabel);
+    html+=specSection('Volume');
+    if(opts.qty>1) html+=specRow('Volume of one', fmt(opts.V1,3)+' m³');
+    html+=specRow('Before wastage', fmt(opts.Vbase)+' m³');
+    html+=specRow('To order', fmt(opts.Vtotal)+' m³');
+    html+=specRow('Concrete weight', fmt(opts.weight/1000)+' t');
+    html+=specSection('Supply options');
+    html+=specRow('Bags ('+state.bag+' kg)', opts.bags+' · '+money(opts.bagCost));
+    html+=specRow('Premix', fmt(opts.premix,1)+' m³ · '+money(opts.premixCost));
+    html+=specRow('Lower cost', opts.verdict);
+    html+=specSection('Prices used');
+    html+=specRow('State', opts.state);
+    html+=specRow('Bag price', money(opts.bagPrice)+' each');
+    html+=specRow('Premix price', money(opts.premixPrice)+' /m³');
+    if(opts.reoLines.length){
+      html+=specSection('Reinforcement');
+      opts.reoLines.forEach(function(r){ html+=specRow(r[0], r[1]); });
+    }
+    $('specSheet').innerHTML=html;
+    show($('specPanel'), true);
+    $('copySpecsBtn').disabled=false;
+    $('copySpecsSlabBtn').disabled=false;
+
+    var p=[];
+    p.push('SlabSet — Concrete spec');
+    p.push('slabset.online');
+    p.push('');
+    p.push('Shape: '+shapeTitle()+' ('+SHAPE_DESC[state.shape]+')');
+    opts.dims.forEach(function(r){ p.push(r[0]+': '+r[1]); });
+    p.push('Quantity: '+opts.qty);
+    p.push('Waste factor: '+opts.wasteLabel);
+    p.push('');
+    if(opts.qty>1) p.push('Volume of one: '+fmt(opts.V1,3)+' m³');
+    p.push('Before wastage: '+fmt(opts.Vbase)+' m³');
+    p.push('To order: '+fmt(opts.Vtotal)+' m³');
+    p.push('Concrete weight: '+fmt(opts.weight/1000)+' t');
+    p.push('');
+    p.push('Bags ('+state.bag+' kg): '+opts.bags+' · '+money(opts.bagCost));
+    p.push('Premix: '+fmt(opts.premix,1)+' m³ · '+money(opts.premixCost));
+    p.push('Lower cost: '+opts.verdict);
+    p.push('');
+    p.push('Prices ('+opts.state+'): '+money(opts.bagPrice)+'/bag · '+money(opts.premixPrice)+'/m³ premix');
+    if(opts.reoLines.length){
+      p.push('');
+      p.push('Reinforcement:');
+      opts.reoLines.forEach(function(r){ p.push(r[0]+': '+r[1]); });
+    }
+    p.push('');
+    p.push('Estimates only. Confirm quantities and costs with your supplier.');
+    lastSpecPlain=p.join('\n');
+  }
+
   function compute(){
-    var s=SHAPES[state.shape], d={}, missing=false, anyEntered=false;
-    s.dims.forEach(function(f){
-      var el=$('dim-'+f[0]), v=parseFloat(el.value);
-      if(el.value!=='') anyEntered=true;
-      if(isNaN(v)||v<=0){missing=true; el.parentElement.classList.toggle('is-error', el.value!=='');}
-      else el.parentElement.classList.remove('is-error');
-      d[f[0]]=v;
-    });
-    if(missing){ errEl.textContent=anyEntered?'Enter a value above 0 in every dimension.':''; blank(); return; }
+    var s=SHAPES[state.shape], parsed=readDims(), d=parsed.d;
+    if(parsed.missing){
+      errEl.textContent=parsed.anyEntered?'Enter a value above 0 in every dimension.':'';
+      blank(); return;
+    }
     errEl.textContent='';
 
     var n=Math.max(1, parseInt($('qty').value,10)||1);
-    var wPct=Math.max(0, parseFloat($('wastage').value)||0);
+    var wPct=state.waste;
     var V1=s.calc(d), Vbase=V1*n, Vtotal=Vbase*(1+wPct/100);
     var weight=Vtotal*DENSITY;
     var bagYield=(state.bag/20)*BAG_YIELD_20;
@@ -355,77 +697,114 @@
     var premix=Math.ceil(Vtotal*10)/10;
     var premixPrice=parseFloat($('premixPrice').value)||0, premixCost=premix*premixPrice;
 
-    $('figVol').textContent=fmt(Vtotal);
-    $('figNote').textContent='Includes '+wPct+'% wastage'+(n>1?' · '+n+' × '+fmt(V1,3)+' m³':'')+'.';
+    var volStr=fmt(Vtotal);
+    if(volStr!==lastVol){ pulseFigVol(); lastVol=volStr; }
+    $('figVol').textContent=volStr;
+    $('slabPanel').classList.remove('is-empty');
+    document.body.classList.add('has-result');
+    show($('readouts'), true);
+    $('figNote').textContent=wPct?wPct+'% wastage included':'No wastage allowance';
+    $('formulaStrip').textContent=formulaText(d, n, wPct, Vtotal);
+    show($('formulaStrip'), true);
+    show($('slabAssumptions'), true);
+    $('mobileVol').innerHTML=volStr+' <small>m³</small>';
+    show($('mobileReadout'), true);
 
-    if(state.mode==='bags'){
-      $('r1k').textContent='Bags ('+state.bag+' kg)'; $('r1v').textContent=bags;
-      $('r2k').textContent='Estimated cost'; $('r2v').textContent=money(bagCost);
+    $('bagsLabel').textContent='Bags ('+state.bag+' kg)';
+    $('bagsQty').textContent=bags;
+    $('bagsCost').textContent=money(bagCost);
+    $('premixQty').innerHTML=fmt(premix,1)+' <small>m³</small>';
+    $('premixCost').textContent=money(premixCost);
+
+    var belowTruck=premix<MIN_LOAD;
+    var cheaper=bagCost<=premixCost?'bags':'premix', save=Math.abs(bagCost-premixCost);
+    var winner=belowTruck?'bags':cheaper;
+    $('supplyBags').classList.toggle('is-winner', winner==='bags');
+    $('supplyPremix').classList.toggle('is-winner', winner==='premix');
+
+    var verdictText;
+    if(belowTruck){
+      verdictText='Most plants need about 0.5 m³ minimum for premix. Bags are the practical choice below that.';
+    } else if(save<1){
+      verdictText='Line-ball on cost at these prices';
     } else {
-      $('r1k').textContent='Order (premix)'; $('r1v').innerHTML=fmt(premix,1)+' <small>m³</small>';
-      $('r2k').textContent='Estimated cost'; $('r2v').textContent=money(premixCost);
+      var winLabel=cheaper==='bags'?'Bags':'Premix';
+      var loseLabel=cheaper==='bags'?'premix':'bags';
+      verdictText=winLabel+' saves about '+money(save)+' vs '+loseLabel;
     }
-    $('r3v').innerHTML=fmt(weight/1000)+' <small>t</small>';
-    $('r4v').innerHTML=fmt(Vbase)+' <small>m³</small>';
-
-    /* verdict — bags vs premix */
-    var cheaper=bagCost<=premixCost?'Bags':'Premix', save=Math.abs(bagCost-premixCost);
-    var practical = Vtotal<0.2 ? 'bags are simplest for this much'
-                  : Vtotal>0.6 ? 'premix usually wins on cost and effort above ~0.5 m³'
-                  : 'either works at this size';
-    $('verdictText').innerHTML = (save<1 ? 'Line-ball on cost — '+practical
-        : '<strong>'+cheaper+'</strong> — saves ~'+money(save)+' vs '+(cheaper==='Bags'?'premix':'bags')+' · '+practical) + '.';
+    $('verdictText').textContent=verdictText;
+    $('mobileHint').textContent=verdictText;
     show($('verdict'),true);
+    show($('warn'),false);
 
-    /* min-order warning */
-    if(premix<MIN_LOAD){
-      $('warn').textContent='Premix order is only '+fmt(premix,1)+' m³. Many plants have a ~0.5 m³ minimum or charge a short-load fee — bags may work out better.';
-      show($('warn'),true);
-    } else show($('warn'),false);
-
-    /* reinforcement */
+    var reoLines=[];
     if(state.reoOn){
       show($('reoPanel'),true);
       if(s.reo==='mesh'){
         var A=s.area(d)*n, sheets=Math.ceil(A*MESH_LAP/MESH_SHEET), chairs=Math.ceil(A*CHAIRS_PER_M2);
         show($('reoReadouts'),true);
-        $('reo1k').textContent='Mesh sheets'; $('reo1v').innerHTML=sheets+' <small>6.0×2.4 m</small>';
+        $('reo1k').textContent='Mesh sheets'; $('reo1v').innerHTML=sheets+' <span class="v-meta">(6.0×2.4 m)</span>';
         $('reo2k').textContent='Bar chairs'; $('reo2v').textContent=chairs;
-        $('reoNote').innerHTML='≈ '+fmt(A)+' m² · '+state.mesh+' · incl. 10% laps. Indicative reo cost '+money(sheets*MESH_PRICE+chairs*CHAIR_PRICE)+'.';
+        $('reoNote').innerHTML=fmt(A)+' m² · '+state.mesh+' · incl. 10% laps. Indicative reo cost '+money(sheets*MESH_PRICE+chairs*CHAIR_PRICE)+'.';
+        reoLines.push(['Mesh grade', state.mesh]);
+        reoLines.push(['Slab area', fmt(A)+' m²']);
+        reoLines.push(['Mesh sheets', sheets+' (6.0×2.4 m)']);
+        reoLines.push(['Bar chairs', String(chairs)]);
       } else if(s.reo==='trench'){
         var L=s.len(d)*n, mlen=L*TRENCH_LAP, lengths=Math.ceil(mlen/TRENCH_LEN);
         show($('reoReadouts'),true);
-        $('reo1k').textContent='Trench mesh'; $('reo1v').innerHTML=fmt(mlen,1)+' <small>m</small>';
+        $('reo1k').textContent='Trench mesh'; $('reo1v').innerHTML=fmt(mlen,1)+' <span class="v-meta">(m)</span>';
         $('reo2k').textContent='6 m lengths'; $('reo2v').textContent=lengths;
-        $('reoNote').innerHTML='≈ '+fmt(L,1)+' m run · incl. 15% laps. Indicative reo cost '+money(mlen*TRENCH_PRICE)+'.';
+        $('reoNote').innerHTML=fmt(L,1)+' m run · incl. 15% laps. Indicative reo cost '+money(mlen*TRENCH_PRICE)+'.';
+        reoLines.push(['Trench mesh run', fmt(L,1)+' m']);
+        reoLines.push(['Mesh length (incl. laps)', fmt(mlen,1)+' m']);
+        reoLines.push(['6 m lengths', String(lengths)]);
       } else {
         show($('reoReadouts'),false);
-        $('reoNote').textContent="Cylinders (columns, posts, piers) use vertical bars (N12–N16) + ties — size to your engineer's spec.";
+        $('reoNote').textContent="Cylinders use vertical bars and ties. Size to your engineer's spec.";
+        reoLines.push(['Note', "Size vertical bars and ties to engineer's spec"]);
       }
     } else show($('reoPanel'),false);
 
-    /* working */
-    var w=[];
-    w.push(['Volume of one','<span class="n">'+fmt(V1,3)+' m³</span>']);
-    if(n>1) w.push(['× quantity ('+n+')','<span class="n">'+fmt(Vbase,3)+' m³</span>']);
-    w.push(['+ '+wPct+'% wastage','<span class="n">'+fmt(Vtotal)+' m³</span>']);
-    if(state.mode==='bags') w.push(['÷ '+fmt(bagYield,4)+' m³ / bag','<span class="n">'+bags+' bags</span>']);
-    else w.push(['rounded up to 0.1 m³','<span class="n">'+fmt(premix,1)+' m³</span>']);
-    $('working').innerHTML=w.map(function(r){return '<li><span class="lbl">'+r[0]+'</span>'+r[1]+'</li>';}).join('');
-
-    /* mobile instrument readout */
-    $('rbFig').textContent=fmt(Vtotal);
-    var primary = state.mode==='bags' ? bags+' × '+state.bag+'kg bags' : 'Premix '+fmt(premix,1)+' m³';
-    $('rbSub').innerHTML=primary+'<br>'+cheaper.toLowerCase()+' cheaper';
+    renderSpecSheet({
+      dims:dimSummaryLines(),
+      qty:n,
+      wasteLabel:wPct?wPct+'%':'None',
+      V1:V1, Vbase:Vbase, Vtotal:Vtotal, weight:weight,
+      bags:bags, bagCost:bagCost, premix:premix, premixCost:premixCost,
+      verdict:verdictText,
+      state:$('stateSel').value,
+      bagPrice:bagPrice, premixPrice:premixPrice,
+      reoLines:reoLines
+    });
+    syncUrl();
   }
 
   function blank(){
+    lastVol='';
     $('figVol').textContent='—';
-    $('figNote').textContent='Includes wastage. Enter dimensions to start.';
-    ['r1v','r2v','r3v','r4v'].forEach(function(id){$(id).textContent='—';});
+    $('figNote').textContent='Enter dimensions to start';
+    $('slabPanel').classList.add('is-empty');
+    document.body.classList.remove('has-result');
+    show($('formulaStrip'), false);
+    show($('slabAssumptions'), false);
+    show($('mobileReadout'), false);
+    $('mobileVol').innerHTML='— <small>m³</small>';
+    $('mobileHint').textContent='Enter dimensions';
+    show($('readouts'), false);
+    $('bagsQty').textContent='—';
+    $('bagsCost').textContent='—';
+    $('premixQty').textContent='—';
+    $('premixCost').textContent='—';
+    $('supplyBags').classList.remove('is-winner');
+    $('supplyPremix').classList.remove('is-winner');
     show($('verdict'),false); show($('warn'),false); show($('reoPanel'),false);
-    $('working').innerHTML='<li><span class="lbl">Fill in the dimensions to see the breakdown.</span></li>';
-    $('rbFig').textContent='—'; $('rbSub').textContent='Enter dimensions';
+    show($('specPanel'), false);
+    $('specSheet').innerHTML='';
+    $('copySpecsBtn').disabled=true;
+    $('copySpecsSlabBtn').disabled=true;
+    lastSpecPlain='';
+    $('copyToast').textContent='';
   }
 
   function bindSeg(segId, attr, key, after){
@@ -437,22 +816,59 @@
     });
   }
 
-  bindSeg('shapeSeg','data-shape','shape', renderDims);
-  bindSeg('bagSeg','data-bag','bag', function(){ state.bag=parseInt(state.bag,10); applyBagSize(); });
-  bindSeg('meshSeg','data-mesh','mesh', function(){ $('meshHint').innerHTML=MESH_HINT[state.mesh]; });
-  bindSeg('modeSeg','data-mode','mode', function(){
-    var bags=state.mode==='bags';
-    show($('bagOpts'),bags); show($('bagPriceField'),bags);
-    show($('premixPriceField'),!bags); show($('premixHint'),!bags);
+  bindSeg('shapeSeg','data-shape','shape', function(){
+    if(state.shape!=='slab') state.lwUnit='m';
+    [].forEach.call($('lwUnitSeg').querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', x.getAttribute('data-unit')===state.lwUnit ? 'true' : 'false');
+    });
+    updateShapeDesc();
+    renderDims(); compute();
+  });
+  bindSeg('bagSeg','data-bag','bag', function(){ state.bag=parseInt(state.bag,10); applyBagSize(); compute(); });
+  bindSeg('meshSeg','data-mesh','mesh', function(){ $('meshHint').textContent=MESH_HINT[state.mesh]; });
+
+  $('lwUnitSeg').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var next=b.getAttribute('data-unit');
+    if(next===state.lwUnit) return;
+    [].forEach.call(this.querySelectorAll('button'), function(x){x.setAttribute('aria-pressed','false');});
+    b.setAttribute('aria-pressed','true');
+    convertLwUnit(next);
   });
 
-  $('stateSel').addEventListener('change', function(){ applyState(); flashPrices(); compute(); });
+  $('wasteSeg').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    [].forEach.call(this.querySelectorAll('button'), function(x){x.setAttribute('aria-pressed','false');});
+    b.setAttribute('aria-pressed','true');
+    state.waste=parseInt(b.getAttribute('data-waste'),10);
+    updateWasteDesc(); compute();
+  });
+
+  $('stateSel').addEventListener('change', function(){ applyState(); updateStateProvenance(true); flashPrices(); compute(); });
   $('reoToggle').addEventListener('change', function(){ state.reoOn=this.checked; show($('reoOpts'),this.checked); compute(); });
   document.addEventListener('input', function(e){ if(e.target.matches('input')) compute(); });
-  $('calc').addEventListener('submit', function(e){ e.preventDefault(); compute(); document.querySelector('.slab').scrollIntoView({behavior:'smooth',block:'nearest'}); });
-  $('rbJump').addEventListener('click', function(){ document.querySelector('.slab').scrollIntoView({behavior:'smooth',block:'center'}); });
 
-  renderDims(); applyState(); blank();
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('slabset-theme', theme);
+    [].forEach.call($('themeSeg').querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', x.getAttribute('data-theme')===theme ? 'true' : 'false');
+    });
+  }
+  (function initTheme(){
+    var theme=document.documentElement.getAttribute('data-theme')||'light';
+    applyTheme(theme);
+  })();
+  $('themeSeg').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    applyTheme(b.getAttribute('data-theme'));
+  });
+
+  $('copySpecsBtn').addEventListener('click', copySpecs);
+  $('copySpecsSlabBtn').addEventListener('click', copySpecs);
+
+  loadFromUrl();
+  renderDims(); applyState(); updateShapeDesc(); updateWasteDesc(); blank(); compute();
 })();
 </script>
 </body>
