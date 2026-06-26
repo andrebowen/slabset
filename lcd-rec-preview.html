@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SlabSet — LCD recommendation copy (3 options)</title>
+<link rel="icon" type="image/svg+xml" href="shared/slabset-mark.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+:root{
+  --ink:#1B1D20;--steel:#6B7075;--y:#F3C300;--lcd:#1C1C1E;--lcd-pin:#48484A;
+  --paper:#F5F5F2;--concrete:#E4E4DF;--steel-line:#D4D4D4;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;
+  --page-x:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);
+  background:#E8E8E4;line-height:1.45;
+}
+.wrap{max-width:420px;margin:0 auto;padding:16px 14px 48px}
+.top{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #C8C8C0}
+.top h1{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+.top p{margin:0;font-size:.82rem;color:var(--steel)}
+.jump{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.jump a{
+  text-decoration:none;color:var(--ink);font-weight:600;font-size:.8rem;
+  border:1px solid #C8C8C0;border-radius:999px;padding:8px 12px;background:#fff;
+}
+.option{margin-bottom:28px}
+.option-head{margin-bottom:10px}
+.option-head h2{font-size:.92rem;font-weight:700;margin:0 0 4px}
+.option-head p{margin:0;font-size:.75rem;color:var(--steel);line-height:1.35}
+.option-head .pick{
+  display:inline-block;margin-top:6px;font-size:.66rem;font-weight:700;
+  color:var(--ink);background:var(--y);border-radius:6px;padding:3px 8px;
+}
+.phone{
+  border-radius:28px;border:3px solid var(--ink);overflow:hidden;
+  background:var(--paper);box-shadow:0 16px 36px -26px rgba(27,29,32,.35);
+}
+.notch{
+  height:20px;display:flex;align-items:center;justify-content:center;
+  font-size:.5rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--steel);background:#fff;border-bottom:1px solid #C8C8C0;
+}
+.body{padding:0 var(--page-x) var(--page-x)}
+.top-nav{
+  display:flex;align-items:flex-start;gap:var(--space-2);
+  padding:var(--space-2) var(--page-x) var(--space-3);
+  margin:0 calc(-1 * var(--page-x));
+  border-bottom:1px solid var(--steel-line);
+}
+.top-nav__mark{width:28px;height:28px;flex-shrink:0;margin-top:2px}
+.top-nav__brand b{font-weight:700;font-size:1.05rem}
+.top-nav__brand b span{background:var(--y);padding:0 .1em;border-radius:3px}
+.top-nav__product{display:block;font-weight:700;font-size:1.05rem;margin-top:2px}
+.top-nav__by{font-size:.6rem;color:var(--steel)}
+.calc-zone{padding:var(--space-3) 0 0;display:flex;flex-direction:column;gap:var(--space-3)}
+.h1{font-size:1.15rem;font-weight:700;margin:0;line-height:1.1}
+.lcd{
+  background:var(--lcd);border-radius:var(--space-2);color:#fff;
+  min-height:9.5rem;padding:var(--space-3) 10px;gap:var(--space-3);
+  display:flex;flex-direction:column;justify-content:flex-end;
+}
+.lcd-readout{
+  flex:1;display:flex;flex-direction:column;justify-content:flex-end;min-height:0;
+}
+.lcd-row{display:flex;justify-content:flex-end;align-items:baseline;gap:.35em}
+.lcd-num{font-size:2.5rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.lcd-unit{font-size:.9rem;font-weight:600;color:var(--y)}
+.lcd-hint{
+  font-size:.725rem;font-weight:500;color:rgba(255,255,255,.4);margin:0;
+  text-align:right;line-height:1.3;
+}
+.lcd-pin{
+  display:block;border:0;border-top:1px solid var(--lcd-pin);
+  margin:0 -10px;height:0;width:calc(100% + 20px);flex-shrink:0;
+}
+.lcd-rec{
+  font-size:.725rem;font-weight:500;color:rgba(255,255,255,.55);
+  margin:0;text-align:right;line-height:1.35;
+}
+.lcd-rec em{font-style:normal;color:var(--y);font-weight:600}
+.lcd-rec-link{
+  color:rgba(255,255,255,.72);font-weight:600;text-decoration:underline;
+  text-decoration-color:rgba(255,255,255,.28);text-underline-offset:2px;
+}
+.lcd-rec-sep{color:rgba(255,255,255,.35);margin:0 .25em}
+.order-section{
+  margin-top:var(--space-5);margin-inline:calc(-1 * var(--page-x));
+  padding:var(--space-4) var(--page-x);background:var(--concrete);
+}
+.order-section h3{font-size:.805rem;font-weight:600;margin:0}
+.order-section p{margin:var(--space-2) 0 0;font-size:.7rem;color:var(--steel)}
+.order-section[id]{scroll-margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>LCD recommendation — 3 options</h1>
+    <p>Mobile-first · 1.32 m³ · tap link on A to jump to Supply options.</p>
+    <nav class="jump" aria-label="Jump to option">
+      <a href="#opt-a">A · Recommended + link</a>
+      <a href="#opt-b">B · Verdict only</a>
+      <a href="#opt-c">C · Rule (above 1 m³)</a>
+    </nav>
+  </header>
+
+  <section class="option" id="opt-a">
+    <div class="option-head">
+      <h2>A · Verdict + link</h2>
+      <p><em>Premix by truck</em> recommended · <a href="#opt-a-supply">Supply options</a></p>
+      <span class="pick">Recommended for prod</span>
+    </div>
+    <div class="phone">
+      <div class="notch">A</div>
+      <div class="body">
+        <nav class="top-nav" aria-label="App">
+          <img class="top-nav__mark" src="shared/slabset-mark.svg" alt="">
+          <div class="top-nav__brand">
+            <b>Slab<span>Set</span></b>
+            <span class="top-nav__product">Concrete Calculator</span>
+            <span class="top-nav__by">by Metric Instruments</span>
+          </div>
+        </nav>
+        <div class="calc-zone">
+          <h2 class="h1">How much concrete?</h2>
+          <div class="lcd">
+            <div class="lcd-readout">
+              <div class="lcd-row"><span class="lcd-num">1.32</span><span class="lcd-unit">m³</span></div>
+              <p class="lcd-hint">Includes +10% wastage</p>
+            </div>
+            <hr class="lcd-pin" aria-hidden="true">
+            <p class="lcd-rec"><em>Premix by truck</em> recommended<span class="lcd-rec-sep">·</span><a class="lcd-rec-link" href="#opt-a-supply">Supply options</a></p>
+          </div>
+        </div>
+        <div class="order-section" id="opt-a-supply">
+          <h3>Supply options</h3>
+          <p>Bags vs premix cards appear here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="option" id="opt-b">
+    <div class="option-head">
+      <h2>B · Verdict only</h2>
+      <p><em>Premix by truck</em> recommended — no link; section visible on scroll.</p>
+    </div>
+    <div class="phone">
+      <div class="notch">B</div>
+      <div class="body">
+        <nav class="top-nav" aria-label="App">
+          <img class="top-nav__mark" src="shared/slabset-mark.svg" alt="">
+          <div class="top-nav__brand">
+            <b>Slab<span>Set</span></b>
+            <span class="top-nav__product">Concrete Calculator</span>
+            <span class="top-nav__by">by Metric Instruments</span>
+          </div>
+        </nav>
+        <div class="calc-zone">
+          <h2 class="h1">How much concrete?</h2>
+          <div class="lcd">
+            <div class="lcd-readout">
+              <div class="lcd-row"><span class="lcd-num">1.32</span><span class="lcd-unit">m³</span></div>
+              <p class="lcd-hint">Includes +10% wastage</p>
+            </div>
+            <hr class="lcd-pin" aria-hidden="true">
+            <p class="lcd-rec"><em>Premix by truck</em> recommended</p>
+          </div>
+        </div>
+        <div class="order-section">
+          <h3>Supply options</h3>
+          <p>Bags vs premix cards appear here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="option" id="opt-c">
+    <div class="option-head">
+      <h2>C · Rule only</h2>
+      <p><em>Premix by truck</em> above 1 m³ — teaches threshold, not this result.</p>
+    </div>
+    <div class="phone">
+      <div class="notch">C</div>
+      <div class="body">
+        <nav class="top-nav" aria-label="App">
+          <img class="top-nav__mark" src="shared/slabset-mark.svg" alt="">
+          <div class="top-nav__brand">
+            <b>Slab<span>Set</span></b>
+            <span class="top-nav__product">Concrete Calculator</span>
+            <span class="top-nav__by">by Metric Instruments</span>
+          </div>
+        </nav>
+        <div class="calc-zone">
+          <h2 class="h1">How much concrete?</h2>
+          <div class="lcd">
+            <div class="lcd-readout">
+              <div class="lcd-row"><span class="lcd-num">1.32</span><span class="lcd-unit">m³</span></div>
+              <p class="lcd-hint">Includes +10% wastage</p>
+            </div>
+            <hr class="lcd-pin" aria-hidden="true">
+            <p class="lcd-rec"><em>Premix by truck</em> above 1 m³</p>
+          </div>
+        </div>
+        <div class="order-section">
+          <h3>Supply options</h3>
+          <p>Bags vs premix cards appear here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
