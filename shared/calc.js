@@ -343,8 +343,8 @@
     state.premixPrice = st.premix;
     var note = $('costNote');
     if (note) {
-      note.textContent = 'Estimates use typical metro prices in ' + REGION_LABEL +
-        '. Confirm with your local supplier before ordering.';
+      note.innerHTML =
+        'Estimate uses typical metro prices in Australia.<br>Confirm with your local supplier before ordering.';
     }
   }
 
