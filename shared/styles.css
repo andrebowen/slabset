@@ -189,7 +189,7 @@ button.fld.shape-fld > .chev,
 }
 .fld .unit{font-size:12px;font-weight:600;opacity:.55}
 button.fld.shape-fld > .chev,
-.wmenu .menu-btn > .chev{opacity:.7;line-height:1}
+.wmenu .menu-btn > .chev{opacity:.7;line-height:1;font-size:16px}
 
 /* shape field — matches .fld row: Shape | (diagram) Name */
 button.fld.shape-fld{
