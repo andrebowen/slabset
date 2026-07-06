@@ -342,10 +342,17 @@
   .job {
     border: none; background: transparent; font-family: inherit;
     font-size: .875rem; font-weight: 800; color: var(--ink);
-    padding: 8px 0 0; width: 100%;
+    padding: 8px 10px; margin: 4px -10px; width: calc(100% + 20px);
+    border-radius: 10px;
     user-select: text; -webkit-user-select: text;
+    transition: background .2s ease;
   }
   .job::placeholder { color: var(--ink); opacity: .4; font-weight: 700; }
+  .job:focus, .job:focus-visible {
+    outline: none;
+    background: var(--field-accent); color: var(--on-field-accent);
+  }
+  .job:focus::placeholder { color: var(--on-field-accent); opacity: .55; }
   .sheet-head .no { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
   .sheet-vol { padding: 12px 0 8px; border-bottom: 1.5px solid color-mix(in srgb, currentColor 35%, transparent); }
   .sheet-vol .k { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
@@ -961,6 +968,10 @@ function trackCalc(){
 /* ---------- job name (persists across sessions) ---------- */
 try{ $("jobName").value=localStorage.getItem("slabset-job")||""; }catch{}
 $("jobName").oninput=()=>{ try{ localStorage.setItem("slabset-job",$("jobName").value); }catch{} };
+/* tapping anywhere else on the sheet closes the field (iOS keeps inputs focused otherwise) */
+document.querySelector("#sheet .sheet-scroll").addEventListener("click",e=>{
+  if(e.target!==$("jobName")) $("jobName").blur();
+});
 
 /* ---------- native share where available ---------- */
 if(navigator.share){
