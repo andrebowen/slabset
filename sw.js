@@ -1,56 +1,28 @@
-// Single version knob — bump on deploy. Assets carry no query strings;
-// the fetch strategy is network-first, so fresh files win whenever online.
-var VERSION = 'v478';
-var CACHE = 'slabset-' + VERSION;
-var ASSETS = [
-  './',
-  './index.html',
-  './concrete-slab-calculator.html',
-  './concrete-footing-calculator.html',
-  './concrete-column-calculator.html',
-  './round-pad-calculator.html',
-  './concrete-stairs-calculator.html',
-  './shared/styles.css',
-  './shared/calc.js',
-  './shared/logo.svg',
-  './shared/icons/icon-192.png',
-  './shared/icons/favicon-48.png',
-  './manifest.webmanifest',
-  './terms.html',
-  './privacy.html'
-];
+const CACHE = "slabset-v2";
+const ASSETS = ["./", "./icon-192.png", "./icon-512.png", "./manifest.webmanifest"];
 
-self.addEventListener('install', function (e) {
-  e.waitUntil(
-    caches.open(CACHE).then(function (cache) {
-      return cache.addAll(ASSETS);
-    }).then(function () { return self.skipWaiting(); })
-  );
+self.addEventListener("install", e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', function (e) {
+self.addEventListener("activate", e => {
   e.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) {
-        return caches.delete(k);
-      }));
-    }).then(function () { return self.clients.claim(); })
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', function (e) {
-  if (e.request.method !== 'GET') return;
-  var url = new URL(e.request.url);
-  if (url.origin !== self.location.origin) return;
+self.addEventListener("fetch", e => {
+  if (e.request.method !== "GET") return;
   e.respondWith(
-    fetch(e.request).then(function (res) {
-      if (res && res.status === 200) {
-        var copy = res.clone();
-        caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });
-      }
-      return res;
-    }).catch(function () {
-      return caches.match(e.request);
-    })
+    caches.match(e.request, { ignoreSearch: e.request.mode === "navigate" }).then(hit =>
+      hit ||
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      }).catch(() => caches.match("./"))
+    )
   );
 });

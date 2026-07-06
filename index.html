@@ -1,90 +1,970 @@
 <!DOCTYPE html>
-<html lang="en-AU">
+<html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Concrete Calculator Australia | SlabSet</title>
-<meta name="description" content="Concrete calculator for Australian slabs, footings, columns and stairs. Work out m³, bags, premix and a copy-ready pour spec.">
+<title>SlabSet: Metric Concrete Volume Calculator Australia</title>
+<meta name="description" content="Free metric concrete calculator for Australia. Slabs, strip footings, piers and stairs in mm and m³, with 20 kg bag counts, ready-mix order quantities and wastage included.">
+<meta name="theme-color" content="#F2F0EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101214" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://slabset.online/">
-<meta name="theme-color" content="#DED8CB">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="SlabSet">
-<meta property="og:site_name" content="SlabSet">
-<meta property="og:title" content="SlabSet Concrete Calculator">
-<meta property="og:description" content="Concrete calculator for Australian slabs, footings, columns and stairs. Work out m³, bags, premix and a copy-ready pour spec.">
-<meta property="og:url" content="https://slabset.online/">
+<meta property="og:title" content="SlabSet: Metric Concrete Volume Calculator Australia">
+<meta property="og:description" content="Work out slab, footing, pier and stairs concrete in seconds: volume, bag counts and a ready-mix order quantity, wastage included.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://slabset.online/shared/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SlabSet Concrete Calculator">
-<meta name="twitter:description" content="Concrete calculator for Australian slabs, footings, columns and stairs. Work out m³, bags, premix and a copy-ready pour spec.">
-<meta name="twitter:image" content="https://slabset.online/shared/og-image.png">
-<link rel="icon" type="image/png" sizes="48x48" href="shared/icons/favicon-48.png">
-<link rel="icon" type="image/png" sizes="192x192" href="shared/icons/icon-192.png">
-<link rel="apple-touch-icon" href="shared/icons/apple-touch-icon.png">
+<meta property="og:url" content="https://slabset.online/">
+<meta property="og:image" content="https://slabset.online/icon-512.png">
+<meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="shared/styles.css">
-<script>
-(function () {
-  var h = location.hostname;
-  if (h !== 'localhost' && h !== '127.0.0.1' && h !== '[::1]') return;
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (regs) {
-      regs.forEach(function (r) { r.unregister(); });
-    });
-  }
-  if (window.caches) {
-    caches.keys().then(function (keys) {
-      keys.forEach(function (k) { caches.delete(k); });
-    });
-  }
-})();
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much concrete do I need?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Pick the shape, enter your measurements and the volume updates instantly, wastage included." }
+    },
+    {
+      "@type": "Question",
+      "name": "What wastage should I allow?",
+      "acceptedAnswer": { "@type": "Answer", "text": "10% suits a standard site. Drop to 5% for tidy formwork on a compacted base, or go 15 to 20% over rough ground and hand-dug trenches." }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I order bags or ready-mix?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Under about 0.5 m³ bags usually win on price. Over 1 m³ ready-mix wins on price and convenience, even with a short-load fee." }
+    },
+    {
+      "@type": "Question",
+      "name": "Are these quantities exact?",
+      "acceptedAnswer": { "@type": "Answer", "text": "They are estimates. Round up on site and confirm quantities and prices with your supplier before ordering." }
+    }
+  ]
+}
 </script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-PPKFHXV1DS"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PPKFHXV1DS');</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  :root {
+    --primary: #6750A4;
+    --on-primary: #FFFFFF;
+    --secondary: #625B71;
+    --on-secondary: #FFFFFF;
+    --tertiary: #7D5260;
+    --on-tertiary: #FFFFFF;
+    --surface: #FFFBFE;
+    --surface-container: #F3EDF7;
+    --surface-container-high: #ECE6F0;
+    --on-surface: #1C1B1F;
+    --on-surface-variant: #49454F;
+    --inverse-surface: #313033;
+    --inverse-on-surface: #F4EFF4;
+    --outline: #79747E;
+    --outline-variant: #CAC4D0;
+    --shadow: rgba(0, 0, 0, .18);
+    --ink: var(--on-surface);
+    --logo-accent: var(--primary);
+    --nav-accent: var(--tertiary);
+    --field-accent: var(--primary);
+    --control-accent: var(--primary);
+    --filter-accent: var(--primary);
+    --key-accent: var(--tertiary);
+    --cta-accent: var(--primary);
+    --section-accent: var(--primary);
+    --copy-accent: var(--primary);
+    --pdf-accent: var(--tertiary);
+    --on-logo-accent: var(--on-primary);
+    --on-field-accent: var(--on-primary);
+    --on-control-accent: var(--on-primary);
+    --on-filter-accent: var(--on-primary);
+    --on-key-accent: var(--on-tertiary);
+    --on-cta-accent: var(--on-primary);
+    --on-section-accent: var(--on-primary);
+    --on-copy-accent: var(--on-primary);
+    --on-pdf-accent: var(--on-tertiary);
+    --logo-inner: var(--primary);
+    --bottom-h: 74px;
+    --pad-h: 250px;
+  }
+
+  html, body { height: 100%; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  body {
+    font-family: -apple-system, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    transition: background .35s ease;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 440px;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .scrim {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(0, 0, 0, .35);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .scrim.show { opacity: 1; }
+
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  /* the app fills the first viewport; document content starts strictly below the fold */
+  .fold {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  header { display: flex; justify-content: space-between; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    display: block;
+  }
+  .logo { font-size: 1.3125rem; font-weight: 900; letter-spacing: -.03em; }
+  .logo span { opacity: .6; font-weight: 800; }
+  .tagline {
+    font-size: .75rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .06em; opacity: .7; line-height: 1.15;
+    text-align: right; max-width: 140px;
+  }
+
+  /* ---------- result ---------- */
+  .result {
+    background: var(--inverse-surface);
+    border-radius: 20px;
+    padding: 16px;
+    color: var(--inverse-on-surface);
+    transition: color .35s ease;
+  }
+  .result-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .shape-name { font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: .7; line-height: 1.15; display: block; }
+  .waste-tag { font-size: .75rem; font-weight: 800; opacity: .7; margin-top: 8px; }
+  .vol { font-size: 2.875rem; font-weight: 900; letter-spacing: -.03em; line-height: 1.05; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .vol small { font-size: 1rem; font-weight: 800; opacity: .7; }
+  .buy {
+    background: color-mix(in srgb, var(--primary) 20%, transparent);
+    border-radius: 11px; padding: 12px 12px 8px; margin-top: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .buy .k { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.15; text-transform: uppercase; letter-spacing: .06em; }
+  .buy-row { display: grid; grid-template-columns: 1fr 1fr; margin: 4px 0; }
+  .buy-row .stat { display: flex; flex-direction: column; gap: 4px; }
+  .buy-row .stat + .stat { border-left: 1.5px solid color-mix(in srgb, currentColor 25%, transparent); padding-left: 12px; }
+  .buy .n { font-size: 1.3125rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .buy .n small { font-size: .875rem; font-weight: 800; opacity: .7; }
+  .buy .hint { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.4; }
+
+  /* ---------- input chips ---------- */
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .chip {
+    background: var(--surface-container); border-radius: 14px; border: none;
+    padding: 12px 12px 8px; text-align: left; cursor: pointer;
+    font-family: inherit; color: var(--ink); min-height: 62px;
+    transition: transform .1s ease;
+  }
+  .chip:active { transform: scale(.97); }
+  .chip .lbl { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .7; display: block; line-height: 1.15; }
+  .chip .val { font-size: 1.3125rem; font-weight: 900; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 4px; margin-top: 8px; }
+  .chip .val .un { font-size: .875rem; font-weight: 800; opacity: .6; }
+  .chip.editing { background: var(--field-accent); color: var(--on-field-accent); transition: color .35s ease, background .2s ease; }
+  .chip.editing .lbl { opacity: .7; }
+
+  .chip.stepper { display: flex; align-items: center; justify-content: space-between; cursor: default; grid-column: 2; }
+  .chip.stepper:active { transform: none; }
+  .stepper .mid { text-align: left; align-self: flex-start; }
+  .stepper .cap {
+    display: flex; border-radius: 999px; overflow: hidden;
+    background: var(--surface-container-high);
+    align-self: flex-end;
+  }
+  .stepper .sbtn {
+    width: 44px; height: 40px; border: none; background: transparent;
+    color: var(--ink); font-size: 1rem; font-weight: 800;
+    cursor: pointer; font-family: inherit; line-height: 1;
+  }
+  .stepper .sbtn + .sbtn { border-left: 1.5px solid color-mix(in srgb, var(--ink) 15%, transparent); }
+  .stepper .sbtn:active { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+
+  /* ---------- wastage (its own card) ---------- */
+  .wastage {
+    background: var(--surface-container); border: none; border-radius: 14px;
+    padding: 12px 12px 8px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .wastage-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .wastage .t { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .7; line-height: 1.15; }
+  .wastage .opts { display: flex; gap: 8px; }
+  .wastage .opts button {
+    flex: 1; border: none; background: var(--surface-container-high);
+    font-family: inherit; font-size: .875rem; font-weight: 800;
+    padding: 8px 0; border-radius: 999px; cursor: pointer;
+    color: var(--ink); min-height: 44px; transition: transform .1s ease;
+  }
+  .wastage .opts button:active { transform: scale(.94); }
+  .wastage .hint { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.4; }
+  .wastage .opts button.on { background: var(--filter-accent); color: var(--on-filter-accent); transition: color .35s ease; }
+
+  /* ================= BOTTOM ZONE ================= */
+  .bottom {
+    flex-shrink: 0;
+    background: var(--inverse-surface);
+    border-radius: 0;
+    height: calc(var(--bottom-h) + env(safe-area-inset-bottom));
+    transition: height .24s ease;
+    overflow: hidden;
+    position: relative;
+    z-index: 6;
+    /* solid paint below the bar: hides the subpixel gap Safari leaves at fractional dvh */
+    box-shadow: 0 24px 0 0 var(--inverse-surface);
+  }
+  .bottom.pad-open { height: calc(var(--pad-h) + env(safe-area-inset-bottom)); }
+
+  /* --- shape nav (default state) --- */
+  .nav {
+    position: absolute; inset: 0;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    opacity: 1; transition: opacity .15s ease;
+  }
+  .bottom.pad-open .nav { opacity: 0; pointer-events: none; }
+  .tab {
+    background: transparent; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px;
+    padding-top: 4px;
+    font-family: inherit; border-radius: 12px;
+    transition: transform .1s ease;
+  }
+  .tab:active { transform: scale(.92); }
+  .tab svg { width: 30px; height: 24px; fill: color-mix(in srgb, var(--inverse-on-surface) 38%, transparent); transition: fill .25s ease; }
+  .tab .lbl { font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-align: center; line-height: 1.15; color: color-mix(in srgb, var(--inverse-on-surface) 46%, transparent); transition: color .25s ease; }
+  .tab.active svg { fill: var(--nav-accent); }
+  .tab.active .lbl { color: var(--nav-accent); }
+
+  /* --- keypad (typing state) --- */
+  .keypad {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    opacity: 0; pointer-events: none; transition: opacity .15s ease .08s;
+  }
+  .bottom.pad-open .keypad { opacity: 1; pointer-events: auto; }
+  .keypad button {
+    border: none; border-radius: 12px;
+    background: color-mix(in srgb, var(--inverse-on-surface) 10%, transparent);
+    color: var(--inverse-on-surface);
+    font-size: 1.3125rem; font-weight: 800; font-family: inherit; cursor: pointer;
+    transition: color .35s ease, transform .08s ease;
+  }
+  .keypad button:active { transform: scale(.93); }
+
+  /* ---------- spec sheet CTA (end of flow) ---------- */
+  .spec-cta {
+    border: none; font-family: inherit; cursor: pointer;
+    background: var(--cta-accent); color: var(--on-cta-accent);
+    font-size: .875rem; font-weight: 900;
+    border-radius: 14px; padding: 16px 0; min-height: 50px; width: 100%;
+    transition: color .35s ease, transform .1s ease;
+  }
+  .spec-cta:active { transform: scale(.97); }
+
+  /* ---------- seo shell (document content below the app fold) ---------- */
+  .shell { display: flex; flex-direction: column; gap: 24px; padding: 16px 0 8px; user-select: text; }
+  .shell section { display: flex; flex-direction: column; gap: 8px; }
+  .shell h1 { font-size: 1rem; font-weight: 900; }
+  .shell h2 { font-size: .75rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+  .shell p { font-size: .875rem; font-weight: 500; line-height: 1.6; opacity: .75; }
+  .shell .q { font-size: .875rem; font-weight: 800; opacity: 1; margin-top: 8px; }
+  .calc-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .calc-links button {
+    border: none; font-family: inherit; cursor: pointer;
+    background: var(--surface-container); color: var(--ink);
+    font-size: .875rem; font-weight: 800;
+    padding: 8px 16px; border-radius: 999px; min-height: 36px;
+  }
+  .shell footer { display: flex; flex-direction: column; gap: 8px; border-top: 1.5px solid var(--outline-variant); padding-top: 16px; }
+  .shell footer p { font-size: .75rem; }
+  .shell footer a { color: inherit; font-weight: 800; }
+
+  /* ---------- spec sheet (slide-up docket) ---------- */
+  .sheet {
+    position: absolute; inset: 0; background: var(--surface);
+    transform: translateY(102%); transition: transform .28s ease, background .35s ease;
+    display: flex; flex-direction: column; z-index: 10; color: var(--ink);
+  }
+  .sheet.open { transform: translateY(0); }
+  .sheet-scroll { flex: 1; overflow-y: auto; padding: 16px 20px 20px; }
+  .sheet-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 3px solid var(--on-surface); padding-bottom: 8px;
+  }
+  .sheet-head b { font-size: 1rem; }
+  .job {
+    border: none; background: transparent; font-family: inherit;
+    font-size: .875rem; font-weight: 800; color: var(--ink);
+    padding: 8px 0 0; width: 100%;
+    user-select: text; -webkit-user-select: text;
+  }
+  .job::placeholder { color: var(--ink); opacity: .4; font-weight: 700; }
+  .sheet-head .no { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+  .sheet-vol { padding: 12px 0 8px; border-bottom: 1.5px solid color-mix(in srgb, currentColor 35%, transparent); }
+  .sheet-vol .k { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+  .sheet-vol .v { font-size: 2.875rem; font-weight: 900; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .sheet-vol .v small { font-size: 1rem; font-weight: 800; opacity: .7; }
+  .sheet-vol .w { font-size: .75rem; font-weight: 800; opacity: .7; margin-top: 4px; }
+  .srow {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 8px 0; border-bottom: 1.5px solid color-mix(in srgb, currentColor 20%, transparent);
+  }
+  .ssection + .srow { border-top: 1.5px solid color-mix(in srgb, currentColor 20%, transparent); }
+  .srow .k { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+  .srow .v { font-size: .875rem; font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; }
+  .srow.hero { background: var(--section-accent); color: var(--on-section-accent); margin: 0 -20px; padding-left: 20px; padding-right: 20px; border-bottom: none; }
+  .ssection {
+    margin: 24px 0 12px;
+    font-size: .75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink);
+  }
+  .sheet-note { font-size: .75rem; font-weight: 800; opacity: .7; padding: 12px 0 0; line-height: 1.55; }
+  .sheet-actions {
+    flex-shrink: 0; display: flex; gap: 8px;
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .sheet-actions button {
+    flex: 1; border: none; font-family: inherit; cursor: pointer;
+    border-radius: 12px; padding: 16px 0; font-weight: 900; font-size: .875rem;
+    min-height: 48px;
+    transition: transform .1s ease;
+  }
+  .sheet-actions button:active { transform: scale(.96); }
+  .act-close { background: var(--surface-container-high); color: var(--on-surface); flex: .6; }
+  .act-copy { background: var(--copy-accent); color: var(--on-copy-accent); }
+  .act-pdf { background: var(--pdf-accent); color: var(--on-pdf-accent); }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 110px; transform: translateX(-50%) translateY(8px);
+    background: var(--inverse-surface); color: var(--inverse-on-surface); font-size: .875rem; font-weight: 800;
+    border-radius: 999px; padding: 8px 16px; opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease; z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media print {
+    body * { visibility: hidden; }
+    .sheet, .sheet * { visibility: visible; }
+    .sheet { position: static; transform: none; }
+    .sheet-actions { display: none; }
+  }
+</style>
 </head>
-<body class="website" data-shape="slab">
-<div class="dev-ribbon" id="devRibbon" hidden aria-hidden="true">Website · mockup 04 · mono light/dark</div>
+<body>
+<div class="app">
 
-<div class="app mono t4 mode-field" id="app">
-<script>(function(){try{var s=localStorage.getItem('slabset-theme');var d=s?s==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);if(d){var a=document.getElementById('app');a.classList.remove('t4');a.classList.add('t4d');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#16181A');}}catch(e){}})();</script>
-  <h1 class="sr-only">Concrete calculator Australia</h1>
-  <div class="layout-guides" id="layoutGuides" aria-hidden="true">
-    <div class="guide-margin guide-margin--left"><span class="guide-margin__label">margin 20</span></div>
-    <div class="guide-margin guide-margin--right"></div>
-  </div>
-  <header class="appbar sec-topbar" aria-label="SlabSet">
-    <img class="slogo" src="shared/logo.svg" alt="">
-    <span class="bz">SLABSET</span>
-    <div class="appbar-right">
-      <button type="button" class="ld-btn" id="themeToggle" aria-label="Switch light/dark theme"><svg class="ld-ico ico-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.03 3.94A9.5 9.5 0 1 0 17.03 20.06A7.03 7.03 0 0 1 17.03 3.94Z"/></svg><svg class="ld-ico ico-sun" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="translate(12 12)"><circle cx="0" cy="0" r="4.25"/><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/><g transform="rotate(45)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g><g transform="rotate(90)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g><g transform="rotate(135)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g><g transform="rotate(180)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g><g transform="rotate(225)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g><g transform="rotate(270)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g><g transform="rotate(315)"><rect x="-0.9" y="-10.25" width="1.8" height="4.25" rx="0.9"/></g></g></svg></button>
-      <button type="button" class="toggle" id="modeToggle" aria-pressed="true"><span class="knob"></span><span class="opt">Field</span><span class="opt">Spec</span></button>
+  <div class="scroll" id="scroll">
+    <div class="fold">
+    <header>
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 88 88" aria-hidden="true">
+          <rect x="0" y="0" width="88" height="88" rx="10" fill="#0D0905"/>
+          <polygon points="12,26 64,26 76,14 24,14" fill="var(--logo-inner)"/>
+          <polygon points="12,50 64,50 76,38 24,38" fill="var(--logo-inner)"/>
+          <polygon points="12,74 64,74 76,62 24,62" fill="var(--logo-inner)"/>
+          <polygon points="12,26 24,14 24,38 12,50" fill="var(--logo-inner)"/>
+          <polygon points="64,50 76,38 76,62 64,74" fill="var(--logo-inner)"/>
+        </svg>
+        <div class="logo">Slab<span>Set</span></div>
+      </div>
+      <div class="tagline">Metric concrete calculator</div>
+    </header>
+
+    <section class="result" aria-live="polite">
+      <div class="result-top">
+        <span class="shape-name" id="rShape">Slab</span>
+      </div>
+      <div class="vol"><span id="rVol">0.00</span> <small id="rVolUnit">m³</small></div>
+      <div class="waste-tag" id="rWaste">+10% wastage</div>
+      <div class="buy">
+        <div class="k">Order options</div>
+        <div class="buy-row">
+          <div class="stat"><div class="n" id="b20">0</div><div class="k">20 kg bags</div></div>
+          <div class="stat"><div class="n"><span id="bPre">0.0</span> <small>m³</small></div><div class="k">ready-mix</div></div>
+        </div>
+        <div class="hint" id="buyHint">Under 0.5 m³ bags usually win on price</div>
+      </div>
+    </section>
+
+    <div class="fields" id="fields"></div>
+
+    <div class="wastage">
+      <div class="wastage-head">
+        <span class="t">Wastage</span>
+      </div>
+      <div class="opts" id="wastage">
+        <button data-w="0">0%</button>
+        <button data-w="5">5%</button>
+        <button data-w="10" class="on">10%</button>
+        <button data-w="15">15%</button>
+        <button data-w="20">20%</button>
+      </div>
+      <div class="hint" id="wasteHint">Recommended for standard site</div>
     </div>
-  </header>
-  <div class="view view-field" id="viewField"><section class="sec-lcd" aria-label="Volume readout"><div class="out"><div class="out-main"><span class="out-vol-h">VOLUME</span><span class="ov"><span data-vol>0.00</span><b>m³</b></span><span class="out-note" data-waste-incl>includes 10% wastage</span></div><div class="out-sub"><div class="out-sub-grid"><span class="out-sub-h">TO ORDER</span><span class="out-sub-line"><b data-bags>0</b> Bags (20kg) or <b data-premix>0.0</b> m3 Premix</span></div></div></div></section><section class="sec-inputs" aria-label="Input fields"><div class="shape-menu" id="shapeMenu"><button type="button" class="fld shape-fld" data-menu-btn aria-haspopup="true" aria-expanded="false"><span class="tl">Shape</span><span class="shape-pick" id="shapePick"><svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="6,13 16,8 26,13 16,18"/><polygon class="s" points="6,13 16,18 16,22 6,17"/><polygon class="s" points="16,18 26,13 26,17 16,22"/></svg><span class="shape-pick__name">Slab</span></span><span class="chev" aria-hidden="true">▾</span></button><div class="menu-panel"><button type="button" class="menu-item on" data-shape="slab"><svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="6,13 16,8 26,13 16,18"/><polygon class="s" points="6,13 16,18 16,22 6,17"/><polygon class="s" points="16,18 26,13 26,17 16,22"/></svg><span>Slab</span><span class="chk">✓</span></button><button type="button" class="menu-item" data-shape="footing"><svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="9,7 16,4 23,7 16,10"/><polygon class="s" points="9,7 16,10 16,28 9,25"/><polygon class="s" points="16,10 23,7 23,25 16,28"/></svg><span>Footing</span><span class="chk">✓</span></button><button type="button" class="menu-item" data-shape="column"><svg class="ico" viewBox="0 0 32 32"><ellipse class="f" cx="16" cy="8" rx="8" ry="3"/><path class="s" d="M8 8v15a8 3 0 0 0 16 0V8"/></svg><span>Column</span><span class="chk">✓</span></button><button type="button" class="menu-item" data-shape="round"><svg class="ico" viewBox="0 0 32 32"><ellipse class="f" cx="16" cy="13" rx="10" ry="4"/><path class="s" d="M6 13v4a10 4 0 0 0 20 0v-4"/></svg><span>Round pad</span><span class="chk">✓</span></button><button type="button" class="menu-item" data-shape="stairs"><svg class="ico" viewBox="0 0 32 32"><path class="s" d="M5 24h6v-5h6v-5h6v-5h4v15z"/></svg><span>Stairs</span><span class="chk">✓</span></button></div></div><div class="flds" id="flds"><label class="fld" data-field="L"><span class="tl">Length</span><input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-key="L" value="" placeholder="0" aria-label="Length in millimetres"><span class="unit">mm</span></label><label class="fld" data-field="W"><span class="tl">Width</span><input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-key="W" value="" placeholder="0" aria-label="Width in millimetres"><span class="unit">mm</span></label><label class="fld" data-field="T"><span class="tl">Thickness</span><input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-key="T" value="" placeholder="0" aria-label="Thickness in millimetres"><span class="unit">mm</span></label></div><div class="shape-menu wmenu" id="wasteMenu"><button type="button" class="menu-btn" data-menu-btn aria-haspopup="true" aria-expanded="false"><span class="cur">Wastage</span><b data-wcur>10%</b><span class="chev">▾</span></button><div class="menu-panel"><button type="button" class="menu-item" data-waste="0"><span class="wdesc">No allowance</span><span class="wpct">0%</span></button><button type="button" class="menu-item" data-waste="5"><span class="wdesc">Tidy formwork</span><span class="wpct">5%</span></button><button type="button" class="menu-item on" data-waste="10"><span class="wdesc">Standard site</span><span class="wpct">10%</span></button><button type="button" class="menu-item" data-waste="15"><span class="wdesc">Rough ground</span><span class="wpct">15%</span></button><button type="button" class="menu-item" data-waste="20"><span class="wdesc">Heavy over-dig</span><span class="wpct">20%</span></button></div></div><button type="button" class="spec-cta" id="specCta">Spec sheet</button></section></div>
-  <div class="view view-spec" id="viewSpec"><section class="sp-sec" aria-label="To order"><div class="sp-h"><span>To order</span></div><div class="sp-hero"><button type="button" class="edit" data-edit>edit ⌨</button><span class="hv" data-vol>0.00</span><span class="hu">m³</span></div></section><section class="sp-sec" aria-label="Inputs"><div class="sp-h">Inputs</div><div class="sp-row"><span class="k">Shape</span><span class="v" data-shape-name>Slab</span></div><div data-input-rows><div class="sp-row"><span class="k">Length</span><span class="v">0 mm</span></div><div class="sp-row"><span class="k">Width</span><span class="v">0 mm</span></div><div class="sp-row"><span class="k">Thickness</span><span class="v">0 mm</span></div></div><div class="sp-row"><span class="k">Wastage</span><span class="v" data-waste-label>+10%</span></div></section><section class="sp-sec" aria-label="Estimated cost"><div class="sp-h">Estimated cost</div><div class="sp-rec"><span>Recommended: <b data-cost-rec>–</b></span><span class="why" data-cost-why>Enter dimensions to estimate cost.</span></div><div class="cc" data-rec="bags"><div class="cc-top"><span class="cc-name">Individual bags</span><span class="cc-price" data-bags-cost>–</span></div><div class="cc-sub"><span data-bags>0</span> × 20 kg · <span data-bags30>0</span> × 30 kg</div></div><div class="cc" data-rec="premix"><div class="cc-top"><span class="cc-name">Ready-mix delivery</span><span class="cc-price" data-rm-cost>–</span></div><div class="cc-sub"><span data-premix>0.0</span> m³ + delivery (ex pump)</div></div><p class="sp-fine">Typical metro prices in Australia. Confirm with your local supplier before ordering.</p></section><section class="sp-sec" aria-label="Materials and weight"><div class="sp-h">Materials &amp; weight</div><div class="sp-row"><span class="k">Reinforcing mesh</span><span class="v"><span data-mesh>0</span> sheets</span></div><div class="sp-row"><span class="k">Formwork edge</span><span class="v"><span data-edge>0.0</span> m</span></div><div class="sp-row"><span class="k">Concrete weight</span><span class="v"><span data-weight>0.00</span> t</span></div></section><section class="sp-sec" aria-label="How it is calculated"><div class="sp-h">How it's calculated</div><div class="sp-working" data-working></div><p class="sp-prose">Concrete is sold by volume in m³. Measure the space, work out its volume, add wastage, then convert to individual bags or a premix order.</p><p class="sp-prose"><b>Wastage</b>: sites lose concrete to spillage and uneven ground. 10% is standard; raise it for rough ground, lower it for tidy formwork.</p><p class="sp-prose"><b>Bags or premix</b>: a 20 kg bag yields ≈ 0.0098 m³ (~102 bags/m³). Premix sells in 0.1 m³ steps; below 0.5 m³ bags usually avoid short-load fees.</p></section><section class="sp-sec" aria-label="About"><div class="sp-h">About</div><p class="sp-prose">SlabSet is a metric concrete calculator built for Australian sites. Pick a shape (slab, footing, column, round pad or stairs), enter dimensions in millimetres, and get volume in m³, bag counts, a premix order size and typical cost, ready to copy to your supplier.</p><p class="sp-prose">Everything runs in your browser. No sign-up, no ads between you and the number. Install it to your phone home screen and it works offline on site.</p></section><section class="sp-sec" aria-label="Frequently asked questions"><div class="sp-h">FAQ</div><div class="faq-list"><article class="faq-item"><h3>How do I work out how much concrete I need?</h3><p class="sp-prose">Measure the space in millimetres, convert to metres, multiply the dimensions to get m³, then add wastage.</p></article><article class="faq-item"><h3>How much wastage should I add?</h3><p class="sp-prose">10% is a normal starting point. Use less for tidy formwork and more for rough ground, uneven excavation or over-dig.</p></article><article class="faq-item"><h3>Should I order bags or premix?</h3><p class="sp-prose">Ready-mix is cheaper per cubic metre, but delivery and short-load fees make small deliveries poor value: suppliers charge extra below about 0.5 m³. Bags cost more per m³ but scale down to any size. The switchover is roughly 0.5 m³: below it, order bags; above it, book the truck.</p></article><article class="faq-item"><h3>Does this replace a builder or engineer?</h3><p class="sp-prose">No. Use SlabSet for estimating, then confirm quantities, grade and reinforcement before ordering.</p></article></div></section><section class="sp-sec" aria-label="Other calculators"><div class="sp-h">Other calculators</div><nav class="sp-links"><a href="concrete-slab-calculator.html">Concrete slab calculator</a><a href="concrete-footing-calculator.html">Concrete footing calculator</a><a href="concrete-column-calculator.html">Concrete column and pier calculator</a><a href="round-pad-calculator.html">Round concrete pad calculator</a><a href="concrete-stairs-calculator.html">Concrete stairs calculator</a></nav></section><div class="sp-actions"><button type="button" class="copy" id="btnCopy">Copy specs</button><button type="button" class="pdf" id="btnPdf">Save PDF</button></div><p class="sp-fine">Estimates only. Confirm quantities and prices with your supplier.</p><p class="sp-foot">SlabSet · Metric Concrete Calculator · designed in Australia · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p></div>
+
+    <button class="spec-cta" id="specBtn">Spec sheet →</button>
+    </div>
+
+    <div class="shell">
+      <section>
+        <h1>Metric concrete volume calculator for Australia</h1>
+        <p>SlabSet works out how much concrete you need for slabs, strip footings, piers and stairs, and turns it into an order: bags or a ready-mix delivery.</p>
+      </section>
+      <section>
+        <h2>How it's calculated</h2>
+        <p>SlabSet multiplies your measurements and quantity together, then adds your chosen wastage: that's the big number. A 20 kg bag counts as roughly 0.0098 m³ of placed concrete, so about 102 bags make one cubic metre. Ready-mix rounds up to the next 0.1 m³, since that's the step plants sell in.</p>
+      </section>
+      <section>
+        <h2>FAQ</h2>
+        <p class="q">How much concrete do I need?</p>
+        <p>Pick the shape, enter your measurements and the volume updates instantly, wastage included.</p>
+        <p class="q">What wastage should I allow?</p>
+        <p>10% suits a standard site. Drop to 5% for tidy formwork on a compacted base, or go 15 to 20% over rough ground and hand-dug trenches.</p>
+        <p class="q">Should I order bags or ready-mix?</p>
+        <p>Under about 0.5 m³ bags usually win on price. Over 1 m³ ready-mix wins on price and convenience, even with a short-load fee.</p>
+        <p class="q">Are these quantities exact?</p>
+        <p>They are estimates. Round up on site and confirm quantities and prices with your supplier before ordering.</p>
+      </section>
+      <section>
+        <h2>Calculators</h2>
+        <div class="calc-links" id="calcLinks"></div>
+      </section>
+      <footer>
+        <p>Estimates only. Confirm quantities and prices with your supplier.</p>
+        <p>On iPhone: open in Safari, tap Share, then Add to Home Screen to install SlabSet as an app.</p>
+        <p>© 2026 SlabSet · Metric only (mm, m, m³) · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- bottom zone: shape nav ⇄ keypad occupy the same slot -->
+  <div class="bottom" id="bottom">
+    <nav class="nav" id="nav" aria-label="Shape"></nav>
+    <div class="keypad" id="keypad" role="group" aria-label="Number pad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k=".">.</button><button data-k="0">0</button><button class="del" data-k="del" aria-label="Delete">⌫</button>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
+
+  <!-- SPEC SHEET -->
+  <div class="sheet" id="sheet" role="dialog" aria-label="Spec sheet">
+    <div class="sheet-scroll">
+      <div class="sheet-head"><b>SLABSET</b><span class="no">Pour spec · <span id="specDate"></span></span></div>
+      <input class="job" id="jobName" placeholder="Job name" maxlength="40" autocomplete="off">
+      <div class="sheet-vol">
+        <div class="k" id="sShape">Slab</div>
+        <div class="v"><span id="sVol">0.00</span> <small id="sVolUnit">m³</small></div>
+        <div class="w" id="sWaste">+10% wastage included</div>
+      </div>
+      <div id="sheetRows"></div>
+      <div class="sheet-note">Bag counts assume ~0.0098 m³ yield per 20 kg (premix), scaled for 30 kg. Ready-mix delivery rounded up to the next 0.1 m³. Most ready-mix plants have a minimum order and charge a short-load fee below about 3 m³, so ask when booking. Weight assumes 2.4 t per m³; mesh count assumes 6.0 × 2.4 m sheets laid with laps. Round up on site and confirm with your supplier.</div>
+    </div>
+    <div class="sheet-actions">
+      <button class="act-close" id="sheetClose">Back</button>
+      <button class="act-copy" id="sheetCopy">Copy</button>
+      <button class="act-copy" id="sheetShare" hidden>Share</button>
+      <button class="act-pdf" id="sheetPdf">Save PDF</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied</div>
+
 </div>
 
-<button type="button" class="grid-toggle" id="gridToggle" hidden aria-pressed="false">GRID</button>
+<script>
+const THEMES = [
+  {
+    id:"01", name:"Graphite",
+    primary:"#F2C400", onPrimary:"#15120A", secondary:"#73777D", onSecondary:"#FFFFFF",
+    tertiary:"#FFD95A", onTertiary:"#15120A", surface:"#F2F0EA", surfaceContainer:"#E3E1DC",
+    surfaceContainerHigh:"#D4D2CC", onSurface:"#151719", onSurfaceVariant:"#5B6066",
+    inverseSurface:"#111315", inverseOnSurface:"#F2F0EA", outline:"#878D93", outlineVariant:"#C8C6BF"
+  }
+];
 
-<p class="copy-toast" id="copyToast" role="status" aria-live="polite" hidden></p>
+const THEME_PLACEMENTS = {
+  "01": { logo:"tertiary", nav:"primary", field:"primary", control:"secondary", filter:"primary", key:"tertiary", cta:"primary", section:"tertiary", copy:"primary", pdf:"secondary" },
+};
 
-<div class="install-banner" id="installBanner" hidden>
-  <p>Install SlabSet for iOS for the best on-site experience</p>
-  <button type="button" class="install-banner__go" id="installGo">Install</button>
-  <button type="button" class="install-banner__dismiss" id="installDismiss" aria-label="Dismiss">✕</button>
-</div>
+const DARK_THEME = {
+  id:"01", name:"Graphite Dark",
+  primary:"#F2C400", onPrimary:"#15120A", secondary:"#8A9098", onSecondary:"#101214",
+  tertiary:"#FFD95A", onTertiary:"#15120A", surface:"#101214", surfaceContainer:"#1B1E21",
+  surfaceContainerHigh:"#272B2F", onSurface:"#F2F0EA", onSurfaceVariant:"#A7ACB2",
+  inverseSurface:"#0A0B0C", inverseOnSurface:"#F2F0EA", outline:"#5B6066", outlineVariant:"#33373C"
+};
 
-<script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "WebApplication", "name": "SlabSet Concrete Calculator", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "url": "https://slabset.online/", "offers": {"@type": "Offer", "price": "0"}, "description": "Concrete calculator for Australian slabs, footings, columns and stairs. Work out m³, bags, premix and a copy-ready pour spec.", "inLanguage": "en-AU"}
+const SHAPES = {
+  slab: { label:"Slab",
+    icon:`<rect x="5" y="7" width="30" height="11" rx="2"/>`,
+    fields:[{id:"len",label:"Length",def:4,dim:1,unit:"m"},{id:"wid",label:"Width",def:3,dim:1,unit:"m"},{id:"dep",label:"Depth",def:0.1,dim:1,unit:"mm"},{id:"qty",label:"Quantity",def:1,step:1}],
+    vol:v=>v.len*v.wid*v.dep*v.qty },
+  footing: { tab:"Strip", label:"Strip Footing",
+    icon:`<path fill-rule="evenodd" d="M5 3 H35 V23 H5 Z M11 9 H29 V17 H11 Z"/>`,
+    fields:[{id:"len",label:"Total run",def:12,dim:1,unit:"m"},{id:"wid",label:"Width",def:0.4,dim:1,unit:"mm"},{id:"dep",label:"Depth",def:0.5,dim:1,unit:"mm"},{id:"qty",label:"Quantity",def:1,step:1}],
+    vol:v=>v.len*v.wid*v.dep*v.qty },
+  column: { tab:"Square<br>Pier", label:"Square Pier",
+    icon:`<rect x="11" y="4" width="18" height="18" rx="2"/>`,
+    fields:[{id:"len",label:"Length",def:0.45,dim:1,unit:"mm"},{id:"wid",label:"Width",def:0.45,dim:1,unit:"mm"},{id:"dep",label:"Depth",def:0.6,dim:1,unit:"mm"},{id:"qty",label:"Quantity",def:4,step:1}],
+    vol:v=>v.len*v.wid*v.dep*v.qty },
+  pad: { tab:"Round<br>Pier", label:"Round Pier",
+    icon:`<circle cx="20" cy="13" r="10"/>`,
+    fields:[{id:"dia",label:"Diameter",def:0.45,dim:1,unit:"mm"},{id:"dep",label:"Depth",def:0.6,dim:1,unit:"mm"},{id:"qty",label:"Quantity",def:1,step:1}],
+    vol:v=>Math.PI*(v.dia/2)**2*v.dep*v.qty },
+  stairs: { label:"Stairs",
+    icon:`<path d="M4 22 H12 V17 H20 V12 H28 V7 H36 V22 Z"/>`,
+    fields:[{id:"wid",label:"Width",def:1,dim:1,unit:"m"},{id:"rise",label:"Riser",def:0.18,dim:1,unit:"mm"},{id:"run",label:"Tread",def:0.28,dim:1,unit:"mm"},{id:"stp",label:"Steps",def:4,step:1}],
+    vol:v=>{let t=0;for(let i=1;i<=v.stp;i++)t+=v.run*(v.rise*i)*v.wid;return t;} },
+};
+
+const YIELD_20 = 0.0098;
+let current="slab", wastage=10, values={}, editing=null, buffer="";
+let lastCalc={m3:0,n20:0,n30:0,pre:0};
+
+/* ---------- state persistence (localStorage + shareable URL) ---------- */
+let stateStore={}, initialShape="slab";
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem("slabset1"));
+    if(s){
+      stateStore=s.vals||{};
+      if([0,5,10,15,20].includes(s.wastage)) wastage=s.wastage;
+      if(SHAPES[s.shape]) initialShape=s.shape;
+    }
+  }catch{}
+  try{
+    const q=new URLSearchParams(location.search);
+    const qs=q.get("shape");
+    if(qs&&SHAPES[qs]){
+      initialShape=qs;
+      const vals={};
+      SHAPES[qs].fields.forEach(f=>{
+        const raw=parseFloat(q.get(f.id));
+        if(isFinite(raw)&&raw>0) vals[f.id]=f.step?Math.max(1,Math.round(raw)):raw;
+      });
+      stateStore[qs]={...(stateStore[qs]||{}),...vals};
+    }
+    const w=Number(q.get("waste"));
+    if(q.has("waste")&&[0,5,10,15,20].includes(w)) wastage=w;
+  }catch{}
+}
+function saveState(){
+  stateStore[current]={...values};
+  try{ localStorage.setItem("slabset1",JSON.stringify({shape:current,wastage,vals:stateStore})); }catch{}
+  try{
+    const p=new URLSearchParams({shape:current,waste:String(wastage)});
+    SHAPES[current].fields.forEach(f=>p.set(f.id,String(values[f.id])));
+    history.replaceState(null,"","?"+p.toString());
+  }catch{}
+}
+
+const $ = id => document.getElementById(id);
+const navEl=$("nav"), fieldsEl=$("fields"), bottomEl=$("bottom");
+
+function setVar(name,value){ document.documentElement.style.setProperty(name,value); }
+function roleColor(theme,role){
+  const key=role[0].toUpperCase()+role.slice(1);
+  return { color:theme[role], on:theme[`on${key}`] };
+}
+function setAccent(theme,slot,role){
+  const resolved=roleColor(theme,role);
+  setVar(`--${slot}-accent`,resolved.color);
+  setVar(`--on-${slot}-accent`,resolved.on);
+}
+function applyTheme(theme){
+  setVar("--primary",theme.primary);
+  setVar("--on-primary",theme.onPrimary);
+  setVar("--secondary",theme.secondary);
+  setVar("--on-secondary",theme.onSecondary);
+  setVar("--tertiary",theme.tertiary);
+  setVar("--on-tertiary",theme.onTertiary);
+  setVar("--surface",theme.surface);
+  setVar("--surface-container",theme.surfaceContainer);
+  setVar("--surface-container-high",theme.surfaceContainerHigh);
+  setVar("--on-surface",theme.onSurface);
+  setVar("--on-surface-variant",theme.onSurfaceVariant);
+  setVar("--inverse-surface",theme.inverseSurface);
+  setVar("--inverse-on-surface",theme.inverseOnSurface);
+  setVar("--outline",theme.outline);
+  setVar("--outline-variant",theme.outlineVariant);
+  const placement=THEME_PLACEMENTS[theme.id] || THEME_PLACEMENTS["01"];
+  Object.entries(placement).forEach(([slot,role])=>setAccent(theme,slot,role));
+}
+
+/* ---------- bottom nav ---------- */
+Object.entries(SHAPES).forEach(([key,s])=>{
+  const b=document.createElement("button");
+  b.className="tab"; b.dataset.key=key;
+  b.setAttribute("aria-label",s.label);
+  b.innerHTML=`<svg viewBox="0 0 40 26">${s.icon}</svg><span class="lbl">${s.tab||s.label}</span>`;
+  b.onclick=()=>selectShape(key);
+  navEl.appendChild(b);
+});
+
+/* ---------- fields ---------- */
+function buildFields(){
+  fieldsEl.innerHTML="";
+  SHAPES[current].fields.forEach(f=>{
+    if(f.step){
+      const chip=document.createElement("div");
+      chip.className="chip stepper";
+      chip.innerHTML=`
+        <div class="mid"><span class="lbl">${f.label}</span><span class="val" id="v_${f.id}">${values[f.id]}</span></div>
+        <div class="cap">
+          <button class="sbtn" data-d="-1" aria-label="Decrease ${f.label}">−</button>
+          <button class="sbtn" data-d="1" aria-label="Increase ${f.label}">+</button>
+        </div>`;
+      chip.querySelectorAll(".sbtn").forEach(btn=>{
+        btn.onclick=()=>{
+          values[f.id]=Math.max(1,values[f.id]+Number(btn.dataset.d));
+          $("v_"+f.id).textContent=values[f.id];
+          calc();
+        };
+      });
+      fieldsEl.appendChild(chip);
+    } else {
+      const chip=document.createElement("button");
+      chip.className="chip"; chip.id="chip_"+f.id;
+      chip.onclick=()=>startEdit(f.id);
+      fieldsEl.appendChild(chip);
+      renderChip(f);
+    }
+  });
+}
+
+function renderChip(f){
+  const chip=$("chip_"+f.id); if(!chip)return;
+  const isEd=editing===f.id;
+  const shown=isEd?(buffer===""?"0":buffer):fmtField(values[f.id],f);
+  chip.classList.toggle("editing",isEd);
+  chip.setAttribute("aria-label",`${f.label}: ${shown} ${fieldUnit(f)}, edit`);
+  chip.innerHTML=`<span class="lbl">${f.label}</span><span class="val">${shown}<span class="un">${fieldUnit(f)}</span></span>`;
+}
+const fmt=n=>(Math.round(n*100)/100).toString();
+const fmtMm=m=>String(Math.round(m*1000));
+const fieldUnit=f=>f.unit||"mm";
+function fmtField(m,f){ return fieldUnit(f)==="m"?fmt(m):fmtMm(m); }
+function fieldInputToMetres(raw,f){ return fieldUnit(f)==="m"?raw:raw/1000; }
+
+/* ---------- editing ---------- */
+const dimFields=()=>SHAPES[current].fields.filter(f=>f.dim);
+
+function startEdit(id){
+  commitBuffer();
+  editing=id; buffer="";
+  dimFields().forEach(renderChip);
+  bottomEl.classList.add("pad-open");
+  $("scrim").classList.add("show");
+}
+function commitBuffer(){
+  if(editing&&buffer!==""&&buffer!=="."){
+    const raw=parseFloat(buffer);
+    const f=SHAPES[current].fields.find(field=>field.id===editing);
+    if(isFinite(raw)&&raw>=0) values[editing]=fieldInputToMetres(raw,f);
+  }
+  const prev=editing; editing=null; buffer="";
+  if(prev) renderChip(SHAPES[current].fields.find(f=>f.id===prev));
+  calc();
+}
+function stopEdit(){
+  commitBuffer();
+  dimFields().forEach(renderChip);
+  bottomEl.classList.remove("pad-open");
+  $("scrim").classList.remove("show");
+}
+
+function handleKey(k){
+  if(!editing)return;
+  if(k==="del"){ buffer=buffer.slice(0,-1); }
+  else{
+    if(k==="."&&buffer.includes("."))return;
+    if(buffer.length>=7)return;
+    buffer+=k;
+  }
+  renderChip(SHAPES[current].fields.find(f=>f.id===editing));
+  render(currentValues());
+}
+$("keypad").querySelectorAll("button").forEach(btn=>{
+  btn.onclick=e=>{ e.stopPropagation(); handleKey(btn.dataset.k); };
+});
+
+/* hardware keyboard support */
+document.addEventListener("keydown",e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.target&&e.target.tagName==="INPUT")return;
+  if($("sheet").classList.contains("open"))return;
+  if(!editing){
+    if(/^[0-9.]$/.test(e.key)){ startEdit(dimFields()[0].id); handleKey(e.key); e.preventDefault(); }
+    return;
+  }
+  if(/^[0-9.]$/.test(e.key)){ handleKey(e.key); e.preventDefault(); }
+  else if(e.key==="Backspace"){ handleKey("del"); e.preventDefault(); }
+  else if(e.key==="Enter"||e.key==="Escape"){ stopEdit(); e.preventDefault(); }
+  else if(e.key==="Tab"){
+    e.preventDefault();
+    const df=dimFields(), i=df.findIndex(f=>f.id===editing);
+    const nxt=df[(i+(e.shiftKey?df.length-1:1))%df.length];
+    commitBuffer(); startEdit(nxt.id);
+  }
+});
+
+$("scroll").addEventListener("click",e=>{
+  /* a chip tap re-renders the chip mid-click, detaching the original
+     target — a detached target must not read as "outside the chip" */
+  if(editing&&e.target.isConnected&&!e.target.closest(".chip")) stopEdit();
+});
+
+/* ---------- shape / calc ---------- */
+function selectShape(key){
+  stopEdit();
+  current=key;
+  document.querySelectorAll(".tab").forEach(el=>el.classList.toggle("active",el.dataset.key===key));
+  values={};
+  SHAPES[key].fields.forEach(f=>{
+    const saved=stateStore[key]?.[f.id];
+    values[f.id]=(typeof saved==="number"&&isFinite(saved))?saved:f.def;
+  });
+  buildFields(); calc();
+}
+
+function currentValues(){
+  const v={...values};
+  if(editing&&buffer!==""&&buffer!=="."){
+    const raw=parseFloat(buffer);
+    const f=SHAPES[current].fields.find(field=>field.id===editing);
+    if(isFinite(raw)) v[editing]=fieldInputToMetres(raw,f);
+  }
+  return v;
+}
+function calc(){ render(values); saveState(); if(booted) trackCalc(); }
+
+const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)");
+let volAnim;
+function setVol(target){
+  const el=$("rVol"), from=parseFloat(el.textContent)||0;
+  cancelAnimationFrame(volAnim);
+  if(reduceMotion.matches||Math.abs(target-from)<0.005){ el.textContent=target.toFixed(2); return; }
+  const t0=performance.now(), dur=180;
+  const step=t=>{
+    const k=Math.min(1,(t-t0)/dur);
+    el.textContent=(from+(target-from)*k).toFixed(2);
+    if(k<1) volAnim=requestAnimationFrame(step);
+  };
+  volAnim=requestAnimationFrame(step);
+}
+
+function render(v){
+  const s=SHAPES[current];
+  let m3=s.vol(v)*(1+wastage/100);
+  if(!isFinite(m3)||m3<0)m3=0;
+  $("rShape").textContent=s.label;
+  $("rWaste").textContent=wastage?`+${wastage}% wastage included`:"no wastage added";
+  setVol(m3);
+  $("rVolUnit").textContent="m³";
+  const n20=Math.ceil(m3/YIELD_20), n30=Math.ceil(m3/(YIELD_20*30/20));
+  const pre=m3>0?Math.max(0.1,Math.ceil(m3*10)/10):0;
+  $("b20").textContent=n20;
+  $("bPre").textContent=pre.toFixed(1);
+  $("buyHint").textContent=
+    m3>1   ? "Over 1 m³ ready-mix usually wins on price and convenience"
+  : m3>=0.5? "0.5 to 1 m³ price is close, but ready-mix wins on convenience"
+  :          "Under 0.5 m³ bags usually win on price";
+  lastCalc={m3,n20,n30,pre};
+}
+
+/* ---------- wastage ---------- */
+const WASTE_HINTS={
+  0:"No allowance, exact measured pours only",
+  5:"Tidy formwork on a compacted base",
+  10:"Recommended for standard site",
+  15:"Rough ground or hand-dug trenches",
+  20:"Heavy over-dig or unlined excavations",
+};
+document.querySelectorAll("#wastage button").forEach(btn=>{
+  btn.onclick=()=>{
+    wastage=Number(btn.dataset.w);
+    document.querySelectorAll("#wastage button").forEach(b=>b.classList.toggle("on",b===btn));
+    $("wasteHint").textContent=WASTE_HINTS[wastage];
+    if(editing){ render(currentValues()); saveState(); } else calc();
+  };
+});
+
+/* ---------- spec sheet ---------- */
+function fmtDim(m,f){ return `${fmtField(m,f)} ${fieldUnit(f)}`; }
+
+function specText(){
+  const s=SHAPES[current], c=lastCalc;
+  const dims=s.fields.map(f=>`${f.label}: ${f.step?values[f.id]:fmtDim(values[f.id],f)}`).join("\n");
+  const job=$("jobName").value.trim();
+  return `SLABSET POUR SPEC: ${s.label.toUpperCase()}${job?`
+Job: ${job}`:""}
+Volume: ${c.m3.toFixed(2)} m³
+
+ORDER OPTIONS
+Bags: ${c.n20} × 20 kg / ${c.n30} × 30 kg
+Ready-mix delivery: ${c.pre.toFixed(1)} m³
+
+MEASUREMENTS
+${dims}
+
+MATERIALS
+Concrete weight: ${(c.m3*2.4).toFixed(1)} t${current==="slab"?`
+Mesh sheets: ${Math.ceil(values.len*values.wid*values.qty/12.5)}
+Formwork edge: ${(2*(values.len+values.wid)*values.qty).toFixed(1)} m`:""}
+
+ALLOWANCE
+Wastage: ${wastage?`+${wastage}%`:"None"}
+Round up on site and confirm with supplier.`;
+}
+
+function openSheet(){
+  const s=SHAPES[current], c=lastCalc;
+  $("specDate").textContent=new Date().toLocaleDateString();
+  $("sShape").textContent=s.label;
+  $("sWaste").textContent=wastage?`+${wastage}% wastage included`:"no wastage added";
+  $("sVol").textContent=c.m3.toFixed(2);
+  $("sVolUnit").textContent="m³";
+  const mats=[["","Concrete weight",`${(c.m3*2.4).toFixed(1)} t`]];
+  if(current==="slab"){
+    const area=values.len*values.wid*values.qty;
+    mats.push(["","Mesh sheets",`${Math.ceil(area/12.5)}`]);
+    mats.push(["","Formwork edge",`${(2*(values.len+values.wid)*values.qty).toFixed(1)} m`]);
+  }
+  const groups=[
+    ["Order Options", [
+      ["","Bags — 20 kg",`${c.n20}`],
+      ["","Bags — 30 kg",`${c.n30}`],
+      ["","Ready-mix delivery",`${c.pre.toFixed(1)} m³`],
+    ]],
+    ["Measurements", s.fields.map(f=>["",f.label, f.step?String(values[f.id]):fmtDim(values[f.id],f)])],
+    ["Materials", mats],
+    ["Allowance", [["","Wastage",wastage?`+${wastage}%`:"None"]]],
+  ];
+  $("sheetRows").innerHTML=groups.map(([title,rows])=>
+    `<div class="ssection">${title}</div>`+
+    rows.map(([cls,k,v])=>`<div class="srow ${cls}"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("")
+  ).join("");
+  $("sheet").classList.add("open");
+}
+$("specBtn").onclick=()=>{ stopEdit(); openSheet(); track('spec_open',calcParams()); };
+$("sheetClose").onclick=()=>$("sheet").classList.remove("open");
+$("sheetPdf").onclick=()=>{ track('spec_pdf',calcParams()); window.print(); };
+$("sheetCopy").onclick=async ()=>{
+  try{
+    await navigator.clipboard.writeText(specText());
+    toast("Copied to clipboard");
+    track('spec_copy',{...calcParams(),success:true});
+  }
+  catch{
+    const ta=document.createElement("textarea");
+    ta.value=specText(); document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy"); ta.remove();
+    toast("Copied to clipboard");
+    track('spec_copy',{...calcParams(),success:false});
+  }
+};
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1600);
+}
+
+/* ---------- analytics (GA4, production only; events per EVENTS.md) ---------- */
+let gaReady=false, calcFired=false, booted=false;
+if(location.protocol==="https:"){
+  const gs=document.createElement("script");
+  gs.async=true; gs.src="https://www.googletagmanager.com/gtag/js?id=G-PPKFHXV1DS";
+  document.head.appendChild(gs);
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){dataLayer.push(arguments);};
+  gtag('js',new Date());
+  gtag('config','G-PPKFHXV1DS');
+  gaReady=true;
+}
+function track(name,params){ if(gaReady) gtag('event',name,params||{}); }
+function calcParams(){
+  return { shape: current, volume_m3: Number(lastCalc.m3.toFixed(2)),
+           waste_pct: wastage, recommended: lastCalc.m3<0.5?"bags":"premix" };
+}
+function trackCalc(){
+  if(calcFired)return;
+  calcFired=true;
+  track('calc_complete',calcParams());
+}
+
+/* ---------- job name (persists across sessions) ---------- */
+try{ $("jobName").value=localStorage.getItem("slabset-job")||""; }catch{}
+$("jobName").oninput=()=>{ try{ localStorage.setItem("slabset-job",$("jobName").value); }catch{} };
+
+/* ---------- native share where available ---------- */
+if(navigator.share){
+  $("sheetShare").hidden=false;
+  $("sheetShare").onclick=()=>{
+    track('spec_share',calcParams());
+    navigator.share({title:"SlabSet pour spec",text:specText()}).catch(()=>{});
+  };
+}
+
+/* ---------- offline support (https only) ---------- */
+if("serviceWorker" in navigator&&location.protocol==="https:")
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+/* ---------- per-shape calculator links ---------- */
+Object.entries(SHAPES).forEach(([key,s])=>{
+  const b=document.createElement("button");
+  b.textContent=`${s.label} calculator`;
+  b.onclick=()=>{ selectShape(key); $("scroll").scrollTo({top:0,behavior:"smooth"}); };
+  $("calcLinks").appendChild(b);
+});
+
+/* ---------- boot: theme follows the system, state restores ---------- */
+const darkMq=matchMedia("(prefers-color-scheme: dark)");
+const pickTheme=()=>applyTheme(darkMq.matches?DARK_THEME:THEMES[0]);
+darkMq.addEventListener("change",pickTheme);
+pickTheme();
+
+loadState();
+document.querySelectorAll("#wastage button").forEach(b=>b.classList.toggle("on",Number(b.dataset.w)===wastage));
+$("wasteHint").textContent=WASTE_HINTS[wastage];
+selectShape(initialShape);
+booted=true;
 </script>
-<script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I work out how much concrete I need?", "acceptedAnswer": {"@type": "Answer", "text": "Measure the space in millimetres, convert to metres, multiply the dimensions to get m³, then add wastage."}}, {"@type": "Question", "name": "How much wastage should I add?", "acceptedAnswer": {"@type": "Answer", "text": "10% is a normal starting point. Use less for tidy formwork and more for rough ground, uneven excavation or over-dig."}}, {"@type": "Question", "name": "Should I order bags or premix?", "acceptedAnswer": {"@type": "Answer", "text": "Ready-mix is cheaper per cubic metre, but delivery and short-load fees make small deliveries poor value: suppliers charge extra below about 0.5 m³. Bags cost more per m³ but scale down to any size. The switchover is roughly 0.5 m³: below it, order bags; above it, book the truck."}}, {"@type": "Question", "name": "Does this replace a builder or engineer?", "acceptedAnswer": {"@type": "Answer", "text": "No. Use SlabSet for estimating, then confirm quantities, grade and reinforcement before ordering."}}]}
-</script>
-<script src="shared/calc.js"></script>
-<script src="shared/layout-guides.js"></script>
 </body>
 </html>

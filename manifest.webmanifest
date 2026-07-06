@@ -1,31 +1,13 @@
 {
-  "name": "SlabSet Job Spec",
+  "name": "SlabSet: Metric Concrete Calculator",
   "short_name": "SlabSet",
-  "description": "Build a concrete pour spec: volume, bags vs premix, copy-ready supplier text.",
-  "start_url": "/",
-  "scope": "/",
+  "description": "Metric concrete volume calculator for slabs, footings, piers and stairs.",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#DED8CB",
-  "theme_color": "#DED8CB",
-  "lang": "en-AU",
+  "background_color": "#F2F0EA",
+  "theme_color": "#F2F0EA",
   "icons": [
-    {
-      "src": "shared/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "shared/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "shared/icons/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
