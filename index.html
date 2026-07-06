@@ -493,7 +493,7 @@
       <div class="sheet-note">Bag counts assume ~0.0098 m³ yield per 20 kg (premix), scaled for 30 kg. Ready-mix delivery rounded up to the next 0.1 m³. Most ready-mix plants have a minimum order and charge a short-load fee below about 3 m³, so ask when booking. Weight assumes 2.4 t per m³; mesh count assumes 6.0 × 2.4 m sheets laid with laps. Round up on site and confirm with your supplier.</div>
     </div>
     <div class="sheet-actions">
-      <button class="act-close" id="sheetClose">Back</button>
+      <button class="act-close" id="sheetClose">← Back</button>
       <button class="act-copy" id="sheetCopy">Copy</button>
       <button class="act-copy" id="sheetShare" hidden>Share</button>
       <button class="act-pdf" id="sheetPdf">Save PDF</button>
@@ -535,7 +535,7 @@
       </div>
     </div>
     <div class="sheet-actions">
-      <button class="act-close" id="infoClose" style="flex:1">Back</button>
+      <button class="act-close" id="infoClose" style="flex:1">← Back</button>
     </div>
   </div>
 
@@ -599,8 +599,8 @@ function loadState(){
   try{
     const s=JSON.parse(localStorage.getItem("slabset1"));
     if(s){
-      /* values deliberately not restored: every launch starts clean at 0 */
-      if([0,5,10,15,20].includes(s.wastage)) wastage=s.wastage;
+      /* values and wastage deliberately not restored: every launch starts
+         clean at 0 with the recommended 10% */
       if(SHAPES[s.shape]) initialShape=s.shape;
     }
   }catch{}
