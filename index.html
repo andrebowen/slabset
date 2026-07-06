@@ -46,7 +46,7 @@
 }
 </script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; }
 
   :root {
     --primary: #6750A4;
@@ -177,7 +177,7 @@
   .buy-row .stat + .stat { border-left: 1.5px solid color-mix(in srgb, currentColor 25%, transparent); padding-left: 12px; }
   .buy .n { font-size: 1.3125rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
   .buy .n small { font-size: .875rem; font-weight: 800; opacity: .7; }
-  .buy .hint { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.4; }
+  .buy .hint { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.4; min-height: 2.8em; }
 
   /* ---------- input chips ---------- */
   .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -294,8 +294,15 @@
   }
   .spec-cta:active { transform: scale(.97); }
 
-  /* ---------- seo shell (document content below the app fold) ---------- */
-  .shell { display: flex; flex-direction: column; gap: 24px; padding: 16px 0 8px; user-select: text; }
+  .about-link {
+    margin-top: auto; align-self: center;
+    border: none; background: none; font-family: inherit; cursor: pointer;
+    font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    opacity: .55; color: var(--ink); padding: 12px; min-height: 44px;
+  }
+
+  /* ---------- about/faq content (lives in the info sheet) ---------- */
+  .shell { display: flex; flex-direction: column; gap: 24px; padding: 8px 0; user-select: text; }
   .shell section { display: flex; flex-direction: column; gap: 8px; }
   .shell h1 { font-size: 1rem; font-weight: 900; }
   .shell h2 { font-size: .75rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
@@ -387,8 +394,9 @@
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   @media print {
     body * { visibility: hidden; }
-    .sheet, .sheet * { visibility: visible; }
-    .sheet { position: static; transform: none; }
+    .sheet.open, .sheet.open * { visibility: visible; }
+    .sheet.open { position: static; transform: none; }
+    .sheet:not(.open) { display: none; }
     .sheet-actions { display: none; }
   }
 </style>
@@ -446,37 +454,7 @@
     </div>
 
     <button class="spec-cta" id="specBtn">Spec sheet →</button>
-    </div>
-
-    <div class="shell">
-      <section>
-        <h1>Metric concrete volume calculator for Australia</h1>
-        <p>SlabSet works out how much concrete you need for slabs, strip footings, piers and stairs, and turns it into an order: bags or a ready-mix delivery.</p>
-      </section>
-      <section>
-        <h2>How it's calculated</h2>
-        <p>SlabSet multiplies your measurements and quantity together, then adds your chosen wastage: that's the big number. A 20 kg bag counts as roughly 0.0098 m³ of placed concrete, so about 102 bags make one cubic metre. Ready-mix rounds up to the next 0.1 m³, since that's the step plants sell in.</p>
-      </section>
-      <section>
-        <h2>FAQ</h2>
-        <p class="q">How much concrete do I need?</p>
-        <p>Pick the shape, enter your measurements and the volume updates instantly, wastage included.</p>
-        <p class="q">What wastage should I allow?</p>
-        <p>10% suits a standard site. Drop to 5% for tidy formwork on a compacted base, or go 15 to 20% over rough ground and hand-dug trenches.</p>
-        <p class="q">Should I order bags or ready-mix?</p>
-        <p>Under about 0.5 m³ bags usually win on price. Over 1 m³ ready-mix wins on price and convenience, even with a short-load fee.</p>
-        <p class="q">Are these quantities exact?</p>
-        <p>They are estimates. Round up on site and confirm quantities and prices with your supplier before ordering.</p>
-      </section>
-      <section>
-        <h2>Calculators</h2>
-        <div class="calc-links" id="calcLinks"></div>
-      </section>
-      <footer>
-        <p>Estimates only. Confirm quantities and prices with your supplier.</p>
-        <p>On iPhone: open in Safari, tap Share, then Add to Home Screen to install SlabSet as an app.</p>
-        <p>© 2026 SlabSet · Metric only (mm, m, m³) · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p>
-      </footer>
+    <button class="about-link" id="aboutBtn">About · FAQ</button>
     </div>
   </div>
 
@@ -511,6 +489,45 @@
       <button class="act-copy" id="sheetCopy">Copy</button>
       <button class="act-copy" id="sheetShare" hidden>Share</button>
       <button class="act-pdf" id="sheetPdf">Save PDF</button>
+    </div>
+  </div>
+
+  <!-- ABOUT / FAQ SHEET -->
+  <div class="sheet" id="infoSheet" role="dialog" aria-label="About SlabSet">
+    <div class="sheet-scroll">
+      <div class="shell">
+      <section>
+        <h1>Metric concrete volume calculator for Australia</h1>
+        <p>SlabSet works out how much concrete you need for slabs, strip footings, piers and stairs, and turns it into an order: bags or a ready-mix delivery.</p>
+      </section>
+      <section>
+        <h2>How it's calculated</h2>
+        <p>SlabSet multiplies your measurements and quantity together, then adds your chosen wastage: that's the big number. A 20 kg bag counts as roughly 0.0098 m³ of placed concrete, so about 102 bags make one cubic metre. Ready-mix rounds up to the next 0.1 m³, since that's the step plants sell in.</p>
+      </section>
+      <section>
+        <h2>FAQ</h2>
+        <p class="q">How much concrete do I need?</p>
+        <p>Pick the shape, enter your measurements and the volume updates instantly, wastage included.</p>
+        <p class="q">What wastage should I allow?</p>
+        <p>10% suits a standard site. Drop to 5% for tidy formwork on a compacted base, or go 15 to 20% over rough ground and hand-dug trenches.</p>
+        <p class="q">Should I order bags or ready-mix?</p>
+        <p>Under about 0.5 m³ bags usually win on price. Over 1 m³ ready-mix wins on price and convenience, even with a short-load fee.</p>
+        <p class="q">Are these quantities exact?</p>
+        <p>They are estimates. Round up on site and confirm quantities and prices with your supplier before ordering.</p>
+      </section>
+      <section>
+        <h2>Calculators</h2>
+        <div class="calc-links" id="calcLinks"></div>
+      </section>
+      <footer>
+        <p>Estimates only. Confirm quantities and prices with your supplier.</p>
+        <p>On iPhone: open in Safari, tap Share, then Add to Home Screen to install SlabSet as an app.</p>
+        <p>© 2026 SlabSet · Metric only (mm, m, m³) · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p>
+      </footer>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="act-close" id="infoClose" style="flex:1">Back</button>
     </div>
   </div>
 
@@ -955,11 +972,19 @@ if(navigator.share){
 if("serviceWorker" in navigator&&location.protocol==="https:")
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 
+/* ---------- about/faq sheet ---------- */
+$("aboutBtn").onclick=()=>{ stopEdit(); $("infoSheet").classList.add("open"); track('info_open'); };
+$("infoClose").onclick=()=>$("infoSheet").classList.remove("open");
+
 /* ---------- per-shape calculator links ---------- */
 Object.entries(SHAPES).forEach(([key,s])=>{
   const b=document.createElement("button");
   b.textContent=`${s.label} calculator`;
-  b.onclick=()=>{ selectShape(key); $("scroll").scrollTo({top:0,behavior:"smooth"}); };
+  b.onclick=()=>{
+    $("infoSheet").classList.remove("open");
+    selectShape(key);
+    $("scroll").scrollTo({top:0,behavior:"smooth"});
+  };
   $("calcLinks").appendChild(b);
 });
 
