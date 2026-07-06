@@ -585,7 +585,7 @@ const SHAPES = {
     vol:v=>Math.PI*(v.dia/2)**2*v.dep*v.qty },
   stairs: { label:"Stairs",
     icon:`<path d="M4 22 H12 V17 H20 V12 H28 V7 H36 V22 Z"/>`,
-    fields:[{id:"wid",label:"Width",def:0,dim:1,unit:"m"},{id:"rise",label:"Riser",def:0,dim:1,unit:"mm"},{id:"run",label:"Tread",def:0,dim:1,unit:"mm"},{id:"stp",label:"Steps",def:1,step:1}],
+    fields:[{id:"wid",label:"Width",def:0,dim:1,unit:"mm"},{id:"rise",label:"Riser",def:0,dim:1,unit:"mm"},{id:"run",label:"Tread",def:0,dim:1,unit:"mm"},{id:"stp",label:"Steps",def:1,step:1}],
     vol:v=>{let t=0;for(let i=1;i<=v.stp;i++)t+=v.run*(v.rise*i)*v.wid;return t;} },
 };
 
