@@ -441,7 +441,7 @@
           <div class="stat"><div class="n" id="b20">0</div><div class="k">20 kg bags</div></div>
           <div class="stat"><div class="n"><span id="bPre">0.0</span> <small>m³</small></div><div class="k">ready-mix</div></div>
         </div>
-        <div class="hint" id="buyHint">Under 0.5 m³ bags usually win on price</div>
+        <div class="hint" id="buyHint">Enter dimensions to compare bags and ready-mix</div>
       </div>
     </section>
 
@@ -840,7 +840,8 @@ function render(v){
   $("b20").textContent=n20;
   $("bPre").textContent=pre.toFixed(1);
   $("buyHint").textContent=
-    m3>1   ? "Over 1 m³ ready-mix usually wins on price and convenience"
+    m3<=0  ? "Enter dimensions to compare bags and ready-mix"
+  : m3>1   ? "Over 1 m³ ready-mix usually wins on price and convenience"
   : m3>=0.5? "0.5 to 1 m³ price is close, but ready-mix wins on convenience"
   :          "Under 0.5 m³ bags usually win on price";
   lastCalc={m3,n20,n30,pre};
