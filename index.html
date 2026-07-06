@@ -191,6 +191,7 @@
   .chip .lbl { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .7; display: block; line-height: 1.15; }
   .chip .val { font-size: 1.3125rem; font-weight: 900; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 4px; margin-top: 8px; }
   .chip .val .un { font-size: .875rem; font-weight: 800; opacity: .6; }
+  .chip .val .ghost { opacity: .45; }
   .chip.editing { background: var(--field-accent); color: var(--on-field-accent); transition: color .35s ease, background .2s ease; }
   .chip.editing .lbl { opacity: .7; }
 
@@ -699,10 +700,12 @@ function buildFields(){
 function renderChip(f){
   const chip=$("chip_"+f.id); if(!chip)return;
   const isEd=editing===f.id;
-  const shown=isEd?(buffer===""?"0":buffer):fmtField(values[f.id],f);
+  /* empty buffer: show the current value ghosted ("still here, type to replace") */
+  const isGhost=isEd&&buffer==="";
+  const shown=(isEd&&buffer!=="")?buffer:fmtField(values[f.id],f);
   chip.classList.toggle("editing",isEd);
-  chip.setAttribute("aria-label",`${f.label}: ${shown} ${fieldUnit(f)}, edit`);
-  chip.innerHTML=`<span class="lbl">${f.label}</span><span class="val">${shown}<span class="un">${fieldUnit(f)}</span></span>`;
+  chip.setAttribute("aria-label",`${f.label}: ${shown} ${fieldUnit(f)}${isGhost?", type to replace":", edit"}`);
+  chip.innerHTML=`<span class="lbl">${f.label}</span><span class="val"><span class="num${isGhost?" ghost":""}">${shown}</span><span class="un">${fieldUnit(f)}</span></span>`;
 }
 const fmt=n=>(Math.round(n*100)/100).toString();
 const fmtMm=m=>String(Math.round(m*1000));
