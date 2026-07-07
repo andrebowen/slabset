@@ -179,12 +179,12 @@
     border-top: 1px solid color-mix(in srgb, var(--inverse-on-surface) 12%, transparent);
     display: flex; flex-direction: column; gap: 8px;
   }
-  .buy .k { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.15; text-transform: uppercase; letter-spacing: .06em; }
-  /* ledger row: label left, value right — matches the spec sheet's own row convention */
-  .brow { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; }
+  /* one phrase per row: qty + unit description, "recommended" only appears on the winner */
+  .brow { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; gap: 8px; }
   .brow .n { font-size: 1.0625rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-  .brow .n small { font-size: .8125rem; font-weight: 800; opacity: .8; }
-  /* the recommended row: outlined, and all its text (label + value) turns yellow */
+  .brow .lbl { font-size: .75rem; font-weight: 800; opacity: .7; text-transform: uppercase; letter-spacing: .05em; margin-left: 4px; }
+  .brow .rec { font-size: .6875rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; display: none; white-space: nowrap; }
+  /* the recommended row: outlined, and all its text turns yellow */
   .brow.win {
     background: color-mix(in srgb, var(--primary) 12%, transparent);
     border: 1.5px solid var(--primary);
@@ -192,8 +192,8 @@
     padding: 8px 10px;
     margin: 0 -10px;
   }
-  .brow.win .k, .brow.win .n { color: var(--primary); opacity: 1; }
-  .brow.win .n small { opacity: 1; }
+  .brow.win .n, .brow.win .lbl { color: var(--primary); opacity: 1; }
+  .brow.win .rec { display: inline; color: var(--primary); }
   .buy .hint { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.4; min-height: 2.8em; }
 
   /* ---------- input chips ---------- */
@@ -453,9 +453,8 @@
       <div class="vol"><span id="rVol">0.00</span> <small id="rVolUnit">m³</small></div>
       <div class="waste-tag" id="rWaste">+10% wastage</div>
       <div class="buy">
-        <div class="k">Order options</div>
-        <div class="brow" id="rowBags"><span class="k">20 kg bags</span><span class="n" id="b20">0</span></div>
-        <div class="brow" id="rowMix"><span class="k">ready-mix</span><span class="n"><span id="bPre">0.0</span> <small>m³</small></span></div>
+        <div class="brow" id="rowBags"><span><span class="n" id="b20">0</span><span class="lbl">bags (20 kg)</span></span><span class="rec">Recommended</span></div>
+        <div class="brow" id="rowMix"><span><span class="n"><span id="bPre">0.0</span> m³</span><span class="lbl">ready-mix</span></span><span class="rec">Recommended</span></div>
         <div class="hint" id="buyHint">Enter dimensions to compare bags and ready-mix</div>
       </div>
     </section>
