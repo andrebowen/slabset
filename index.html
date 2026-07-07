@@ -168,7 +168,10 @@
   .vol small { font-size: 1rem; font-weight: 800; opacity: .7; }
   .buy {
     background: color-mix(in srgb, var(--primary) 20%, transparent);
-    border-radius: 11px; padding: 12px 12px 8px; margin-top: 16px;
+    /* full-bleed bottom section of the LCD card: cancel the card's 16px padding */
+    border-radius: 0 0 20px 20px;
+    padding: 12px 16px;
+    margin: 16px -16px -16px;
     display: flex; flex-direction: column; gap: 8px;
   }
   .buy .k { font-size: .75rem; font-weight: 800; opacity: .7; line-height: 1.15; text-transform: uppercase; letter-spacing: .06em; }
