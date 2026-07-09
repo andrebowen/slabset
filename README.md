@@ -2,7 +2,7 @@
 
 Deployable site rebuilt from **`mockups/claude/keypad-directions.html` mockup 04** — monospace field log, light/dark theme, Field ⇄ Spec toggle.
 
-> **Editing pages?** `index.html` and the five `*-calculator.html` landing pages are **generated** — edit `build.py` (templates + PAGES data), then run `python3 build.py`. Content ships as static HTML for SEO; `shared/calc.js` only hydrates it. Keep SHAPES/ICONS in `build.py` and `calc.js` in sync. On deploy, bump `VERSION` in `sw.js`.
+> **Editing pages?** `index.html` and the six `*-calculator.html` landing pages are **generated** — edit `build.py` (templates + PAGES data), then run `python3 build.py`. Content ships as static HTML for SEO; `shared/calc.js` only hydrates it. Keep SHAPES/ICONS in `build.py` and `calc.js` in sync. On deploy, bump `VERSION` in `sw.js`.
 
 ## Layout (mockup 04)
 
@@ -13,7 +13,7 @@ Deployable site rebuilt from **`mockups/claude/keypad-directions.html` mockup 04
 
 - **04 light** (`t4`) / **04 dark** (`t4d`) — sun/moon toggle in app bar
 - Web form inputs instead of on-screen keypad
-- Five shapes: Slab, Footing, Column, Round pad, Stairs
+- Six shapes: Slab, Strip footing, Pier footing, Column, Round pad, Stairs
 
 ## What lives here
 

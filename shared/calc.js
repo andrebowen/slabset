@@ -4,44 +4,59 @@
   // Static markup ships in the HTML (see build.py) — this script hydrates it.
   // SHAPES/ICONS below must stay in sync with build.py.
 
+  // fields: [key, label, unit, softMax] — softMax triggers an inline warning, not a hard block.
+  // Length/Width are entered in metres; thickness/depth/diameter/rise/going stay in millimetres.
   var SHAPES = {
     slab: {
-      fields: [['L', 'Length', 'mm'], ['W', 'Width', 'mm'], ['T', 'Thickness', 'mm']],
-      vol: function (v) { return v.L * v.W * v.T / 1e9; }
+      fields: [['L', 'Length', 'm', 30], ['W', 'Width', 'm', 30], ['T', 'Thickness', 'mm', 1000], ['Q', 'Quantity', '', 0]],
+      vol: function (v) { return v.L * v.W * (v.T / 1000) * v.Q; }
     },
     footing: {
-      fields: [['L', 'Length', 'mm'], ['W', 'Width', 'mm'], ['D', 'Depth', 'mm']],
-      vol: function (v) { return v.L * v.W * v.D / 1e9; }
+      fields: [['L', 'Total run', 'm', 30], ['W', 'Width', 'm', 2], ['D', 'Depth', 'mm', 2000], ['Q', 'Quantity', '', 0]],
+      vol: function (v) { return v.L * v.W * (v.D / 1000) * v.Q; }
+    },
+    pierfooting: {
+      fields: [['PL', 'Length', 'mm', 3000], ['PW', 'Width', 'mm', 3000], ['PD', 'Depth', 'mm', 2000], ['Q', 'Quantity', '', 0]],
+      vol: function (v) { return (v.PL / 1000) * (v.PW / 1000) * (v.PD / 1000) * v.Q; }
     },
     column: {
-      fields: [['DIA', 'Diameter', 'mm'], ['H', 'Height', 'mm']],
-      vol: function (v) { return Math.PI * Math.pow(v.DIA / 1000 / 2, 2) * (v.H / 1000); }
+      fields: [['DIA', 'Diameter', 'mm', 3000], ['H', 'Height', 'mm', 10000], ['Q', 'Quantity', '', 0]],
+      vol: function (v) { return Math.PI * Math.pow(v.DIA / 1000 / 2, 2) * (v.H / 1000) * v.Q; }
     },
     round: {
-      fields: [['DIA', 'Diameter', 'mm'], ['T', 'Thickness', 'mm']],
-      vol: function (v) { return Math.PI * Math.pow(v.DIA / 1000 / 2, 2) * (v.T / 1000); }
+      fields: [['DIA', 'Diameter', 'm', 10], ['T', 'Thickness', 'mm', 1000], ['Q', 'Quantity', '', 0]],
+      vol: function (v) { return Math.PI * Math.pow(v.DIA / 2, 2) * (v.T / 1000) * v.Q; }
     },
     stairs: {
-      fields: [['W', 'Width', 'mm'], ['R', 'Rise', 'mm'], ['G', 'Going', 'mm'], ['N', 'Steps', '']],
-      vol: function (v) { return (v.W / 1000) * (v.G / 1000) * (v.R / 1000) * (v.N * (v.N + 1) / 2); }
+      fields: [['W', 'Width', 'm', 3], ['R', 'Rise', 'mm', 300], ['G', 'Going', 'mm', 500], ['N', 'Steps', '', 60], ['BT', 'Base thickness', 'mm', 300]],
+      vol: function (v) {
+        var wedge = v.W * (v.G / 1000) * (v.R / 1000) * (v.N * (v.N + 1) / 2);
+        var base = v.W * (v.G / 1000 * v.N) * (v.BT / 1000);
+        return wedge + base;
+      }
     }
   };
 
-  var SHAPE_NAMES = { slab: 'Slab', footing: 'Footing', column: 'Column', round: 'Round pad', stairs: 'Stairs' };
+  var SHAPE_NAMES = { slab: 'Slab', footing: 'Strip footing', pierfooting: 'Pier footing', column: 'Column', round: 'Round pad', stairs: 'Stairs' };
+
+  // Indicative Australian rates — kept in sync with the "Estimated cost" copy in build.py.
+  var RATE_MIX_LOW = 220, RATE_MIX_HIGH = 320, RATE_BAG_LOW = 7, RATE_BAG_HIGH = 10;
 
   var ICONS = {
-    slab: '<svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="6,13 16,8 26,13 16,18"/><polygon class="s" points="6,13 16,18 16,22 6,17"/><polygon class="s" points="16,18 26,13 26,17 16,22"/></svg>',
-    footing: '<svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="9,7 16,4 23,7 16,10"/><polygon class="s" points="9,7 16,10 16,28 9,25"/><polygon class="s" points="16,10 23,7 23,25 16,28"/></svg>',
-    column: '<svg class="ico" viewBox="0 0 32 32"><ellipse class="f" cx="16" cy="8" rx="8" ry="3"/><path class="s" d="M8 8v15a8 3 0 0 0 16 0V8"/></svg>',
-    round: '<svg class="ico" viewBox="0 0 32 32"><ellipse class="f" cx="16" cy="13" rx="10" ry="4"/><path class="s" d="M6 13v4a10 4 0 0 0 20 0v-4"/></svg>',
-    stairs: '<svg class="ico" viewBox="0 0 32 32"><path class="s" d="M5 24h6v-5h6v-5h6v-5h4v15z"/></svg>'
+    slab: '<svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="16,8 27,14.4 16,20.7 5,14.4"/><polygon class="s" points="5,14.4 16,20.7 16,23.7 5,17.4"/><polygon class="s" points="16,20.7 27,14.4 27,17.4 16,23.7"/></svg>',
+    footing: '<svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="14.3,8 25.5,14.5 22.9,16 14.3,11 5.6,16 3,14.5"/><polygon class="s" points="14.3,11 25.5,17.5 22.9,19 14.3,14 5.6,19 3,17.5"/><polygon class="s" points="25.5,14.5 22.9,16 22.9,19 25.5,17.5"/><polygon class="s" points="5.6,16 3,14.5 3,17.5 5.6,19"/></svg>',
+    pierfooting: '<svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="16,6 24,10.6 16,15.2 8,10.6"/><polygon class="s" points="8,10.6 16,15.2 16,29.2 8,24.6"/><polygon class="s" points="16,15.2 24,10.6 24,24.6 16,29.2"/></svg>',
+    column: '<svg class="ico" viewBox="0 0 32 32"><ellipse class="f" cx="16" cy="8" rx="6" ry="3.46"/><path class="s" d="M10 8v15a6 3.46 0 0 0 12 0V8"/></svg>',
+    round: '<svg class="ico" viewBox="0 0 32 32"><ellipse class="f" cx="16" cy="13" rx="12.5" ry="7.22"/><path class="s" d="M3.5 13v4a12.5 7.22 0 0 0 25 0v-4"/></svg>',
+    stairs: '<svg class="ico" viewBox="0 0 32 32"><path class="s" d="M11 24v-5h6v-5h6v-5h6v15z"/></svg>'
   };
 
   var root = document.getElementById('app');
   var initShape = document.body.getAttribute('data-shape');
   if (!SHAPES[initShape]) initShape = 'slab';
-  var st = { shape: initShape, active: SHAPES[initShape].fields[0][0], vals: { L: '', W: '', T: '', D: '', DIA: '', H: '', R: '', G: '', N: '', WASTE: '10' } };
+  var st = { shape: initShape, active: SHAPES[initShape].fields[0][0], vals: { L: '', W: '', T: '', D: '', PL: '', PW: '', PD: '', DIA: '', H: '', R: '', G: '', N: '', Q: '1', BT: '0', WASTE: '10' } };
   var lastSpecPlain = '';
+  var lastVolValue = null;
   var deferredInstall = null;
   var trackedComplete = false;
 
@@ -75,6 +90,7 @@
 
   function allComplete() {
     return SHAPES[st.shape].fields.every(function (f) {
+      if (f[0] === 'BT') return true; // optional: 0 is a valid "no base slab" value
       var raw = st.vals[f[0]];
       return raw && raw !== '0' && raw !== '.';
     });
@@ -84,7 +100,8 @@
     return [
       'CONCRETE CALCULATION · SlabSet',
       '',
-      'PROJECT: ' + SHAPE_NAMES[st.shape],
+    ].concat(opts.job ? ['JOB: ' + opts.job, ''] : []).concat([
+      'SHAPE: ' + SHAPE_NAMES[st.shape],
       'DIMENSIONS: ' + opts.dimLine,
       'WASTAGE: +' + opts.w + '%',
       '',
@@ -94,10 +111,6 @@
       'Bags (20 kg): ' + opts.bags20,
       'Bags (30 kg): ' + opts.bags30,
       'Premix: ' + opts.premix.toFixed(1) + ' m³',
-      'Recommended: ' + opts.recLabel,
-      '',
-      'Est. bags: ' + opts.bagsCost,
-      'Est. premix: ' + opts.rmCost,
       '',
       'Reinforcing mesh: ' + opts.mesh + ' sheets',
       'Formwork edge: ' + opts.edge.toFixed(1) + ' m',
@@ -105,9 +118,8 @@
       '',
       opts.working,
       '',
-      'Estimate uses typical metro prices in Australia.',
-      'Confirm with your local supplier before ordering.'
-    ].join('\n');
+      'Estimates only. Confirm quantities and prices with your supplier before ordering.'
+    ]).join('\n');
   }
 
   function updateOutputs() {
@@ -132,11 +144,15 @@
     }
 
     $all('.menu-item[data-shape]').forEach(function (it) {
-      it.classList.toggle('on', it.getAttribute('data-shape') === st.shape);
+      var on = it.getAttribute('data-shape') === st.shape;
+      it.classList.toggle('on', on);
+      it.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     setText('[data-wcur]', w + '%');
     $all('.menu-item[data-waste]').forEach(function (it) {
-      it.classList.toggle('on', +it.getAttribute('data-waste') === w);
+      var on = +it.getAttribute('data-waste') === w;
+      it.classList.toggle('on', on);
+      it.setAttribute('aria-selected', on ? 'true' : 'false');
     });
 
     var v = parseVals();
@@ -146,24 +162,41 @@
     var bags30 = total ? Math.ceil(total / (0.0098 * 1.5)) : 0;
     var premix = total ? Math.ceil(total * 10) / 10 : 0;
 
+    var outSub = root.querySelector('.out-sub');
+    if (outSub) outSub.classList.toggle('is-empty', !total);
+    var specOrderLine = root.querySelector('.sp-order-line');
+    if (specOrderLine) specOrderLine.classList.toggle('is-empty', !total);
+
     var area = 0;
     var edge = 0;
     if (st.shape === 'slab' || st.shape === 'footing') {
-      area = v.L * v.W / 1e6;
-      edge = 2 * (v.L + v.W) / 1000;
+      area = v.L * v.W * v.Q;
+      edge = 2 * (v.L + v.W) * v.Q;
+    } else if (st.shape === 'pierfooting') {
+      area = (v.PL / 1000) * (v.PW / 1000) * v.Q;
+      edge = 2 * (v.PL / 1000 + v.PW / 1000) * v.Q;
     } else if (st.shape === 'round') {
-      var r = v.DIA / 1000 / 2;
-      area = Math.PI * r * r;
-      edge = Math.PI * v.DIA / 1000;
+      var r = v.DIA / 2;
+      area = Math.PI * r * r * v.Q;
+      edge = Math.PI * v.DIA * v.Q;
     } else if (st.shape === 'column') {
-      edge = Math.PI * v.DIA / 1000;
+      edge = Math.PI * v.DIA / 1000 * v.Q;
     }
     var mesh = area ? Math.ceil(area / 14.4) : 0;
 
     setText('[data-vol]', total ? total.toFixed(2) : '0.00');
+    var volEl = root.querySelector('.out .ov');
+    if (volEl && total !== lastVolValue) {
+      lastVolValue = total;
+      volEl.classList.remove('pulse');
+      void volEl.offsetWidth;
+      volEl.classList.add('pulse');
+    }
     setText('[data-bags]', bags20);
     setText('[data-bags30]', bags30);
     setText('[data-premix]', premix.toFixed(1));
+    setText('[data-cost-mix]', costRange(premix, RATE_MIX_LOW, RATE_MIX_HIGH));
+    setText('[data-cost-bags]', costRange(bags20, RATE_BAG_LOW, RATE_BAG_HIGH));
     setText('[data-weight]', (total * 2.4).toFixed(2));
     setText('[data-mesh]', mesh);
     setText('[data-edge]', edge.toFixed(1));
@@ -174,31 +207,20 @@
     var wf = (1 + w / 100).toFixed(2);
     var work;
     if (st.shape === 'column' || st.shape === 'round') {
-      work = 'π × (' + (v.DIA / 1000).toFixed(3) + ' ÷ 2)² × ' + ((st.shape === 'column' ? v.H : v.T) / 1000).toFixed(3) + ' m = ' + base.toFixed(2) + ' m³\n→ × ' + wf + ' wastage = ' + total.toFixed(2) + ' m³';
+      var diaM = st.shape === 'column' ? v.DIA / 1000 : v.DIA;
+      work = 'π × (' + diaM.toFixed(3) + ' ÷ 2)² × ' + ((st.shape === 'column' ? v.H : v.T) / 1000).toFixed(3) + ' × ' + v.Q + ' m = ' + base.toFixed(2) + ' m³\n→ × ' + wf + ' wastage = ' + total.toFixed(2) + ' m³';
     } else if (st.shape === 'stairs') {
-      work = (v.W / 1000).toFixed(2) + ' × ' + (v.G / 1000).toFixed(3) + ' × ' + (v.R / 1000).toFixed(3) + ' × ' + v.N + '(' + v.N + '+1)/2 = ' + base.toFixed(2) + ' m³\n→ × ' + wf + ' wastage = ' + total.toFixed(2) + ' m³';
+      var wedgeVol = v.W * (v.G / 1000) * (v.R / 1000) * (v.N * (v.N + 1) / 2);
+      work = v.W.toFixed(2) + ' × ' + (v.G / 1000).toFixed(3) + ' × ' + (v.R / 1000).toFixed(3) + ' × ' + v.N + '(' + v.N + '+1)/2 = ' + wedgeVol.toFixed(2) + ' m³';
+      if (v.BT) {
+        var baseSlabVol = v.W * (v.G / 1000 * v.N) * (v.BT / 1000);
+        work += '\n+ base slab ' + v.BT + ' mm = ' + baseSlabVol.toFixed(2) + ' m³';
+      }
+      work += '\n→ × ' + wf + ' wastage = ' + total.toFixed(2) + ' m³';
     } else {
-      work = sh.fields.map(function (f) { return (v[f[0]] / 1000).toFixed(2); }).join(' × ') + ' m = ' + base.toFixed(2) + ' m³\n→ × ' + wf + ' wastage = ' + total.toFixed(2) + ' m³';
+      work = sh.fields.map(function (f) { return f[0] === 'Q' ? v.Q.toString() : (f[2] === 'mm' ? v[f[0]] / 1000 : v[f[0]]).toFixed(2); }).join(' × ') + ' m = ' + base.toFixed(2) + ' m³\n→ × ' + wf + ' wastage = ' + total.toFixed(2) + ' m³';
     }
     setText('[data-working]', work);
-
-    var bagsLo = Math.round(Math.min(bags20 * 8.35, bags30 * 12.55));
-    var bagsHi = Math.round(Math.max(bags20 * 10.65, bags30 * 15.95));
-    var rmLo = Math.round(premix * 300);
-    var rmHi = Math.round(premix * 330 + (premix < 0.5 ? 130 : 0));
-    function money(a, b) { return '$' + a.toLocaleString() + ' – $' + b.toLocaleString(); }
-
-    setText('[data-bags-cost]', total ? money(bagsLo, bagsHi) : '–');
-    setText('[data-rm-cost]', total ? money(rmLo, rmHi) : '–');
-
-    var recPremix = total >= 0.5;
-    setText('[data-cost-rec]', total ? (recPremix ? 'Ready-mix delivery' : 'Individual bags') : '–');
-    setText('[data-cost-why]', total ? (recPremix
-      ? 'At ' + total.toFixed(2) + ' m³, ready-mix is cheaper per cubic metre and far less work than mixing bags.'
-      : 'At ' + total.toFixed(2) + ' m³, bags skip delivery and short-load fees, so they are cheaper overall.') : 'Enter dimensions to estimate cost.');
-
-    $all('[data-rec="premix"]').forEach(function (e) { e.classList.toggle('rec', total && recPremix); });
-    $all('[data-rec="bags"]').forEach(function (e) { e.classList.toggle('rec', total && !recPremix); });
 
     var cta = document.getElementById('specCta');
     if (cta) {
@@ -223,17 +245,40 @@
         bags30: bags30,
         premix: premix,
         dimLine: dimLine,
-        recLabel: recPremix ? 'Ready-mix delivery' : 'Individual bags',
-        bagsCost: money(bagsLo, bagsHi),
-        rmCost: money(rmLo, rmHi),
         mesh: mesh,
         edge: edge,
         weight: total * 2.4,
-        working: work
+        working: work,
+        job: (document.getElementById('jobDesc') || {}).value || ''
       });
     } else {
       lastSpecPlain = '';
     }
+  }
+
+  function validateField(key) {
+    var sh = SHAPES[st.shape];
+    var fdef = sh.fields.filter(function (f) { return f[0] === key; })[0];
+    if (!fdef) return;
+    var max = fdef[3];
+    var label = root.querySelector('.fld[data-field="' + key + '"]');
+    if (!label) return;
+    var warnEl = label.querySelector('.fld-warn');
+    var val = parseFloat(st.vals[key]) || 0;
+    var bad = !!(max && val > max);
+    label.classList.toggle('warn', bad);
+    if (warnEl) warnEl.textContent = bad ? 'That looks unusually large — check the units.' : '';
+  }
+
+  function costRange(qty, low, high) {
+    if (!qty) return 'N/A';
+    return '$' + Math.round(qty * low).toLocaleString() + ' to $' + Math.round(qty * high).toLocaleString();
+  }
+
+  function unitPhrase(u) {
+    if (u === 'mm') return ' in millimetres';
+    if (u === 'm') return ' in metres';
+    return '';
   }
 
   function updateFields() {
@@ -246,10 +291,12 @@
       var val = st.vals[k] || '';
       fh += '<label class="fld" data-field="' + k + '">'
         + '<span class="tl">' + f[1] + '</span>'
-        + '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-key="' + k + '" value="' + val + '" placeholder="0" aria-label="' + f[1] + (f[2] ? ' in millimetres' : '') + '">'
-        + '<span class="unit">' + (f[2] || '') + '</span></label>';
+        + '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-key="' + k + '" value="' + val + '" placeholder="0" aria-label="' + f[1] + unitPhrase(f[2]) + '">'
+        + '<span class="unit">' + (f[2] || '') + '</span>'
+        + '<span class="fld-warn" aria-live="polite"></span></label>';
     });
     document.getElementById('flds').innerHTML = fh;
+    sh.fields.forEach(function (f) { validateField(f[0]); });
     updateOutputs();
   }
 
@@ -257,12 +304,48 @@
     updateFields();
   }
 
-  function closeMenus() {
+  function closeMenus(returnFocus) {
     $all('.shape-menu.open').forEach(function (m) {
       m.classList.remove('open');
       var b = m.querySelector('[data-menu-btn]');
-      if (b) b.setAttribute('aria-expanded', 'false');
+      if (b) {
+        b.setAttribute('aria-expanded', 'false');
+        if (returnFocus) b.focus();
+      }
     });
+  }
+
+  function handleMenuInteraction(e) {
+    var b = e.target.closest('button[data-menu-btn], button[data-shape], button[data-waste]');
+    if (!b) return false;
+    if (b.hasAttribute('data-menu-btn')) {
+      var menu = b.closest('.shape-menu');
+      var open = menu.classList.contains('open');
+      closeMenus();
+      if (!open) {
+        menu.classList.add('open');
+        b.setAttribute('aria-expanded', 'true');
+        var onItem = menu.querySelector('.menu-item.on') || menu.querySelector('.menu-item');
+        if (onItem) onItem.focus();
+      }
+      return true;
+    }
+    if (b.hasAttribute('data-shape')) {
+      st.shape = b.getAttribute('data-shape');
+      st.active = SHAPES[st.shape].fields[0][0];
+      closeMenus(true);
+      track('shape_select', { shape: st.shape });
+      render();
+      return true;
+    }
+    if (b.hasAttribute('data-waste')) {
+      st.vals.WASTE = b.getAttribute('data-waste');
+      closeMenus(true);
+      track('waste_select', { value: st.vals.WASTE });
+      updateOutputs();
+      return true;
+    }
+    return false;
   }
 
   function showToast(msg) {
@@ -288,7 +371,7 @@
   }
 
   function copyText(text) {
-    if (!text) return;
+    if (!text) { showToast('Enter dimensions first'); return; }
     track('copy_spec', { shape: st.shape });
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () {
@@ -308,7 +391,7 @@
       root.classList.toggle('t4d', dark);
       root.classList.toggle('t4', !dark);
       try { localStorage.setItem('slabset-theme', dark ? 'dark' : 'light'); } catch (e) {}
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#16181A' : '#DED8CB');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#16181A' : '#F0F2EA');
       track('theme_toggle', { theme: dark ? 'dark' : 'light' });
     });
   }
@@ -344,6 +427,17 @@
     });
   }
 
+  function initShare() {
+    var btn = document.getElementById('btnShare');
+    if (!btn || !navigator.share) return;
+    btn.hidden = false;
+    btn.addEventListener('click', function () {
+      if (!lastSpecPlain) return;
+      track('share_spec', { shape: st.shape });
+      navigator.share({ title: 'SlabSet concrete spec', text: lastSpecPlain, url: location.href }).catch(function () {});
+    });
+  }
+
   function initServiceWorker() {
     var local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
     if (local || location.protocol !== 'https:' || !('serviceWorker' in navigator)) return;
@@ -360,26 +454,9 @@
     if (b.id === 'specCta') {
       track('spec_cta_tap', { ready: b.classList.contains('is-ready'), shape: st.shape });
       setMode(true);
-    } else if (b.hasAttribute('data-menu-btn')) {
-      var menu = b.closest('.shape-menu');
-      var open = menu.classList.contains('open');
-      closeMenus();
-      if (!open) {
-        menu.classList.add('open');
-        b.setAttribute('aria-expanded', 'true');
-      }
-    } else if (b.hasAttribute('data-shape')) {
-      st.shape = b.getAttribute('data-shape');
-      st.active = SHAPES[st.shape].fields[0][0];
-      closeMenus();
-      track('shape_select', { shape: st.shape });
-      render();
-    } else if (b.hasAttribute('data-waste')) {
-      st.vals.WASTE = b.getAttribute('data-waste');
-      closeMenus();
-      track('waste_select', { value: st.vals.WASTE });
-      updateOutputs();
+      return;
     }
+    handleMenuInteraction(e);
   });
 
   document.getElementById('viewField').addEventListener('input', function (e) {
@@ -392,13 +469,19 @@
     st.vals[key] = next;
     st.active = key;
     if (input.value !== next) input.value = next;
+    validateField(key);
     updateOutputs();
   });
 
   document.getElementById('viewSpec').addEventListener('click', function (e) {
+    if (handleMenuInteraction(e)) return;
     if (e.target.closest('[data-edit]')) setMode(false);
     if (e.target.closest('#btnCopy')) copyText(lastSpecPlain);
     if (e.target.closest('#btnPdf')) { track('save_pdf', { shape: st.shape }); window.print(); }
+  });
+
+  document.getElementById('viewSpec').addEventListener('input', function (e) {
+    if (e.target.id === 'jobDesc') updateOutputs();
   });
 
   document.addEventListener('click', function (e) {
@@ -406,11 +489,30 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeMenus();
+    if (e.key === 'Escape') { closeMenus(true); return; }
+    var openMenu = document.querySelector('.shape-menu.open');
+    if (!openMenu) return;
+    var items = [].slice.call(openMenu.querySelectorAll('.menu-item'));
+    if (!items.length) return;
+    var idx = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items[(idx + 1 + items.length) % items.length].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length].focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      items[0].focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      items[items.length - 1].focus();
+    }
   });
 
   initTheme();
   initPwa();
+  initShare();
   initServiceWorker();
   render();
 })();
