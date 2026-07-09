@@ -257,14 +257,19 @@ button.fld.shape-fld{
 .out .ov.pulse{animation:lcdPulse .3s var(--ease)}
 @keyframes lcdPulse{0%{opacity:.35}100%{opacity:1}}
 .out .ov b{color:inherit;font-weight:700;margin-left:.05em}
-.out-sub{margin-top:calc(var(--grid) * 2);padding-top:calc(var(--grid) * 2);border-top:1px solid rgba(255,255,255,.16)}
+.out-sub{margin-top:calc(var(--grid) * 2);padding-top:calc(var(--grid) * 2);border-top:1px solid rgba(243,177,0,.35)}
 .out-sub.is-empty,.sp-order-line.is-empty{visibility:hidden}
 .out-sub-grid{
   display:flex;flex-direction:column;gap:var(--grid);
 }
 .out-sub-line{
-  text-align:left;font-size:12px;opacity:1;font-variant-numeric:tabular-nums;
+  display:flex;justify-content:space-between;align-items:baseline;gap:calc(var(--grid) * 3);
+  font-size:12px;opacity:1;font-variant-numeric:tabular-nums;
 }
+.out-sub-label{
+  flex-shrink:0;text-transform:uppercase;letter-spacing:.02em;font-size:12px;opacity:1;
+}
+.out-sub-value{text-align:right}
 
 /* spec CTA — quiet until dimensions complete, then amber */
 .spec-cta{
@@ -354,7 +359,10 @@ button.fld.shape-fld{
   font-family:var(--mono);font-size:52px;font-weight:800;letter-spacing:-.03em;line-height:.9;font-variant-numeric:tabular-nums;
 }
 .sp-hero .hu{font-size:16px;font-weight:700}
-.sp-order-line{font-size:14px;line-height:1.5;margin:0;opacity:.82;font-variant-numeric:tabular-nums}
+.sp-order-line{
+  display:flex;justify-content:space-between;align-items:baseline;gap:calc(var(--grid) * 3);
+  font-size:14px;line-height:1.5;margin:0;opacity:.82;font-variant-numeric:tabular-nums;
+}
 .sp-order-line b{font-weight:800;opacity:1}
 .sp-working{font-size:14px;line-height:1.6;opacity:.65;white-space:pre-line}
 .sp-prose{font-size:14px;line-height:1.55;margin:0;opacity:.82;font-family:var(--sans)}
