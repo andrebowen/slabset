@@ -600,6 +600,8 @@ body.legal{background:#F0F2EA;color:#1c1d1f}
 .legal-page a{color:#1c1d1f}
 .legal-back{display:inline-block;margin-bottom:16px;font-size:.78rem;font-weight:600;color:#5c6066}
 
+.print-sheet{display:none}
+
 @media print{
   .dev-ribbon,.grid-toggle,.appbar,.view-field,.install-banner,.sp-actions,
   .sp-more,.sp-group--actions{display:none !important}
@@ -611,6 +613,20 @@ body.legal{background:#F0F2EA;color:#1c1d1f}
   }
   .order-option,.order-option--recommended{
     background:#fff !important;color:#1c1d1f !important;
+  }
+  /* Save PDF = same job sheet text as Copy (not the on-screen pricing UI) */
+  body.printing-job .app,
+  body.printing-job .dev-ribbon,
+  body.printing-job .install-banner,
+  body.printing-job .copy-toast,
+  body.printing-job .grid-toggle{display:none !important}
+  body.printing-job .print-sheet{
+    display:block !important;
+    margin:0;padding:0;
+    white-space:pre-wrap;word-break:break-word;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11pt;line-height:1.45;
+    color:#1c1d1f !important;background:#fff !important;
   }
 }
 

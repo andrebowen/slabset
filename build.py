@@ -311,7 +311,7 @@ def spec_view(page):
         '<section class="sp-sec" aria-label="About"><div class="sp-h">About</div>' + about_html + '</section>'
         + other_links(page) +
         '</details>'
-        '<p class="sp-fine">Estimates only — not a supplier quote. Confirm quantities and prices with your supplier.</p>'
+        '<p class="sp-fine">Estimates only. Not a supplier quote. Confirm quantities and prices with your supplier.</p>'
         '<p class="sp-foot">SlabSet · Metric Concrete Calculator · Made for Australia · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p>'
         '<section class="sp-group sp-group--actions" aria-label="Actions">'
         '<div class="sp-actions"><button type="button" class="back" id="btnBack" data-edit>← Back</button>'

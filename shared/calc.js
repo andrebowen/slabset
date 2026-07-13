@@ -168,7 +168,7 @@
 
   function ratesNote(confirmHint) {
     var bands = 'bags $' + RATES.bagLow + '–$' + RATES.bagHigh + ' each, ready-mix $' + RATES.mixLow + '–$' + RATES.mixHigh + ' per m³';
-    return 'Guide only — not a supplier quote. Typical Australian prices: ' + bands +
+    return 'Guide only. Not a supplier quote. Typical Australian prices: ' + bands +
       ' (ex delivery, pump and waiting). Reviewed ' + RATES.cadence + ' · last checked ' + RATES.asOf + '. ' + confirmHint;
   }
 
@@ -232,7 +232,7 @@
       '',
       opts.working,
       '',
-      'Estimates only — not a supplier quote. Confirm quantities and prices before ordering.'
+      'Estimates only. Not a supplier quote. Confirm quantities and prices before ordering.'
     ]).join('\n');
   }
 
@@ -461,7 +461,7 @@
     var suggested = '';
     if (bad && fdef[2] === 'mm' && val >= 1000 && val % 10 === 0) suggested = String(val / 10);
     label.classList.toggle('warn', bad);
-    if (warnEl) warnEl.textContent = bad ? (suggested ? 'That looks unusually large.' : 'That looks unusually large — check the units.') : '';
+    if (warnEl) warnEl.textContent = bad ? (suggested ? 'That looks unusually large.' : 'That looks unusually large. Check the units.') : '';
     if (fixEl) {
       fixEl.hidden = !suggested;
       fixEl.textContent = suggested ? 'Use ' + suggested + ' mm' : '';
@@ -613,9 +613,22 @@
   }
 
   function printJob() {
+    if (!lastSpecPlain) { showToast('Enter dimensions first'); return; }
     track('save_pdf', { shape: st.shape });
+    var sheet = document.getElementById('printSheet');
+    if (!sheet) {
+      sheet = document.createElement('pre');
+      sheet.id = 'printSheet';
+      sheet.className = 'print-sheet';
+      sheet.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(sheet);
+    }
+    sheet.textContent = lastSpecPlain;
+    document.body.classList.add('printing-job');
     var wasDark = root.classList.contains('t4d');
     function restore() {
+      document.body.classList.remove('printing-job');
+      if (sheet) sheet.textContent = '';
       if (!wasDark) return;
       root.classList.add('t4d');
       root.classList.remove('t4');
