@@ -1,7 +1,7 @@
 {
-  "name": "SlabSet Job Spec",
+  "name": "SlabSet Job Sheet",
   "short_name": "SlabSet",
-  "description": "Build a concrete pour spec: volume, bags vs premix, copy-ready supplier text.",
+  "description": "Build a concrete job sheet: volume, bags vs premix, copy-ready supplier text.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

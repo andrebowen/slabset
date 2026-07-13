@@ -22,7 +22,7 @@ SHAPES = {
     'pierfooting': [('PL', 'Length', 'mm'), ('PW', 'Width', 'mm'), ('PD', 'Depth', 'mm'), ('Q', 'Quantity', '')],
     'column':      [('DIA', 'Diameter', 'mm'), ('H', 'Height', 'mm'), ('Q', 'Quantity', '')],
     'round':       [('DIA', 'Diameter', 'm'), ('T', 'Thickness', 'mm'), ('Q', 'Quantity', '')],
-    'stairs':      [('W', 'Width', 'm'), ('R', 'Rise', 'mm'), ('G', 'Going', 'mm'), ('N', 'Steps', ''), ('BT', 'Base thickness', 'mm')],
+    'stairs':      [('W', 'Width', 'm'), ('R', 'Rise', 'mm'), ('G', 'Going', 'mm'), ('N', 'Steps', ''), ('BT', 'Base thickness (optional)', 'mm')],
 }
 SHAPE_NAMES = {'slab': 'Slab', 'footing': 'Strip footing', 'pierfooting': 'Pier footing', 'column': 'Column', 'round': 'Round pad', 'stairs': 'Stairs'}
 ICONS = {
@@ -163,16 +163,22 @@ def unit_phrase(unit):
     return ''
 
 
+FIELD_DEFAULTS = {}
+
+
 def field_rows(shape):
     out = []
     for k, label, unit in SHAPES[shape]:
+        default = FIELD_DEFAULTS.get(shape, {}).get(k, '')
+        placeholder = default or '0'
         out.append(
-            '<label class="fld" data-field="' + k + '">'
-            '<span class="tl">' + label + '</span>'
+            '<div class="fld" data-field="' + k + '">'
+            '<label class="tl" for="fld-' + k + '">' + label + '</label>'
             '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" '
-            'data-key="' + k + '" value="" placeholder="0" aria-label="' + label + unit_phrase(unit) + '">'
+            'id="fld-' + k + '" data-key="' + k + '" value="" placeholder="' + placeholder + '" aria-label="' + label + unit_phrase(unit) + '">'
             '<span class="unit">' + unit + '</span>'
-            '<span class="fld-warn" aria-live="polite"></span></label>'
+            '<span class="fld-warn" aria-live="polite"></span>'
+            '<button type="button" class="fld-fix" data-fix-key="' + k + '" hidden></button></div>'
         )
     return ''.join(out)
 
@@ -197,7 +203,7 @@ def shape_menu(shape):
         '<span class="tl">Shape</span>'
         '<span class="shape-pick" id="shapePick">' + ICONS[shape]
         + '<span class="shape-pick__name">' + SHAPE_NAMES[shape] + '</span></span>'
-        '<span class="chev" aria-hidden="true">▾</span>'
+        '<svg class="chev" viewBox="0 0 16 10" aria-hidden="true"><path d="M2 2l6 6 6-6"/></svg>'
         '</button>'
         '<div class="menu-panel" id="shapeMenuPanel" role="listbox" aria-label="Shape">' + items + '</div></div>'
     )
@@ -206,7 +212,7 @@ def shape_menu(shape):
 WASTE_MENU = (
     '<div class="shape-menu wmenu" id="wasteMenu">'
     '<button type="button" class="menu-btn" data-menu-btn aria-haspopup="listbox" aria-expanded="false" aria-controls="wasteMenuPanel">'
-    '<span class="cur">Wastage</span><b data-wcur>10%</b><span class="chev">▾</span></button>'
+    '<span class="cur">Wastage</span><b data-wcur>10%</b><svg class="chev" viewBox="0 0 16 10" aria-hidden="true"><path d="M2 2l6 6 6-6"/></svg></button>'
     '<div class="menu-panel" id="wasteMenuPanel" role="listbox" aria-label="Wastage allowance">'
     + ''.join(
         '<button type="button" role="option" aria-selected="' + ('true' if pct == 10 else 'false')
@@ -222,11 +228,15 @@ def field_view(shape):
     return (
         '<div class="view view-field" id="viewField">'
         '<section class="sec-lcd" aria-label="Volume readout">'
-        '<div class="out"><div class="out-main"><span class="out-vol-h">VOLUME</span>'
-        '<span class="ov"><span data-vol>0.00</span><b>m³</b></span>'
-        '<span class="out-note" data-waste-incl>includes 10% wastage</span></div>'
-        '<div class="out-sub"><div class="out-sub-grid">'
-        '<span class="out-sub-line"><span class="out-sub-label">Order</span><span class="out-sub-value"><b data-premix>0.0</b> m³ ready-mix, or <b data-bags>0</b> x 20 kg bags</span></span></div></div></div>'
+        '<div class="out"><div class="out-a"><div class="out-main"><span class="out-vol-h">VOLUME</span>'
+        '<span class="ov"><span data-vol>0.00</span><b>m³</b></span></div></div>'
+        '<div class="out-b"><p class="out-guidance" data-guidance>Enter length and width to calculate.</p>'
+        '<div class="out-rec" id="outRecommend" hidden>'
+        '<span class="out-rec__label">Recommended</span>'
+        '<span class="out-rec__body">'
+        '<span class="out-rec__value" data-lcd-recommend></span>'
+        '<span class="out-rec__price" data-lcd-price></span>'
+        '</span></div></div></div>'
         '</section>'
         '<section class="sec-inputs" aria-label="Input fields">'
         '<div class="input-card">'
@@ -234,7 +244,7 @@ def field_view(shape):
         + '<div class="flds" id="flds">' + field_rows(shape) + '</div>'
         + WASTE_MENU
         + '</div>'
-        + '<button type="button" class="spec-cta" id="specCta">Spec sheet</button>'
+        + '<button type="button" class="spec-cta" id="specCta">Job sheet</button>'
         + '</section></div>'
     )
 
@@ -259,33 +269,51 @@ def spec_view(page):
     about_html = ''.join('<p class="sp-prose">' + para + '</p>' for para in page['about'])
     return (
         '<div class="view view-spec" id="viewSpec">'
-        '<section class="sp-sec" aria-label="Job description"><div class="sp-h">Job</div>'
-        '<input type="text" class="job-input" id="jobDesc" placeholder="Add site description" aria-label="Job description" autocomplete="off">'
-        '</section>'
-        '<section class="sp-sec" aria-label="To order"><div class="sp-h"><span>To order</span></div>'
+        '<section class="sp-group sp-group--estimate" aria-label="Result"><div class="sp-group-h">Result</div>'
+        '<section class="sp-sec sp-sec--sub" aria-label="Volume">'
         '<div class="sp-hero"><span class="hv" data-vol>0.00</span><span class="hu">m³</span></div>'
-        '<p class="sp-order-line"><span class="out-sub-label">Order</span><span class="out-sub-value"><b data-premix>0.0</b> m³ ready-mix, or <b data-bags>0</b> x 20 kg bags</span></p></section>'
-        '<section class="sp-sec" aria-label="Estimated cost"><div class="sp-h">Estimated cost</div>'
-        '<div class="sp-row"><span class="k">Ready-mix</span><span class="v" data-cost-mix>N/A</span></div>'
-        '<div class="sp-row"><span class="k">Bags (20 kg)</span><span class="v" data-cost-bags>N/A</span></div>'
-        '<p class="sp-prose">Indicative Australian rates: ready-mix $220–$320 per m³, bags $7–$10 each. Actual prices vary by region, supplier and mix specification, so confirm before ordering.</p></section>'
-        '<section class="sp-sec" aria-label="Inputs"><div class="sp-h">Inputs</div>'
+        '<span class="sp-hero-note" data-waste-incl>includes 10% wastage</span>'
+        '</section>'
+        '<section class="sp-sec sp-sec--sub sp-sec--divider order-plan" aria-label="Order options" data-order-plan hidden>'
+        '<div class="sp-h">Order options</div>'
+        '<div class="order-option order-option--recommended">'
+        '<div class="order-option__title-row"><p class="order-option__title" data-plan-rec-title></p><span class="order-option__tag">Recommended</span></div>'
+        '<p class="order-option__price" data-plan-rec-price></p>'
+        '<p class="order-option__why" data-plan-rec-why></p>'
+        '</div>'
+        '<div class="order-option">'
+        '<p class="order-option__title" data-plan-alt-title></p>'
+        '<p class="order-option__price" data-plan-alt-price></p>'
+        '<p class="order-option__why" data-plan-alt-why></p>'
+        '</div>'
+        '<p class="order-plan__note" data-plan-note></p>'
+        '</section>'
+        '</section>'
+        '<section class="sp-group" aria-label="Job"><div class="sp-group-h">Job</div>'
+        '<section class="sp-sec sp-sec--sub" aria-label="Job description">'
+        '<input type="text" class="job-input" id="jobDesc" placeholder="Add description" aria-label="Job description" autocomplete="off">'
+        '</section>'
+        '<section class="sp-sec sp-sec--sub" aria-label="Dimensions"><div class="sp-h">Dimensions</div>'
         '<div class="sp-row"><span class="k">Shape</span><span class="v" data-shape-name>' + SHAPE_NAMES[shape] + '</span></div>'
         '<div data-input-rows>' + input_rows(shape) + '</div>'
         '<div class="sp-row"><span class="k">Wastage</span><span class="v" data-waste-label>+10%</span></div></section>'
-        '<section class="sp-sec" aria-label="Materials and weight"><div class="sp-h">Materials &amp; weight</div>'
+        '<section class="sp-sec sp-sec--sub" aria-label="Quantities"><div class="sp-h">Quantities</div>'
         '<div class="sp-row"><span class="k">Reinforcing mesh</span><span class="v"><span data-mesh>0</span> sheets</span></div>'
         '<div class="sp-row"><span class="k">Formwork edge</span><span class="v"><span data-edge>0.0</span> m</span></div>'
         '<div class="sp-row"><span class="k">Concrete weight</span><span class="v"><span data-weight>0.00</span> t</span></div></section>'
-        '<div class="sp-actions"><button type="button" class="back" id="btnBack" data-edit>← Back</button>'
-        '<button type="button" class="copy" id="btnCopy">Copy specs</button>'
-        '<button type="button" class="pdf" id="btnPdf">Save PDF</button>'
-        '<button type="button" class="share" id="btnShare" hidden>Share</button></div>'
+        '</section>'
+        '<details class="sp-more"><summary>Help & links</summary>'
         '<section class="sp-sec" aria-label="Frequently asked questions"><div class="sp-h">FAQ</div><div class="faq-list">' + faq_html + '</div></section>'
         '<section class="sp-sec" aria-label="About"><div class="sp-h">About</div>' + about_html + '</section>'
         + other_links(page) +
+        '</details>'
         '<p class="sp-fine">Estimates only. Confirm quantities and prices with your supplier.</p>'
         '<p class="sp-foot">SlabSet · Metric Concrete Calculator · Made for Australia · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p>'
+        '<section class="sp-group sp-group--actions" aria-label="Actions">'
+        '<div class="sp-actions"><button type="button" class="back" id="btnBack" data-edit>← Back</button>'
+        '<button type="button" class="copy" id="btnCopy">Copy job</button>'
+        '<button type="button" class="pdf" id="btnPdf">Save PDF</button>'
+        '<button type="button" class="share" id="btnShare" hidden>Share</button></div></section>'
         '</div>'
     )
 
@@ -315,7 +343,8 @@ THEME_SCRIPT = (
     '<script>(function(){try{var s=localStorage.getItem(\'slabset-theme\');'
     'var d=s?s===\'dark\':(window.matchMedia&&matchMedia(\'(prefers-color-scheme: dark)\').matches);'
     'if(d){var a=document.getElementById(\'app\');a.classList.remove(\'t4\');a.classList.add(\'t4d\');'
-    'var m=document.querySelector(\'meta[name="theme-color"]\');if(m)m.setAttribute(\'content\',\'#16181A\');}}catch(e){}})();</script>'
+    'document.querySelectorAll(\'meta[name="theme-color"]\').forEach(function(m){m.setAttribute(\'content\',\'#16181A\');});'
+    '}}catch(e){}})();</script>'
 )
 
 SW_CLEANUP = '''<script>
@@ -345,6 +374,8 @@ def render(page):
 <title>''' + page['title'] + '''</title>
 <meta name="description" content="''' + page['desc'] + '''">
 <link rel="canonical" href="''' + page['url'] + '''">
+<meta name="theme-color" content="#F0F2EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#F0F2EA">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -393,7 +424,7 @@ def render(page):
     <span class="bz">SLABSET</span>
     <div class="appbar-right">
       <button type="button" class="ld-btn" id="themeToggle" aria-label="Switch light/dark theme">''' + MOON_SVG + SUN_SVG + '''</button>
-      <button type="button" class="toggle" id="modeToggle" aria-pressed="true"><span class="knob"></span><span class="opt">Calc</span><span class="opt">Spec</span></button>
+      <button type="button" class="toggle" id="modeToggle" aria-pressed="true"><span class="knob"></span><span class="opt">Calc</span><span class="opt">Job</span></button>
     </div>
   </header>
   ''' + field_view(page['shape']) + '''
@@ -405,7 +436,7 @@ def render(page):
 <p class="copy-toast" id="copyToast" role="status" aria-live="polite" hidden></p>
 
 <div class="install-banner" id="installBanner" hidden>
-  <p>Install SlabSet for iOS for the best on-site experience</p>
+  <p>Install SlabSet for the best on-site experience</p>
   <button type="button" class="install-banner__go" id="installGo">Install</button>
   <button type="button" class="install-banner__dismiss" id="installDismiss" aria-label="Dismiss">✕</button>
 </div>

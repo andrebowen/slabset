@@ -28,7 +28,7 @@
       vol: function (v) { return Math.PI * Math.pow(v.DIA / 2, 2) * (v.T / 1000) * v.Q; }
     },
     stairs: {
-      fields: [['W', 'Width', 'm', 3], ['R', 'Rise', 'mm', 300], ['G', 'Going', 'mm', 500], ['N', 'Steps', '', 60], ['BT', 'Base thickness', 'mm', 300]],
+      fields: [['W', 'Width', 'm', 3], ['R', 'Rise', 'mm', 300], ['G', 'Going', 'mm', 500], ['N', 'Steps', '', 60], ['BT', 'Base thickness (optional)', 'mm', 300]],
       vol: function (v) {
         var wedge = v.W * (v.G / 1000) * (v.R / 1000) * (v.N * (v.N + 1) / 2);
         var base = v.W * (v.G / 1000 * v.N) * (v.BT / 1000);
@@ -38,9 +38,20 @@
   };
 
   var SHAPE_NAMES = { slab: 'Slab', footing: 'Strip footing', pierfooting: 'Pier footing', column: 'Column', round: 'Round pad', stairs: 'Stairs' };
+  var FIELD_DEFAULTS = {};
+  var UNIT_HINTS = {
+    slab: 'Length & width in metres · thickness in mm',
+    footing: 'Run & width in metres · depth in mm',
+    pierfooting: 'Length, width & depth in millimetres',
+    column: 'Diameter & height in millimetres',
+    round: 'Diameter in metres · thickness in mm',
+    stairs: 'Width in metres · rise & going in mm'
+  };
 
-  // Indicative Australian rates — kept in sync with the "Estimated cost" copy in build.py.
+  // Indicative Australian rates used in the Job sheet order options.
   var RATE_MIX_LOW = 220, RATE_MIX_HIGH = 320, RATE_BAG_LOW = 7, RATE_BAG_HIGH = 10;
+  var RATE_AS_OF = '13 Jul 2026';
+  var DRAFT_KEY = 'slabset-draft';
 
   var ICONS = {
     slab: '<svg class="ico" viewBox="0 0 32 32"><polygon class="f" points="16,8 27,14.4 16,20.7 5,14.4"/><polygon class="s" points="5,14.4 16,20.7 16,23.7 5,17.4"/><polygon class="s" points="16,20.7 27,14.4 27,17.4 16,23.7"/></svg>',
@@ -54,11 +65,14 @@
   var root = document.getElementById('app');
   var initShape = document.body.getAttribute('data-shape');
   if (!SHAPES[initShape]) initShape = 'slab';
+  // Landing pages lock shape; index.html can restore the last draft shape.
+  var shapeLocked = /calculator\.html$/.test(location.pathname);
   var st = { shape: initShape, active: SHAPES[initShape].fields[0][0], vals: { L: '', W: '', T: '', D: '', PL: '', PW: '', PD: '', DIA: '', H: '', R: '', G: '', N: '', Q: '1', BT: '0', WASTE: '10' } };
   var lastSpecPlain = '';
   var lastVolValue = null;
   var deferredInstall = null;
   var trackedComplete = false;
+  var printRestoreTimer = null;
 
   function track(name, params) {
     if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
@@ -66,6 +80,13 @@
 
   function $all(sel) { return [].slice.call(root.querySelectorAll(sel)); }
   function setText(sel, val) { $all(sel).forEach(function (e) { e.textContent = val; }); }
+
+  function setThemeColor(dark) {
+    var color = dark ? '#16181A' : '#F0F2EA';
+    document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+      m.setAttribute('content', color);
+    });
+  }
 
   function setMode(spec) {
     root.classList.toggle('mode-spec', spec);
@@ -75,42 +96,123 @@
       document.getElementById('viewSpec').scrollTop = 0;
       track('spec_view', { shape: st.shape });
     }
+    saveDraft();
   }
 
   function fieldKeys() {
     return SHAPES[st.shape].fields.map(function (f) { return f[0]; });
   }
 
+  function fieldDefault(key) {
+    return (FIELD_DEFAULTS[st.shape] && FIELD_DEFAULTS[st.shape][key]) || '';
+  }
+
+  function rawComplete(key) {
+    var raw = st.vals[key];
+    return !!(raw && raw !== '0' && raw !== '.');
+  }
+
+  function defaultInUse(key) {
+    return !rawComplete(key) && !!fieldDefault(key);
+  }
+
+  function defaultValueShown(key) {
+    var def = fieldDefault(key);
+    if (!def) return false;
+    if (defaultInUse(key)) return true;
+    if (!rawComplete(key)) return false;
+    return parseFloat(st.vals[key]) === parseFloat(def);
+  }
+
+  function effectiveRaw(key) {
+    return rawComplete(key) ? st.vals[key] : fieldDefault(key);
+  }
+
   function parseVals() {
     var sh = SHAPES[st.shape];
     var v = {};
-    sh.fields.forEach(function (f) { v[f[0]] = parseFloat(st.vals[f[0]]) || 0; });
+    sh.fields.forEach(function (f) { v[f[0]] = parseFloat(effectiveRaw(f[0])) || 0; });
     return v;
   }
 
   function allComplete() {
     return SHAPES[st.shape].fields.every(function (f) {
       if (f[0] === 'BT') return true; // optional: 0 is a valid "no base slab" value
-      var raw = st.vals[f[0]];
-      return raw && raw !== '0' && raw !== '.';
+      return rawComplete(f[0]) || !!fieldDefault(f[0]);
     });
+  }
+
+  function missingFields() {
+    return SHAPES[st.shape].fields.filter(function (f) {
+      return f[0] !== 'BT' && !rawComplete(f[0]) && !fieldDefault(f[0]);
+    });
+  }
+
+  function guidanceText(total) {
+    if (total) return '';
+    var missing = missingFields();
+    if (!missing.length) return 'Enter dimensions to calculate.';
+    if (missing.length === 1) return 'Enter ' + missing[0][1].toLowerCase() + ' to calculate.';
+    return 'Enter ' + missing.slice(0, -1).map(function (f) { return f[1].toLowerCase(); }).join(', ') + ' and ' + missing[missing.length - 1][1].toLowerCase() + ' to calculate.';
+  }
+
+  function ratesNote(prefix) {
+    return prefix + ' Rates last checked ' + RATE_AS_OF + '.';
+  }
+
+  function orderPlan(total, bags20, premix) {
+    if (!total) return null;
+    var mixCost = costRange(premix, RATE_MIX_LOW, RATE_MIX_HIGH);
+    var bagCost = costRange(bags20, RATE_BAG_LOW, RATE_BAG_HIGH);
+    if (total < 0.5) {
+      return {
+        recTitle: bags20 + ' × 20 kg bags',
+        recPrice: bagCost,
+        recWhy: 'Usually the cheapest landed cost at this size: no truck booking, no minimum load, no short-load fee.',
+        altTitle: premix.toFixed(1) + ' m³ ready-mix',
+        altPrice: mixCost + ' + delivery + fees',
+        altWhy: 'Under 0.5 m³ the delivery and short-load fees usually push the total cost above bags',
+        note: ratesNote('Pricing uses indicative Australian rates: bags $7-$10 each, ready-mix $220-$320 per m³. Confirm mix grade before ordering.')
+      };
+    }
+    if (total < 1.2) {
+      return {
+        recTitle: premix.toFixed(1) + ' m³ ready-mix',
+        recPrice: mixCost,
+        recWhy: 'Less mixing and lifting. Ask for mini-mix if access is tight or the load is small.',
+        altTitle: bags20 + ' × 20 kg bags',
+        altPrice: bagCost,
+        altWhy: 'Works if truck access is poor, but it is slower and physically harder.',
+        note: ratesNote('Pricing uses indicative Australian rates: ready-mix $220-$320 per m³, bags $7-$10 each. Confirm minimum load, delivery and mix specification.')
+      };
+    }
+    return {
+      recTitle: premix.toFixed(1) + ' m³ ready-mix',
+      recPrice: mixCost,
+      recWhy: 'Best fit for this volume: far less labour than mixing bags and easier to pour consistently.',
+      altTitle: bags20 + ' × 20 kg bags',
+      altPrice: bagCost,
+      altWhy: 'Only practical if truck access is impossible or the pour can be staged.',
+      note: ratesNote('Pricing uses indicative Australian rates: ready-mix $220-$320 per m³, bags $7-$10 each. Confirm truck access and mix specification.')
+    };
   }
 
   function buildPlainSpec(opts) {
     return [
-      'CONCRETE CALCULATION · SlabSet',
+      'JOB SHEET · SlabSet',
       '',
     ].concat(opts.job ? ['JOB: ' + opts.job, ''] : []).concat([
       'SHAPE: ' + SHAPE_NAMES[st.shape],
-      'DIMENSIONS: ' + opts.dimLine,
+    ]).concat(opts.dimLines).concat([
       'WASTAGE: +' + opts.w + '%',
       '',
       'To order: ' + opts.total.toFixed(2) + ' m³',
       'Measured: ' + opts.base.toFixed(2) + ' m³',
       '',
-      'Bags (20 kg): ' + opts.bags20,
-      'Bags (30 kg): ' + opts.bags30,
-      'Premix: ' + opts.premix.toFixed(1) + ' m³',
+      'Ordering Options:',
+      opts.bags20 + ' × 20 kg Bags',
+      opts.bags30 + ' × 30 kg Bags',
+      opts.premix.toFixed(1) + ' m³ Premix',
       '',
       'Reinforcing mesh: ' + opts.mesh + ' sheets',
       'Formwork edge: ' + opts.edge.toFixed(1) + ' m',
@@ -120,6 +222,59 @@
       '',
       'Estimates only. Confirm quantities and prices with your supplier before ordering.'
     ]).join('\n');
+  }
+
+  function saveDraft() {
+    try {
+      var jobEl = document.getElementById('jobDesc');
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        shape: st.shape,
+        vals: st.vals,
+        job: jobEl ? jobEl.value : '',
+        mode: root.classList.contains('mode-spec') ? 'spec' : 'field'
+      }));
+    } catch (e) {}
+  }
+
+  function loadDraft() {
+    try {
+      var raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      var draft = JSON.parse(raw);
+      if (!draft || !draft.vals) return;
+      if (!shapeLocked && draft.shape && SHAPES[draft.shape]) st.shape = draft.shape;
+      Object.keys(draft.vals).forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(st.vals, k)) st.vals[k] = draft.vals[k];
+      });
+      st.active = SHAPES[st.shape].fields[0][0];
+      var jobEl = document.getElementById('jobDesc');
+      if (jobEl && typeof draft.job === 'string') jobEl.value = draft.job;
+    } catch (e) {}
+  }
+
+  function focusField(key, select) {
+    var input = root.querySelector('input[data-key="' + key + '"]');
+    if (!input) return;
+    setTimeout(function () {
+      input.focus();
+      if (select) input.select();
+    }, 0);
+  }
+
+  function focusFirstEmpty() {
+    var missing = missingFields();
+    var key = missing.length ? missing[0][0] : SHAPES[st.shape].fields[0][0];
+    focusField(key);
+  }
+
+  function flashUnits() {
+    $all('.fld .unit').forEach(function (el) {
+      el.classList.remove('unit-flash');
+      void el.offsetWidth;
+      el.classList.add('unit-flash');
+    });
+    var hint = UNIT_HINTS[st.shape];
+    if (hint) showToast(hint);
   }
 
   function updateOutputs() {
@@ -132,7 +287,8 @@
       var val = st.vals[k] || '';
       var unit = f[2] ? (' ' + f[2]) : '';
       var empty = !(val && val !== '0' && val !== '.');
-      ir += '<div class="sp-row"><span class="k">' + f[1] + '</span><span class="v">' + (empty ? '0' : val) + unit + '</span></div>';
+      var shown = (empty ? '0' : val) + unit;
+      ir += '<button type="button" class="sp-row sp-row--edit" data-edit-field="' + k + '"><span class="k">' + f[1] + '</span><span class="v">' + shown + '</span></button>';
     });
     var irEl = root.querySelector('[data-input-rows]');
     if (irEl) irEl.innerHTML = ir;
@@ -154,6 +310,10 @@
       it.classList.toggle('on', on);
       it.setAttribute('aria-selected', on ? 'true' : 'false');
     });
+    sh.fields.forEach(function (f) {
+      var row = root.querySelector('.fld[data-field="' + f[0] + '"]');
+      if (row) row.classList.toggle('is-default', defaultValueShown(f[0]));
+    });
 
     var v = parseVals();
     var base = allComplete() ? sh.vol(v) : 0;
@@ -162,10 +322,8 @@
     var bags30 = total ? Math.ceil(total / (0.0098 * 1.5)) : 0;
     var premix = total ? Math.ceil(total * 10) / 10 : 0;
 
-    var outSub = root.querySelector('.out-sub');
-    if (outSub) outSub.classList.toggle('is-empty', !total);
-    var specOrderLine = root.querySelector('.sp-order-line');
-    if (specOrderLine) specOrderLine.classList.toggle('is-empty', !total);
+    var specOrderBlock = root.querySelector('.sp-order-block');
+    if (specOrderBlock) specOrderBlock.classList.toggle('is-empty', !total);
 
     var area = 0;
     var edge = 0;
@@ -195,14 +353,29 @@
     setText('[data-bags]', bags20);
     setText('[data-bags30]', bags30);
     setText('[data-premix]', premix.toFixed(1));
-    setText('[data-cost-mix]', costRange(premix, RATE_MIX_LOW, RATE_MIX_HIGH));
-    setText('[data-cost-bags]', costRange(bags20, RATE_BAG_LOW, RATE_BAG_HIGH));
     setText('[data-weight]', (total * 2.4).toFixed(2));
     setText('[data-mesh]', mesh);
     setText('[data-edge]', edge.toFixed(1));
     setText('[data-shape-name]', SHAPE_NAMES[st.shape]);
     setText('[data-waste-label]', '+' + w + '%');
     setText('[data-waste-incl]', w ? 'includes ' + w + '% wastage' : 'no wastage added');
+    setText('[data-guidance]', guidanceText(total));
+    $all('[data-guidance]').forEach(function (el) { el.hidden = !!total; });
+    var plan = orderPlan(total, bags20, premix);
+    setText('[data-lcd-recommend]', plan ? plan.recTitle : '');
+    setText('[data-lcd-price]', plan ? plan.recPrice : '');
+    var outRecommend = document.getElementById('outRecommend');
+    if (outRecommend) outRecommend.hidden = !plan;
+    $all('[data-order-plan]').forEach(function (el) { el.hidden = !plan; });
+    if (plan) {
+      setText('[data-plan-rec-title]', plan.recTitle);
+      setText('[data-plan-rec-price]', plan.recPrice);
+      setText('[data-plan-rec-why]', plan.recWhy);
+      setText('[data-plan-alt-title]', plan.altTitle);
+      setText('[data-plan-alt-price]', plan.altPrice);
+      setText('[data-plan-alt-why]', plan.altWhy);
+      setText('[data-plan-note]', plan.note);
+    }
 
     var wf = (1 + w / 100).toFixed(2);
     var work;
@@ -225,7 +398,7 @@
     var cta = document.getElementById('specCta');
     if (cta) {
       cta.classList.toggle('is-ready', !!total);
-      cta.textContent = total ? 'View spec sheet →' : 'Spec sheet';
+      cta.textContent = total ? 'View job sheet →' : 'Job sheet';
     }
 
     if (total) {
@@ -233,10 +406,10 @@
         trackedComplete = true;
         track('calc_complete', { shape: st.shape });
       }
-      var dimLine = sh.fields.map(function (f) {
-        var raw = st.vals[f[0]] || '0';
-        return raw + (f[2] ? ' ' + f[2] : '');
-      }).join(' × ');
+      var dimLines = sh.fields.map(function (f) {
+        var raw = effectiveRaw(f[0]) || '0';
+        return f[1] + ': ' + raw + (f[2] ? ' ' + f[2] : '');
+      });
       lastSpecPlain = buildPlainSpec({
         w: w,
         base: base,
@@ -244,7 +417,7 @@
         bags20: bags20,
         bags30: bags30,
         premix: premix,
-        dimLine: dimLine,
+        dimLines: dimLines,
         mesh: mesh,
         edge: edge,
         weight: total * 2.4,
@@ -254,6 +427,7 @@
     } else {
       lastSpecPlain = '';
     }
+    saveDraft();
   }
 
   function validateField(key) {
@@ -264,10 +438,18 @@
     var label = root.querySelector('.fld[data-field="' + key + '"]');
     if (!label) return;
     var warnEl = label.querySelector('.fld-warn');
+    var fixEl = label.querySelector('.fld-fix');
     var val = parseFloat(st.vals[key]) || 0;
     var bad = !!(max && val > max);
+    var suggested = '';
+    if (bad && fdef[2] === 'mm' && val >= 1000 && val % 10 === 0) suggested = String(val / 10);
     label.classList.toggle('warn', bad);
-    if (warnEl) warnEl.textContent = bad ? 'That looks unusually large — check the units.' : '';
+    if (warnEl) warnEl.textContent = bad ? (suggested ? 'That looks unusually large.' : 'That looks unusually large — check the units.') : '';
+    if (fixEl) {
+      fixEl.hidden = !suggested;
+      fixEl.textContent = suggested ? 'Use ' + suggested + ' mm' : '';
+      fixEl.setAttribute('data-fix-value', suggested);
+    }
   }
 
   function costRange(qty, low, high) {
@@ -289,15 +471,38 @@
     sh.fields.forEach(function (f) {
       var k = f[0];
       var val = st.vals[k] || '';
-      fh += '<label class="fld" data-field="' + k + '">'
-        + '<span class="tl">' + f[1] + '</span>'
-        + '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-key="' + k + '" value="' + val + '" placeholder="0" aria-label="' + f[1] + unitPhrase(f[2]) + '">'
+      var def = fieldDefault(k);
+      var ph = k === 'BT' ? '0 = none' : (def || '0');
+      fh += '<div class="fld" data-field="' + k + '">'
+        + '<label class="tl" for="fld-' + k + '">' + f[1] + '</label>'
+        + '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" id="fld-' + k + '" data-key="' + k + '" value="' + val + '" placeholder="' + ph + '" aria-label="' + f[1] + unitPhrase(f[2]) + '">'
         + '<span class="unit">' + (f[2] || '') + '</span>'
-        + '<span class="fld-warn" aria-live="polite"></span></label>';
+        + '<span class="fld-warn" aria-live="polite"></span>'
+        + '<button type="button" class="fld-fix" data-fix-key="' + k + '" hidden></button></div>';
     });
     document.getElementById('flds').innerHTML = fh;
+    sh.fields.forEach(function (f) {
+      var row = root.querySelector('.fld[data-field="' + f[0] + '"]');
+      if (row) row.classList.toggle('is-default', defaultValueShown(f[0]));
+    });
     sh.fields.forEach(function (f) { validateField(f[0]); });
     updateOutputs();
+  }
+
+  function applyFix(btn) {
+    var key = btn.getAttribute('data-fix-key');
+    var value = btn.getAttribute('data-fix-value');
+    if (!key || !value) return;
+    st.vals[key] = value;
+    st.active = key;
+    var input = root.querySelector('input[data-key="' + key + '"]');
+    if (input) {
+      input.value = value;
+      input.focus();
+    }
+    validateField(key);
+    updateOutputs();
+    track('unit_fix_apply', { shape: st.shape, field: key });
   }
 
   function render() {
@@ -331,11 +536,15 @@
       return true;
     }
     if (b.hasAttribute('data-shape')) {
-      st.shape = b.getAttribute('data-shape');
+      var nextShape = b.getAttribute('data-shape');
+      var changed = nextShape !== st.shape;
+      st.shape = nextShape;
       st.active = SHAPES[st.shape].fields[0][0];
-      closeMenus(true);
+      closeMenus();
       track('shape_select', { shape: st.shape });
       render();
+      if (changed) flashUnits();
+      focusFirstEmpty();
       return true;
     }
     if (b.hasAttribute('data-waste')) {
@@ -367,7 +576,7 @@
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
     document.body.removeChild(ta);
-    showToast(ok ? 'Specs copied' : 'Copy failed');
+    showToast(ok ? 'Job copied' : 'Copy failed');
   }
 
   function copyText(text) {
@@ -375,7 +584,7 @@
     track('copy_spec', { shape: st.shape });
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () {
-        showToast('Specs copied');
+        showToast('Job copied');
       }).catch(function () {
         copyFallback(text);
       });
@@ -384,14 +593,44 @@
     }
   }
 
+  function printJob() {
+    track('save_pdf', { shape: st.shape });
+    var wasDark = root.classList.contains('t4d');
+    function restore() {
+      if (!wasDark) return;
+      root.classList.add('t4d');
+      root.classList.remove('t4');
+      setThemeColor(true);
+    }
+    if (wasDark) {
+      root.classList.remove('t4d');
+      root.classList.add('t4');
+      setThemeColor(false);
+    }
+    window.removeEventListener('afterprint', restore);
+    window.addEventListener('afterprint', restore);
+    clearTimeout(printRestoreTimer);
+    printRestoreTimer = setTimeout(restore, 1500);
+    window.print();
+  }
+
+  function isIos() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }
+
   function initTheme() {
-    // Theme class is applied before paint by an inline script in the HTML.
     document.getElementById('themeToggle').addEventListener('click', function () {
       var dark = !root.classList.contains('t4d');
       root.classList.toggle('t4d', dark);
       root.classList.toggle('t4', !dark);
       try { localStorage.setItem('slabset-theme', dark ? 'dark' : 'light'); } catch (e) {}
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#16181A' : '#F0F2EA');
+      setThemeColor(dark);
       track('theme_toggle', { theme: dark ? 'dark' : 'light' });
     });
   }
@@ -399,18 +638,39 @@
   function initPwa() {
     var banner = document.getElementById('installBanner');
     if (!banner) return;
+    var copy = banner.querySelector('p');
+    var go = document.getElementById('installGo');
+    var dismissed = false;
+    try { dismissed = !!localStorage.getItem('slabset-install-dismissed'); } catch (err) {}
+
+    function showBanner(mode) {
+      if (dismissed || isStandalone()) return;
+      banner.hidden = false;
+      banner.setAttribute('data-mode', mode);
+      if (mode === 'ios') {
+        if (copy) copy.textContent = 'Install SlabSet: tap Share, then Add to Home Screen';
+        if (go) go.textContent = 'How';
+      } else {
+        if (copy) copy.textContent = 'Install SlabSet for the best on-site experience';
+        if (go) go.textContent = 'Install';
+      }
+      track('pwa_banner_shown', { mode: mode });
+    }
 
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferredInstall = e;
-      var dismissed = false;
-      try { dismissed = !!localStorage.getItem('slabset-install-dismissed'); } catch (err) {}
-      if (dismissed) return;
-      banner.hidden = false;
-      track('pwa_banner_shown');
+      showBanner('android');
     });
 
-    document.getElementById('installGo').addEventListener('click', function () {
+    if (isIos()) showBanner('ios');
+
+    go.addEventListener('click', function () {
+      if (banner.getAttribute('data-mode') === 'ios') {
+        showToast('Tap the Share icon, then Add to Home Screen');
+        track('pwa_ios_how');
+        return;
+      }
       if (!deferredInstall) return;
       deferredInstall.prompt();
       deferredInstall.userChoice.then(function (choice) {
@@ -432,9 +692,12 @@
     if (!btn || !navigator.share) return;
     btn.hidden = false;
     btn.addEventListener('click', function () {
-      if (!lastSpecPlain) return;
+      if (!lastSpecPlain) { showToast('Enter dimensions first'); return; }
       track('share_spec', { shape: st.shape });
-      navigator.share({ title: 'SlabSet concrete spec', text: lastSpecPlain, url: location.href }).catch(function () {});
+      navigator.share({ title: 'SlabSet job sheet', text: lastSpecPlain, url: location.href }).catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        showToast('Share failed');
+      });
     });
   }
 
@@ -445,18 +708,38 @@
   }
 
   document.getElementById('modeToggle').addEventListener('click', function () {
-    setMode(!root.classList.contains('mode-spec'));
+    var toSpec = !root.classList.contains('mode-spec');
+    if (toSpec && !allComplete()) {
+      showToast(guidanceText(0));
+      return;
+    }
+    setMode(toSpec);
   });
 
   document.getElementById('viewField').addEventListener('click', function (e) {
     var b = e.target.closest('button');
-    if (!b) return;
-    if (b.id === 'specCta') {
-      track('spec_cta_tap', { ready: b.classList.contains('is-ready'), shape: st.shape });
-      setMode(true);
+    if (b) {
+      if (b.classList.contains('fld-fix')) {
+        applyFix(b);
+        return;
+      }
+      if (b.id === 'specCta') {
+        if (!b.classList.contains('is-ready')) {
+          showToast(guidanceText(0));
+          return;
+        }
+        track('spec_cta_tap', { ready: true, shape: st.shape });
+        setMode(true);
+        return;
+      }
+      if (handleMenuInteraction(e)) return;
+    }
+    var row = e.target.closest('.fld[data-field]');
+    if (row) {
+      var input = row.querySelector('.fld-input');
+      if (input && e.target !== input) input.focus();
       return;
     }
-    handleMenuInteraction(e);
   });
 
   document.getElementById('viewField').addEventListener('input', function (e) {
@@ -473,15 +756,44 @@
     updateOutputs();
   });
 
+  document.getElementById('viewField').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    var input = e.target.closest('.fld-input');
+    if (!input) return;
+    e.preventDefault();
+    var keys = fieldKeys();
+    var idx = keys.indexOf(input.getAttribute('data-key'));
+    if (idx < 0) return;
+    if (idx < keys.length - 1) {
+      focusField(keys[idx + 1], true);
+      return;
+    }
+    if (allComplete()) {
+      setMode(true);
+      return;
+    }
+    focusFirstEmpty();
+  });
+
   document.getElementById('viewSpec').addEventListener('click', function (e) {
     if (handleMenuInteraction(e)) return;
+    var editField = e.target.closest('[data-edit-field]');
+    if (editField) {
+      var key = editField.getAttribute('data-edit-field');
+      setMode(false);
+      focusField(key, true);
+      return;
+    }
     if (e.target.closest('[data-edit]')) setMode(false);
     if (e.target.closest('#btnCopy')) copyText(lastSpecPlain);
-    if (e.target.closest('#btnPdf')) { track('save_pdf', { shape: st.shape }); window.print(); }
+    if (e.target.closest('#btnPdf')) printJob();
   });
 
   document.getElementById('viewSpec').addEventListener('input', function (e) {
-    if (e.target.id === 'jobDesc') updateOutputs();
+    if (e.target.id === 'jobDesc') {
+      updateOutputs();
+      saveDraft();
+    }
   });
 
   document.addEventListener('click', function (e) {
@@ -510,6 +822,7 @@
     }
   });
 
+  loadDraft();
   initTheme();
   initPwa();
   initShare();

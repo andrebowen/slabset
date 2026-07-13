@@ -1,25 +1,31 @@
-# SlabSet website — CONTEXT
+# SlabSet website v6 — CONTEXT
 
 ## Status
 
 | Field | Value |
 |-------|-------|
 | status | active |
-| role | Deployable spec-sheet website (no field-tool numpad) |
+| role | Deployable job-sheet website with guided field UX |
 | parent | `Calculator-Studio/slab-set/` |
 
 ## Intent
 
-Single folder containing **all files the public website needs**. UX follows **mockup 04** from `mockups/claude/keypad-directions.html` — monospace field log, light/dark theme, Field ⇄ Spec toggle, full costed spec sheet. Web inputs replace the on-screen keypad.
+Single folder containing **all files the public website needs**. v6 keeps the mockup 04 instrument feel, then adds the UX pass:
+
+- explicit missing-field guidance (thickness starts empty)
+- LCD + Job sheet order recommendations (bags vs ready-mix)
+- one-tap correction for likely millimetre unit mistakes
+- sticky Job actions (copy / PDF / share)
+- collapsed help/SEO content so the job sheet stays task-focused
 
 ## Relationship
 
 ```
 slab-set/
-├── website/          ← deploy root (this folder)
+├── app-v6/           ← this folder; deploy candidate
+├── app-v5/           ← previous version
 ├── field-tool/       ← numpad + Spec panel mockup
-├── mockups/          ← design exploration
-└── index.html        ← legacy production mirror
+└── mockups/          ← design exploration
 ```
 
 ## Preview
@@ -30,4 +36,4 @@ slab-set/
 
 ## Outputs
 
-Deploy `website/` as static site to slabset.online (or successor host).
+Deploy `app-v6/` as static site to slabset.online (or successor host).
