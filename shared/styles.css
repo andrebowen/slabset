@@ -419,6 +419,10 @@ button.fld.shape-fld{
 .sp-row{display:flex;justify-content:space-between;align-items:baseline;font-size:16px;gap:calc(var(--grid) * 3)}
 .sp-row .k{flex:1;opacity:.8}
 .sp-row .v{font-weight:700;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sp-row--total .v{
+  border-bottom:2px solid currentColor;
+  padding-bottom:1px;
+}
 button.sp-row--edit{
   width:100%;border:0;background:transparent;color:inherit;font:inherit;
   padding:0;margin:0;cursor:pointer;text-align:left;

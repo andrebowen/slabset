@@ -216,10 +216,9 @@
     ].concat(opts.job ? ['JOB: ' + opts.job, ''] : []).concat([
       'SHAPE: ' + SHAPE_NAMES[st.shape],
     ]).concat(opts.dimLines).concat([
-      'WASTAGE: +' + opts.w + '%',
-      '',
-      'To order: ' + opts.total.toFixed(2) + ' m³',
-      'Measured: ' + opts.base.toFixed(2) + ' m³',
+      'Subtotal: ' + opts.base.toFixed(2) + ' m³',
+      'Wastage: +' + opts.w + '%',
+      'Total: ' + opts.total.toFixed(2) + ' m³',
       '',
       'Ordering Options:',
       opts.bags20 + ' × 20 kg Bags',
@@ -360,6 +359,8 @@
     var mesh = area ? Math.ceil(area / 14.4) : 0;
 
     setText('[data-vol]', total ? total.toFixed(2) : '0.00');
+    setText('[data-order-vol]', total ? total.toFixed(2) : '0.00');
+    setText('[data-base-vol]', base ? base.toFixed(2) : '0.00');
     var volEl = root.querySelector('.out .ov');
     if (volEl && total !== lastVolValue) {
       lastVolValue = total;

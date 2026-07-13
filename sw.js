@@ -1,6 +1,6 @@
 // Single version knob — bump on deploy. Assets carry no query strings;
 // the fetch strategy is network-first, so fresh files win whenever online.
-var VERSION = 'v665';
+var VERSION = 'v669';
 var CACHE = 'slabset-' + VERSION;
 var ASSETS = [
   './',
