@@ -48,9 +48,18 @@
     stairs: 'Width in metres · rise & going in mm'
   };
 
-  // Indicative Australian rates used in the Job sheet order options.
-  var RATE_MIX_LOW = 220, RATE_MIX_HIGH = 320, RATE_BAG_LOW = 7, RATE_BAG_HIGH = 10;
-  var RATE_AS_OF = '13 Jul 2026';
+  // Indicative Australian rate bands for Job sheet / LCD order options.
+  // Ops: revisit every quarter (or sooner if bags/ready-mix move sharply); update asOf when you do.
+  var RATES = {
+    mixLow: 220,
+    mixHigh: 320,
+    bagLow: 7,
+    bagHigh: 10,
+    asOf: '13 Jul 2026',
+    cadence: 'quarterly'
+  };
+  var RATE_MIX_LOW = RATES.mixLow, RATE_MIX_HIGH = RATES.mixHigh;
+  var RATE_BAG_LOW = RATES.bagLow, RATE_BAG_HIGH = RATES.bagHigh;
   var DRAFT_KEY = 'slabset-draft';
 
   var ICONS = {
@@ -96,6 +105,7 @@
       document.getElementById('viewSpec').scrollTop = 0;
       track('spec_view', { shape: st.shape });
     }
+    syncInstallBanner();
     saveDraft();
   }
 
@@ -156,8 +166,10 @@
     return 'Enter ' + missing.slice(0, -1).map(function (f) { return f[1].toLowerCase(); }).join(', ') + ' and ' + missing[missing.length - 1][1].toLowerCase() + ' to calculate.';
   }
 
-  function ratesNote(prefix) {
-    return prefix + ' Rates last checked ' + RATE_AS_OF + '.';
+  function ratesNote(confirmHint) {
+    var bands = 'bags $' + RATES.bagLow + '–$' + RATES.bagHigh + ' each, ready-mix $' + RATES.mixLow + '–$' + RATES.mixHigh + ' per m³';
+    return 'Guide only — not a supplier quote. Typical Australian prices: ' + bands +
+      ' (ex delivery, pump and waiting). Reviewed ' + RATES.cadence + ' · last checked ' + RATES.asOf + '. ' + confirmHint;
   }
 
   function orderPlan(total, bags20, premix) {
@@ -172,7 +184,7 @@
         altTitle: premix.toFixed(1) + ' m³ ready-mix',
         altPrice: mixCost + ' + delivery + fees',
         altWhy: 'Under 0.5 m³ the delivery and short-load fees usually push the total cost above bags',
-        note: ratesNote('Pricing uses indicative Australian rates: bags $7-$10 each, ready-mix $220-$320 per m³. Confirm mix grade before ordering.')
+        note: ratesNote('Confirm mix grade before ordering.')
       };
     }
     if (total < 1.2) {
@@ -183,7 +195,7 @@
         altTitle: bags20 + ' × 20 kg bags',
         altPrice: bagCost,
         altWhy: 'Works if truck access is poor, but it is slower and physically harder.',
-        note: ratesNote('Pricing uses indicative Australian rates: ready-mix $220-$320 per m³, bags $7-$10 each. Confirm minimum load, delivery and mix specification.')
+        note: ratesNote('Confirm minimum load, delivery and mix specification.')
       };
     }
     return {
@@ -193,7 +205,7 @@
       altTitle: bags20 + ' × 20 kg bags',
       altPrice: bagCost,
       altWhy: 'Only practical if truck access is impossible or the pour can be staged.',
-      note: ratesNote('Pricing uses indicative Australian rates: ready-mix $220-$320 per m³, bags $7-$10 each. Confirm truck access and mix specification.')
+      note: ratesNote('Confirm truck access and mix specification.')
     };
   }
 
@@ -220,7 +232,7 @@
       '',
       opts.working,
       '',
-      'Estimates only. Confirm quantities and prices with your supplier before ordering.'
+      'Estimates only — not a supplier quote. Confirm quantities and prices before ordering.'
     ]).join('\n');
   }
 
@@ -258,6 +270,11 @@
     setTimeout(function () {
       input.focus();
       if (select) input.select();
+      try {
+        input.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+      } catch (err) {
+        input.scrollIntoView(true);
+      }
     }, 0);
   }
 
@@ -467,15 +484,17 @@
     var sh = SHAPES[st.shape];
     if (fieldKeys().indexOf(st.active) < 0) st.active = sh.fields[0][0];
 
+    var keys = fieldKeys();
     var fh = '';
-    sh.fields.forEach(function (f) {
+    sh.fields.forEach(function (f, i) {
       var k = f[0];
       var val = st.vals[k] || '';
       var def = fieldDefault(k);
       var ph = k === 'BT' ? '0 = none' : (def || '0');
+      var hint = (i === keys.length - 1 || k === 'BT') ? 'done' : 'next';
       fh += '<div class="fld" data-field="' + k + '">'
         + '<label class="tl" for="fld-' + k + '">' + f[1] + '</label>'
-        + '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" id="fld-' + k + '" data-key="' + k + '" value="' + val + '" placeholder="' + ph + '" aria-label="' + f[1] + unitPhrase(f[2]) + '">'
+        + '<input class="fld-input" type="text" inputmode="decimal" enterkeyhint="' + hint + '" autocomplete="off" spellcheck="false" id="fld-' + k + '" data-key="' + k + '" value="' + val + '" placeholder="' + ph + '" aria-label="' + f[1] + unitPhrase(f[2]) + '">'
         + '<span class="unit">' + (f[2] || '') + '</span>'
         + '<span class="fld-warn" aria-live="polite"></span>'
         + '<button type="button" class="fld-fix" data-fix-key="' + k + '" hidden></button></div>';
@@ -635,17 +654,30 @@
     });
   }
 
+  var syncInstallBanner = function () {};
+
   function initPwa() {
     var banner = document.getElementById('installBanner');
     if (!banner) return;
     var copy = banner.querySelector('p');
     var go = document.getElementById('installGo');
     var dismissed = false;
+    var wanted = false;
     try { dismissed = !!localStorage.getItem('slabset-install-dismissed'); } catch (err) {}
+
+    syncInstallBanner = function () {
+      if (dismissed || isStandalone() || root.classList.contains('mode-spec') || !wanted) {
+        banner.hidden = true;
+        document.body.classList.remove('has-install-banner');
+        return;
+      }
+      banner.hidden = false;
+      document.body.classList.add('has-install-banner');
+    };
 
     function showBanner(mode) {
       if (dismissed || isStandalone()) return;
-      banner.hidden = false;
+      wanted = true;
       banner.setAttribute('data-mode', mode);
       if (mode === 'ios') {
         if (copy) copy.textContent = 'Install SlabSet: tap Share, then Add to Home Screen';
@@ -654,6 +686,7 @@
         if (copy) copy.textContent = 'Install SlabSet for the best on-site experience';
         if (go) go.textContent = 'Install';
       }
+      syncInstallBanner();
       track('pwa_banner_shown', { mode: mode });
     }
 
@@ -667,7 +700,7 @@
 
     go.addEventListener('click', function () {
       if (banner.getAttribute('data-mode') === 'ios') {
-        showToast('Tap the Share icon, then Add to Home Screen');
+        showToast('Tap Share → Add to Home Screen');
         track('pwa_ios_how');
         return;
       }
@@ -675,13 +708,16 @@
       deferredInstall.prompt();
       deferredInstall.userChoice.then(function (choice) {
         track('pwa_install', { outcome: choice && choice.outcome ? choice.outcome : 'unknown' });
-        banner.hidden = true;
+        wanted = false;
+        syncInstallBanner();
         deferredInstall = null;
       });
     });
 
     document.getElementById('installDismiss').addEventListener('click', function () {
-      banner.hidden = true;
+      dismissed = true;
+      wanted = false;
+      syncInstallBanner();
       track('pwa_banner_dismissed');
       try { localStorage.setItem('slabset-install-dismissed', '1'); } catch (e) {}
     });
@@ -765,7 +801,13 @@
     var idx = keys.indexOf(input.getAttribute('data-key'));
     if (idx < 0) return;
     if (idx < keys.length - 1) {
-      focusField(keys[idx + 1], true);
+      var next = keys[idx + 1];
+      // Optional trailing field (stairs base): skip straight to Job when ready
+      if (next === 'BT' && allComplete()) {
+        setMode(true);
+        return;
+      }
+      focusField(next, true);
       return;
     }
     if (allComplete()) {

@@ -43,6 +43,8 @@ FAQ_SHARED = [
      '10% is a normal starting point. Use less for tidy formwork and more for rough ground, uneven excavation or over-dig.'),
     ('Should I order bags or premix?',
      'Below 0.5 m³, bags usually work out cheaper: you skip the delivery minimums and short-load fees trucks charge. Above 0.5 m³, ready-mix usually wins on price, whether that\'s a mini-mix truck for tight access and smaller loads or a standard agitator truck for bigger pours.'),
+    ('Are the price estimates quotes?',
+     'No. SlabSet uses typical Australian prices for bags and ready-mix, reviewed about every quarter. Delivery, pump, waiting time, region and mix grade can move the real number a lot. Treat the range as a planning guide and confirm with your supplier before you order.'),
     ('Does this replace a builder or engineer?',
      'No. Use SlabSet for estimating, then confirm quantities, grade and reinforcement before ordering.'),
 ]
@@ -168,13 +170,15 @@ FIELD_DEFAULTS = {}
 
 def field_rows(shape):
     out = []
-    for k, label, unit in SHAPES[shape]:
+    fields = SHAPES[shape]
+    for i, (k, label, unit) in enumerate(fields):
         default = FIELD_DEFAULTS.get(shape, {}).get(k, '')
-        placeholder = default or '0'
+        placeholder = '0 = none' if k == 'BT' else (default or '0')
+        hint = 'done' if (i == len(fields) - 1 or k == 'BT') else 'next'
         out.append(
             '<div class="fld" data-field="' + k + '">'
             '<label class="tl" for="fld-' + k + '">' + label + '</label>'
-            '<input class="fld-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" '
+            '<input class="fld-input" type="text" inputmode="decimal" enterkeyhint="' + hint + '" autocomplete="off" spellcheck="false" '
             'id="fld-' + k + '" data-key="' + k + '" value="" placeholder="' + placeholder + '" aria-label="' + label + unit_phrase(unit) + '">'
             '<span class="unit">' + unit + '</span>'
             '<span class="fld-warn" aria-live="polite"></span>'
@@ -307,7 +311,7 @@ def spec_view(page):
         '<section class="sp-sec" aria-label="About"><div class="sp-h">About</div>' + about_html + '</section>'
         + other_links(page) +
         '</details>'
-        '<p class="sp-fine">Estimates only. Confirm quantities and prices with your supplier.</p>'
+        '<p class="sp-fine">Estimates only — not a supplier quote. Confirm quantities and prices with your supplier.</p>'
         '<p class="sp-foot">SlabSet · Metric Concrete Calculator · Made for Australia · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:metainstruments@icloud.com">Contact</a></p>'
         '<section class="sp-group sp-group--actions" aria-label="Actions">'
         '<div class="sp-actions"><button type="button" class="back" id="btnBack" data-edit>← Back</button>'
@@ -421,7 +425,7 @@ def render(page):
       <polygon class="slogo-s" points="12,26 24,14 24,38 12,50"/>
       <polygon class="slogo-s" points="64,50 76,38 76,62 64,74"/>
     </svg>
-    <span class="bz">SLABSET</span>
+    <span class="bz">SlabSet</span>
     <div class="appbar-right">
       <button type="button" class="ld-btn" id="themeToggle" aria-label="Switch light/dark theme">''' + MOON_SVG + SUN_SVG + '''</button>
       <button type="button" class="toggle" id="modeToggle" aria-pressed="true"><span class="knob"></span><span class="opt">Calc</span><span class="opt">Job</span></button>

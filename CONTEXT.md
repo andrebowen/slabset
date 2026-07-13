@@ -34,6 +34,10 @@ slab-set/
 - **Field tool:** `field-tool/dev-server.py` → port 8811
 - **Mockups catalogue:** `mockups/index.html` via slab-set mockup server → port 8810
 
+## Rates (ops)
+
+Indicative AU bands live in `shared/calc.js` (`RATES`). Revisit **quarterly** (or sooner if market moves); bump `asOf` when you change numbers. Copy says guide-only, ex delivery/pump/waiting.
+
 ## Outputs
 
 Deploy `app-v6/` as static site to slabset.online (or successor host).
