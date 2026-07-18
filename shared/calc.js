@@ -744,7 +744,8 @@
     btn.addEventListener('click', function () {
       if (!lastSpecPlain) { showToast('Enter dimensions first'); return; }
       track('share_spec', { shape: st.shape });
-      navigator.share({ title: 'SlabSet job sheet', text: lastSpecPlain, url: location.href }).catch(function (err) {
+      // iOS Notes/Messages drop `text` when `url` is also passed — share body only.
+      navigator.share({ title: 'SlabSet job sheet', text: lastSpecPlain }).catch(function (err) {
         if (err && err.name === 'AbortError') return;
         showToast('Share failed');
       });
