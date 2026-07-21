@@ -1,27 +1,64 @@
-/* SlabSet v11 — industrial dark two-step calculator */
-:root {
+/* SlabSet v11 — industrial calculator (dark default + light theme) */
+:root,
+[data-theme="dark"] {
   --bg: #121212;
   --surface: #1e1e1e;
   --surface-2: #2a2a2a;
-  /* Figma Make: border-zinc-800 */
   --line: #27272a;
   --muted: #888;
   --soft: #b0b0b0;
   --ink: #f5f5f5;
   --amber: #ffb800;
   --amber-dim: #3a3200;
+  --on-amber: #121212;
   --blue: #93c5fd;
   --blue-bg: #0f1b3d;
   --blue-line: #1e3a8a;
   --green: #5fe9b5;
   --green-bg: #06241c;
   --green-line: #065f46;
+  --stage: #000;
+  --phone-rim: #222;
+  --phone-bevel: #0a0a0a;
+  --notch: #000;
+  --home-bar: #3a3a3a;
+  --qty-n: #fff;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-soft: rgba(255, 255, 255, 0.06);
+  --shape-on: var(--amber);
   --radius: 12px;
   --radius-lg: 16px;
   --radius-cta: 18px;
   --font: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f4f4f5;
+  --surface: #ffffff;
+  --surface-2: #e4e4e7;
+  --line: #e4e4e7;
+  --muted: #71717a;
+  --soft: #52525b;
+  --ink: #18181b;
+  --amber: #ffb800;
+  --amber-dim: #fff3c4;
+  --on-amber: #121212;
+  --green: #0d9488;
+  --green-bg: #ccfbf1;
+  --green-line: #0f766e;
+  --stage: #d4d4d8;
+  --phone-rim: #a1a1aa;
+  --phone-bevel: #e4e4e7;
+  --notch: #18181b;
+  --home-bar: #a1a1aa;
+  --qty-n: #18181b;
+  --hairline: #e4e4e7;
+  --hairline-soft: #e4e4e7;
+  --shape-on: #a16207;
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -30,7 +67,7 @@ html, body { height: 100%; }
 body {
   margin: 0;
   font-family: var(--font);
-  background: #000;
+  background: var(--stage);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -42,7 +79,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: #000;
+  background: var(--stage);
 }
 
 .phone {
@@ -51,8 +88,8 @@ body {
   height: min(844px, calc(100dvh - 32px));
   background: var(--bg);
   border-radius: 40px;
-  border: 1px solid #222;
-  box-shadow: 0 0 0 10px #0a0a0a, 0 30px 60px rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--phone-rim);
+  box-shadow: 0 0 0 10px var(--phone-bevel), 0 30px 60px rgba(0, 0, 0, 0.28);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -67,7 +104,7 @@ body {
   transform: translateX(-50%);
   width: 118px;
   height: 28px;
-  background: #000;
+  background: var(--notch);
   border-radius: 18px;
   z-index: 5;
 }
@@ -94,7 +131,7 @@ body {
   width: 120px;
   height: 4px;
   border-radius: 999px;
-  background: #3a3a3a;
+  background: var(--home-bar);
 }
 
 @media (max-width: 480px) {
@@ -115,12 +152,41 @@ body {
 .mast {
   padding: 16px 18px 16px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 .mast__brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
+.theme-toggle {
+  appearance: none;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+.theme-toggle svg { width: 18px; height: 18px; display: block; }
+.theme-toggle .ico-sun { display: none; }
+.theme-toggle .ico-moon { display: block; }
+[data-theme="light"] .theme-toggle .ico-sun { display: block; }
+[data-theme="light"] .theme-toggle .ico-moon { display: none; }
 .slogo {
   width: 34px;
   height: 34px;
@@ -130,7 +196,7 @@ body {
   flex-shrink: 0;
 }
 .slogo-bg { fill: var(--amber); }
-.slogo-s { fill: #121212; }
+.slogo-s { fill: var(--on-amber); }
 .mast__name {
   font-size: 18px;
   font-weight: 700;
@@ -178,7 +244,7 @@ body {
 }
 .steps__btn.is-on {
   background: var(--amber);
-  color: #121212;
+  color: var(--on-amber);
 }
 .steps__btn:focus-visible {
   outline: 2px solid var(--amber);
@@ -269,7 +335,7 @@ body {
 }
 .shape.is-on {
   border-color: var(--amber);
-  color: var(--amber);
+  color: var(--shape-on);
   /* Figma: amber fill at ~10% opacity over surface */
   background: rgba(255, 184, 0, 0.1);
 }
@@ -378,7 +444,7 @@ body {
 }
 .waste__btn.is-on {
   background: var(--amber);
-  color: #121212;
+  color: var(--on-amber);
 }
 .waste__btn:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
 
@@ -456,7 +522,7 @@ body {
 }
 .btn-calc:not(:disabled) {
   background: var(--amber);
-  color: #121212;
+  color: var(--on-amber);
   box-shadow: 0 10px 28px rgba(255, 184, 0, 0.3);
 }
 .btn-calc:disabled { cursor: not-allowed; }
@@ -504,7 +570,7 @@ body {
   font-size: 18px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: #fff;
+  color: var(--qty-n);
   line-height: 1;
 }
 .qty-cell__u,
@@ -517,7 +583,7 @@ body {
 .rec__alt {
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--hairline);
 }
 .rec__alt[hidden] { display: none !important; }
 .rec__alt-lab {
@@ -543,7 +609,7 @@ body {
 .rec__alt-text .mix-primary__n {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--qty-n);
 }
 .rec__alt-text .qty-cell__u,
 .rec__alt-text .mix-primary__u {
@@ -608,7 +674,7 @@ body {
 }
 .btn-copy {
   background: var(--amber);
-  color: #121212;
+  color: var(--on-amber);
   box-shadow: 0 8px 24px rgba(255, 184, 0, 0.22);
 }
 .btn-share {
@@ -651,7 +717,7 @@ body {
   border: 0;
   border-radius: 8px;
   background: var(--amber);
-  color: #121212;
+  color: var(--on-amber);
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -752,7 +818,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--hairline-soft);
 }
 .help__h {
   margin: 12px 0 0;

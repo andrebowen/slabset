@@ -2,6 +2,7 @@
   'use strict';
 
   var DRAFT_KEY = 'slabset-v11-draft';
+  var THEME_KEY = 'slabset-theme';
   var DRAFT_SCHEMA = 2;
   var BAG_20 = 0.01;
   var THIN_MM = 50;
@@ -394,6 +395,27 @@
     return lines.join('\n');
   }
 
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  }
+
+  function syncThemeBtn() {
+    var btn = document.getElementById('btnTheme');
+    if (!btn) return;
+    var light = currentTheme() === 'light';
+    btn.setAttribute('aria-pressed', light ? 'true' : 'false');
+    btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+  }
+
+  function applyTheme(theme) {
+    var next = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', next === 'light' ? '#f4f4f5' : '#121212');
+    syncThemeBtn();
+  }
+
   function toast(msg) {
     var el = document.getElementById('toast');
     if (!el) return;
@@ -689,6 +711,10 @@
   }
 
   document.addEventListener('click', function (e) {
+    if (e.target.closest('#btnTheme')) {
+      applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+      return;
+    }
     var stepBtn = e.target.closest('.steps__btn');
     if (stepBtn) {
       setStep(stepBtn.getAttribute('data-step'));
@@ -822,5 +848,6 @@
 
   loadDraft();
   applyShapeFromUrl();
+  syncThemeBtn();
   render();
 })();

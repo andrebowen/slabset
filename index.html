@@ -7,6 +7,21 @@
 <meta name="description" content="Work out concrete volume and what to order — bags or truck. AU metric.">
 <meta name="theme-color" content="#121212">
 <link rel="canonical" href="https://slabset.online/">
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('slabset-theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'light' ? '#f4f4f5' : '#121212');
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
 <meta property="og:site_name" content="SlabSet">
 <meta property="og:title" content="SlabSet — How much concrete to order">
 <meta property="og:description" content="Work out concrete volume and what to order — bags or truck. AU metric.">
@@ -48,6 +63,15 @@
           <div class="mast__sub">How much concrete to order</div>
         </div>
       </div>
+      <button type="button" class="theme-toggle" id="btnTheme" aria-label="Switch to light theme" aria-pressed="false">
+        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+        </svg>
+        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
+          <path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+      </button>
     </header>
 
     <div class="install" id="installBanner" hidden>
