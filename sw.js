@@ -1,5 +1,5 @@
 // SlabSet live — bump VERSION on deploy so caches refresh.
-var VERSION = 'v710';
+var VERSION = 'v711';
 var CACHE = 'slabset-' + VERSION;
 var ASSETS = [
   './',
