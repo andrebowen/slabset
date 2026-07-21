@@ -166,7 +166,7 @@ body {
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   /* Figma track ≈ 41px at our width; was 48–50px (too thick) */
   min-height: 40px;
@@ -371,7 +371,7 @@ body {
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   min-height: 40px;
   cursor: pointer;
