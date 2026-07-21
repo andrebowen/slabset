@@ -468,7 +468,7 @@ body {
   border-radius: var(--radius-lg);
   padding: 16px;
 }
-.card--vol .dock-live__row { margin-top: 4px; }
+.card--vol .dock-live__row { margin-top: 0; }
 
 .card--rec {
   background: var(--surface);
@@ -478,7 +478,7 @@ body {
 .card--rec[data-tone="bags"] .rec__title,
 .card--rec[data-tone="either"] .rec__title { color: var(--green); }
 .rec__title {
-  margin: 6px 0 10px;
+  margin: 0 0 10px;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -541,7 +541,6 @@ body {
 }
 
 /* Spec sheet = one card surface (no nested inner card) */
-.card--spec .card__lab { margin-bottom: 10px; }
 .spec {
   margin: 0;
   padding: 0;

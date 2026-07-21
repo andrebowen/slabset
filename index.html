@@ -115,28 +115,34 @@
       </section>
 
       <section class="panel" id="panelResults" hidden>
-        <div class="card card--vol">
-          <h2 class="card__lab">Volume</h2>
-          <div class="dock-live__row">
-            <span class="dock-live__num" data-total>0.000</span>
-            <span class="dock-live__unit" data-waste-lab>m³ (includes +10% waste)</span>
+        <div class="block">
+          <h2 class="block__lab">Volume</h2>
+          <div class="card card--vol">
+            <div class="dock-live__row">
+              <span class="dock-live__num" data-total>0.000</span>
+              <span class="dock-live__unit" data-waste-lab>m³ (includes +10% waste)</span>
+            </div>
           </div>
         </div>
 
-        <div class="card card--rec" id="recCard" data-tone="bags">
-          <div class="card__lab">Recommendation</div>
-          <div class="rec__title" data-rec-title>Bag concrete</div>
-          <p class="rec__why" data-rec-why></p>
-          <div class="rec__body" id="recBody"></div>
-          <div class="rec__alt" id="recAlt" hidden>
-            <div class="rec__alt-lab">Alternative</div>
-            <p class="rec__alt-text" data-rec-alt></p>
+        <div class="block">
+          <h2 class="block__lab">Recommendation</h2>
+          <div class="card card--rec" id="recCard" data-tone="bags">
+            <div class="rec__title" data-rec-title>Bag concrete</div>
+            <p class="rec__why" data-rec-why></p>
+            <div class="rec__body" id="recBody"></div>
+            <div class="rec__alt" id="recAlt" hidden>
+              <div class="rec__alt-lab">Alternative</div>
+              <p class="rec__alt-text" data-rec-alt></p>
+            </div>
           </div>
         </div>
 
-        <div class="card card--spec">
-          <h2 class="card__lab">Spec sheet</h2>
-          <div class="spec" id="specSheet"></div>
+        <div class="block">
+          <h2 class="block__lab">Spec sheet</h2>
+          <div class="card card--spec">
+            <div class="spec" id="specSheet"></div>
+          </div>
         </div>
 
         <div class="actions">
