@@ -206,7 +206,7 @@
     var truck = ceil1(total);
     var truckTxt = truck.toFixed(1);
     var bagsTxt = bags20 + ' × 20 kg bags';
-    var mixTxt = truckTxt + ' m³ pre-mix';
+    var mixTxt = truckTxt + ' m³ ready-mix';
     var volTxt = total.toFixed(2) + ' m³';
 
     if (total < 0.5) {
@@ -218,27 +218,27 @@
         bags20: bags20,
         truck: truck,
         order: bagsTxt,
-        alt: '<strong>' + truckTxt + '</strong> m³ pre-mix',
+        alt: '<strong>' + truckTxt + '</strong> m³ ready-mix',
         altPlain: mixTxt
       };
     }
     if (total <= 1.2) {
       return {
         tone: 'either',
-        title: 'Bags or pre-mix',
-        why: volTxt + ' sits in the crossover zone. Compare local bag vs pre-mix truck pricing before you order.',
+        title: 'Bags or ready-mix',
+        why: volTxt + ' sits in the crossover zone. Compare local bag vs ready-mix truck pricing before you order.',
         layout: 'either',
         bags20: bags20,
         truck: truck,
         order: bagsTxt,
-        alt: '<strong>' + truckTxt + '</strong> m³ pre-mix',
+        alt: '<strong>' + truckTxt + '</strong> m³ ready-mix',
         altPlain: mixTxt
       };
     }
     return {
       tone: 'truck',
-      title: 'Pre-mix truck',
-      why: volTxt + ' is too large for bags to be practical. Pre-mix is faster and cheaper per m³ at this volume.',
+      title: 'Ready-mix truck',
+      why: volTxt + ' is too large for bags to be practical. Ready-mix is faster and cheaper per m³ at this volume.',
       layout: 'truck',
       bags20: bags20,
       truck: truck,
@@ -261,7 +261,7 @@
     return (
       '<div class="mix-primary">' +
       '<span class="mix-primary__n">' + val + '</span>' +
-      '<span class="mix-primary__u">m³ pre-mix by truck</span>' +
+      '<span class="mix-primary__u">m³ ready-mix by truck</span>' +
       '</div>'
     );
   }
