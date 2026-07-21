@@ -207,6 +207,12 @@
     var truckTxt = truck.toFixed(1);
     var bagsTxt = bags20 + ' × 20 kg bags';
     var mixTxt = truckTxt + ' m³ ready-mix';
+    var mixAlt =
+      '<span class="qty-cell__n">' + truckTxt + ' m³</span> ' +
+      '<span class="qty-cell__u">ready-mix</span>';
+    var bagsAlt =
+      '<span class="qty-cell__n">' + bags20 + '</span> ' +
+      '<span class="qty-cell__u">× 20 kg bags</span>';
     var volTxt = total.toFixed(2) + ' m³';
 
     if (total < 0.5) {
@@ -218,7 +224,7 @@
         bags20: bags20,
         truck: truck,
         order: bagsTxt,
-        alt: '<strong>' + truckTxt + '</strong> m³ ready-mix',
+        alt: mixAlt,
         altPlain: mixTxt
       };
     }
@@ -231,7 +237,7 @@
         bags20: bags20,
         truck: truck,
         order: bagsTxt,
-        alt: '<strong>' + truckTxt + '</strong> m³ ready-mix',
+        alt: mixAlt,
         altPlain: mixTxt
       };
     }
@@ -243,7 +249,7 @@
       bags20: bags20,
       truck: truck,
       order: mixTxt,
-      alt: '<strong>' + bags20 + '</strong> × 20 kg bags',
+      alt: bagsAlt,
       altPlain: bagsTxt
     };
   }
@@ -260,8 +266,8 @@
   function mixPrimary(val) {
     return (
       '<div class="mix-primary">' +
-      '<span class="mix-primary__n">' + val + '</span>' +
-      '<span class="mix-primary__u">m³ ready-mix by truck</span>' +
+      '<span class="mix-primary__n">' + val + ' m³</span>' +
+      '<span class="mix-primary__u">ready-mix</span>' +
       '</div>'
     );
   }

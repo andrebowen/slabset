@@ -534,10 +534,18 @@ body {
   font-weight: 500;
   line-height: 1.45;
   color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
 }
-.rec__alt-text strong {
-  color: #fff;
-  font-weight: 700;
+.rec__alt-text .qty-cell__n,
+.rec__alt-text .mix-primary__n {
+  font-size: 18px;
+}
+.rec__alt-text .qty-cell__u,
+.rec__alt-text .mix-primary__u {
+  font-size: 15px;
 }
 
 /* Spec sheet = one card surface (no nested inner card) */
