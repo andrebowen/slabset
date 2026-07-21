@@ -1,6 +1,5 @@
-// Single version knob — bump on deploy. Assets carry no query strings;
-// the fetch strategy is network-first, so fresh files win whenever online.
-var VERSION = 'v672';
+// SlabSet live — bump VERSION on deploy so caches refresh.
+var VERSION = 'v700';
 var CACHE = 'slabset-' + VERSION;
 var ASSETS = [
   './',
@@ -11,13 +10,16 @@ var ASSETS = [
   './concrete-column-calculator.html',
   './round-pad-calculator.html',
   './concrete-stairs-calculator.html',
-  './shared/styles.css',
-  './shared/calc.js',
-  './shared/icons/icon-192.png',
-  './shared/icons/favicon-48.png',
-  './manifest.webmanifest',
   './terms.html',
-  './privacy.html'
+  './privacy.html',
+  './shared/styles.css',
+  './shared/app.js',
+  './shared/icons/icon-192.png',
+  './shared/icons/icon-512.png',
+  './shared/icons/icon-maskable-512.png',
+  './shared/icons/favicon-48.png',
+  './shared/icons/apple-touch-icon.png',
+  './manifest.webmanifest'
 ];
 
 self.addEventListener('install', function (e) {
