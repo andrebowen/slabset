@@ -21,7 +21,7 @@
       fields: [
         { k: 'L', lab: 'Length', unit: 'm', need: true, max: 30 },
         { k: 'W', lab: 'Width', unit: 'm', need: true, max: 30 },
-        { k: 'T', lab: 'Depth / Thickness', unit: 'mm', need: true, mm: true, max: 1000 }
+        { k: 'T', lab: 'Depth', unit: 'mm', need: true, mm: true, max: 1000 }
       ],
       vol: function (v) { return v.L * v.W * (v.T / 1000); }
     },
@@ -206,7 +206,7 @@
     var truck = ceil1(total);
     var truckTxt = truck.toFixed(1);
     var bagsTxt = bags20 + ' × 20 kg bags';
-    var mixTxt = truckTxt + ' m³ pre-mix by truck';
+    var mixTxt = truckTxt + ' m³ pre-mix';
     var volTxt = total.toFixed(2) + ' m³';
 
     if (total < 0.5) {
@@ -218,7 +218,7 @@
         bags20: bags20,
         truck: truck,
         order: bagsTxt,
-        alt: '<strong>' + truckTxt + '</strong> m³ pre-mix by truck',
+        alt: '<strong>' + truckTxt + '</strong> m³ pre-mix',
         altPlain: mixTxt
       };
     }
@@ -231,7 +231,7 @@
         bags20: bags20,
         truck: truck,
         order: bagsTxt,
-        alt: '<strong>' + truckTxt + '</strong> m³ pre-mix by truck',
+        alt: '<strong>' + truckTxt + '</strong> m³ pre-mix',
         altPlain: mixTxt
       };
     }
@@ -328,57 +328,56 @@
   function specRows() {
     var v = volume();
     var sh = SHAPES[st.shape];
-    var rows = [{ k: 'Shape:', v: sh.label }];
+    var rows = [{ k: 'Shape', v: sh.label }];
     sh.fields.forEach(function (f) {
       if (!f.need && !rawComplete(f.k)) return;
       var shown = displayVal(f) || '0';
       rows.push({
-        k: f.lab + ':',
+        k: f.lab,
         v: shown + (f.unit ? (' ' + f.unit) : '')
       });
     });
     if (shapeUsesQty(st.shape)) {
-      rows.push({ k: 'Quantity:', v: String(effectiveQty()) + ' ×' });
+      rows.push({ k: 'Quantity', v: String(effectiveQty()) + ' ×' });
     }
-    rows.push({ gap: true });
-    rows.push({
-      k: 'Volume (includes +' + st.waste + '% waste):',
-      v: v.total.toFixed(3) + ' m³'
-    });
+    rows.push({ k: 'Waste', v: '+' + st.waste + '%' });
+    rows.push({ k: 'Volume', v: v.total.toFixed(3) + ' m³' });
     var plan = recommend(v.total);
     if (plan) {
       rows.push({ gap: true });
-      rows.push({ k: 'Order:', v: plan.order });
-      rows.push({ k: 'Alternative:', v: plan.altPlain });
+      rows.push({ k: 'Order', v: plan.order });
+      rows.push({ k: 'Alternative', v: plan.altPlain });
     }
     if (v.total > 0) {
       var extras = jobExtras(v.total);
       rows.push({ gap: true });
       rows.push({ head: 'Quantities' });
       rows.push({
-        k: 'Reinforcing mesh:',
+        k: 'Mesh',
         v: extras.mesh === 1 ? '1 sheet' : extras.mesh + ' sheets'
       });
-      rows.push({ k: 'Formwork edge:', v: extras.edge.toFixed(1) + ' m' });
-      rows.push({ k: 'Concrete weight:', v: extras.weight.toFixed(2) + ' t' });
+      rows.push({ k: 'Formwork', v: extras.edge.toFixed(1) + ' m' });
+      rows.push({ k: 'Weight', v: extras.weight.toFixed(2) + ' t' });
     }
     return rows;
   }
 
   function specText() {
     var lines = ['Spec Sheet by SlabSet', ''];
+    var keyW = 14;
     specRows().forEach(function (r) {
       if (r.gap) {
         lines.push('');
         return;
       }
       if (r.head) {
-        lines.push(r.head);
+        lines.push(String(r.head).toUpperCase());
         return;
       }
-      lines.push((r.k || '') + (r.k ? ' ' : '') + r.v);
+      var key = r.k || '';
+      while (key.length < keyW) key += ' ';
+      lines.push(key + '  ' + r.v);
     });
-    // Trim trailing blank lines
     while (lines.length && lines[lines.length - 1] === '') lines.pop();
     return lines.join('\n');
   }
