@@ -362,8 +362,14 @@
     return rows;
   }
 
+  function specDate() {
+    var d = new Date();
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
   function specText() {
-    var lines = ['Spec Sheet by SlabSet', ''];
+    var lines = ['Spec Sheet by SlabSet', specDate(), ''];
     var keyW = 14;
     specRows().forEach(function (r) {
       if (r.gap) {
