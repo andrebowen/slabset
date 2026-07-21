@@ -530,7 +530,7 @@ body {
 }
 .rec__alt-text {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.45;
   color: var(--muted);
@@ -541,7 +541,9 @@ body {
 }
 .rec__alt-text .qty-cell__n,
 .rec__alt-text .mix-primary__n {
-  font-size: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
 }
 .rec__alt-text .qty-cell__u,
 .rec__alt-text .mix-primary__u {
