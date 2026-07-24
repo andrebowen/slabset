@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-273.79 -350.50 540.65 456.00" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <title>Gutter / Kerb - isometric dimensions</title>
+<path d="M -131.64 -76.00 L -131.64 -106.00 L -50.23 -153.00 L -50.23 -220.00 L -6.93 -245.00 L -6.93 -148.00 L -50.23 -123.00 Z" fill="#ffffff" stroke="none"/>
+<line x1="-131.64" y1="-76.00" x2="-131.64" y2="-106.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-131.64" y1="-106.00" x2="-50.23" y2="-153.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-50.23" y1="-153.00" x2="-50.23" y2="-220.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-50.23" y1="-220.00" x2="-6.93" y2="-245.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-6.93" y1="-245.00" x2="-6.93" y2="-148.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-6.93" y1="-148.00" x2="-50.23" y2="-123.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-50.23" y1="-123.00" x2="-131.64" y2="-76.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<path d="M 0.00 0.00 L 0.00 -30.00 L 81.41 -77.00 L 81.41 -144.00 L 124.71 -169.00 L 124.71 -72.00 L 81.41 -47.00 Z" fill="#ffffff" stroke="none"/>
+<line x1="0.00" y1="0.00" x2="0.00" y2="-30.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="0.00" y1="-30.00" x2="81.41" y2="-77.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="81.41" y1="-77.00" x2="81.41" y2="-144.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="81.41" y1="-144.00" x2="124.71" y2="-169.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="124.71" y1="-169.00" x2="124.71" y2="-72.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="124.71" y1="-72.00" x2="81.41" y2="-47.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="81.41" y1="-47.00" x2="0.00" y2="0.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<path d="M 0.00 0.00 L -131.64 -76.00 L -131.64 -106.00 L 0.00 -30.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 0.00 -30.00 L -131.64 -106.00 L -50.23 -153.00 L 81.41 -77.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 81.41 -144.00 L -50.23 -220.00 L -6.93 -245.00 L 124.71 -169.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 81.41 -77.00 L -50.23 -153.00 L -50.23 -220.00 L 81.41 -144.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<line x1="0.00" y1="0.00" x2="-131.64" y2="-76.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-6.93" y1="4.00" x2="-31.18" y2="18.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-138.56" y1="-72.00" x2="-162.81" y2="-58.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-31.18" y1="18.00" x2="-162.81" y2="-58.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-34.21" y1="19.75" x2="-28.15" y2="16.25" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-165.84" y1="-56.25" x2="-159.78" y2="-59.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-128.17" y="-2.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Length</text>
+<line x1="-138.56" y1="-102.00" x2="-162.81" y2="-88.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-138.56" y1="-72.00" x2="-162.81" y2="-58.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-162.81" y1="-88.00" x2="-162.81" y2="-58.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-165.84" y1="-86.25" x2="-159.78" y2="-89.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-165.84" y1="-56.25" x2="-159.78" y2="-59.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-202.65" y="-81.40" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Flag<tspan x="-202.65" dy="16.80">thickness</tspan></text>
+<line x1="-57.16" y1="-157.00" x2="-91.80" y2="-177.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-138.56" y1="-110.00" x2="-173.21" y2="-130.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-91.80" y1="-177.00" x2="-173.21" y2="-130.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-88.77" y1="-175.25" x2="-94.83" y2="-178.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-170.17" y1="-128.25" x2="-176.24" y2="-131.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-167.14" y="-181.90" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Gutter<tspan x="-167.14" dy="16.80">width</tspan></text>
+<line x1="-57.16" y1="-224.00" x2="-93.53" y2="-245.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-57.16" y1="-157.00" x2="-93.53" y2="-178.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-93.53" y1="-245.00" x2="-93.53" y2="-178.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-90.50" y1="-243.25" x2="-96.56" y2="-246.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-90.50" y1="-176.25" x2="-96.56" y2="-179.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-140.30" y="-211.50" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Kerb height</text>
+<line x1="-6.93" y1="-253.00" x2="-6.93" y2="-295.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-50.23" y1="-228.00" x2="-50.23" y2="-270.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-6.93" y1="-295.00" x2="-50.23" y2="-270.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-6.93" y1="-291.50" x2="-6.93" y2="-298.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-50.23" y1="-266.50" x2="-50.23" y2="-273.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-28.58" y="-318.50" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Kerb depth</text>
+</svg>

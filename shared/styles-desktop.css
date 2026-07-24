@@ -1,0 +1,138 @@
+/* SlabSet desktop workbench - ConcreteCalc-style split; keep phone type tokens */
+
+html[data-layout="desktop"],
+html[data-layout="desktop"] body {
+  height: auto;
+  min-height: 100%;
+}
+
+html[data-layout="desktop"] body {
+  background: var(--bg);
+}
+
+.stage--desk {
+  min-height: 100dvh;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0;
+  background: var(--bg);
+}
+
+.desk {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+.mast--desk {
+  padding: 22px 28px 18px;
+  border-bottom: 0;
+}
+
+.mast__tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.mast__phone-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.mast__phone-link:hover {
+  color: var(--ink);
+  border-color: var(--amber);
+}
+
+/* ~1/3 inputs · ~2/3 results, hairline gutter */
+.desk-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.55fr);
+  gap: 0;
+  flex: 1;
+  align-items: start;
+  padding: 0 20px 40px;
+}
+
+.desk-col {
+  padding: 8px 0 0;
+  min-width: 0;
+}
+
+.desk-col--measure {
+  border-right: 1px solid var(--hairline);
+  padding-right: 28px;
+  margin-right: 0;
+}
+
+.desk-col--results {
+  padding-left: 28px;
+}
+
+/* Same column rhythm as mobile panel: Volume → order → summary */
+html[data-layout="desktop"] .desk-results-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+html[data-layout="desktop"] .panel--results.is-pending .desk-results-body {
+  opacity: 0.42;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease);
+}
+
+html[data-layout="desktop"] .panel--results:not(.is-pending) .desk-results-body {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.2s var(--ease);
+}
+
+html[data-layout="desktop"] .btn-edit,
+html[data-layout="desktop"] .steps,
+html[data-layout="desktop"] .install,
+html[data-layout="desktop"] .phone__notch,
+html[data-layout="desktop"] .phone__status,
+html[data-layout="desktop"] .phone__home,
+html[data-layout="desktop"] #dockMeasure {
+  display: none !important;
+}
+
+html[data-layout="desktop"] .actions {
+  margin-top: 8px;
+}
+
+html[data-layout="desktop"] .help {
+  margin-top: 28px;
+}
+
+@media (max-width: 860px) {
+  .desk-grid {
+    grid-template-columns: 1fr;
+    padding: 0 14px 36px;
+  }
+  .desk-col--measure {
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+    padding-right: 0;
+    padding-bottom: 24px;
+    margin-bottom: 8px;
+  }
+  .desk-col--results {
+    padding-left: 0;
+  }
+  .mast--desk {
+    padding: 18px 14px 12px;
+  }
+}

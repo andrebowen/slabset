@@ -1,5 +1,5 @@
-// SlabSet live — bump VERSION on deploy so caches refresh.
-var VERSION = 'v717';
+// SlabSet live - bump VERSION on deploy so caches refresh.
+var VERSION = 'v818';
 var CACHE = 'slabset-' + VERSION;
 var ASSETS = [
   './',
@@ -10,10 +10,17 @@ var ASSETS = [
   './concrete-column-calculator.html',
   './round-pad-calculator.html',
   './concrete-stairs-calculator.html',
+  './concrete-gutter-calculator.html',
   './terms.html',
   './privacy.html',
   './shared/styles.css',
   './shared/app.js',
+  './shared/diagrams/slab.svg',
+  './shared/diagrams/footing.svg',
+  './shared/diagrams/pierfooting.svg',
+  './shared/diagrams/column.svg',
+  './shared/diagrams/stairs.svg',
+  './shared/diagrams/gutter.svg',
   './shared/icons/icon-192.png',
   './shared/icons/icon-512.png',
   './shared/icons/icon-maskable-512.png',

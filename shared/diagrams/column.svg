@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-152.76 -220.00 305.52 304.05" aria-hidden="true">
+  <title>Column - isometric dimensions</title>
+<path d="M -34.00 -136.00 L 34.00 -136.00 L 34.00 0.00 L 33.90 1.27 L 33.62 2.53 L 33.15 3.78 L 32.49 5.01 L 31.65 6.21 L 30.63 7.38 L 29.44 8.50 L 28.09 9.58 L 26.58 10.60 L 24.92 11.56 L 23.13 12.46 L 21.20 13.29 L 19.15 14.05 L 17.00 14.72 L 14.75 15.32 L 12.42 15.82 L 10.02 16.24 L 7.57 16.57 L 5.07 16.81 L 2.54 16.95 L 0.00 17.00 L -2.54 16.95 L -5.07 16.81 L -7.57 16.57 L -10.02 16.24 L -12.42 15.82 L -14.75 15.32 L -17.00 14.72 L -19.15 14.05 L -21.20 13.29 L -23.13 12.46 L -24.92 11.56 L -26.58 10.60 L -28.09 9.58 L -29.44 8.50 L -30.63 7.38 L -31.65 6.21 L -32.49 5.01 L -33.15 3.78 L -33.62 2.53 L -33.90 1.27 L -34.00 0.00 Z" fill="#ffffff" stroke="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 34.00 -136.00 L 33.62 -133.47 L 32.49 -130.99 L 30.63 -128.62 L 28.09 -126.42 L 24.92 -124.44 L 21.20 -122.71 L 17.00 -121.28 L 12.42 -120.18 L 7.57 -119.43 L 2.54 -119.05 L -2.54 -119.05 L -7.57 -119.43 L -12.42 -120.18 L -17.00 -121.28 L -21.20 -122.71 L -24.92 -124.44 L -28.09 -126.42 L -30.63 -128.62 L -32.49 -130.99 L -33.62 -133.47 L -34.00 -136.00 L -33.62 -138.53 L -32.49 -141.01 L -30.63 -143.38 L -28.09 -145.58 L -24.92 -147.56 L -21.20 -149.29 L -17.00 -150.72 L -12.42 -151.82 L -7.57 -152.57 L -2.54 -152.95 L 2.54 -152.95 L 7.57 -152.57 L 12.42 -151.82 L 17.00 -150.72 L 21.20 -149.29 L 24.92 -147.56 L 28.09 -145.58 L 30.63 -143.38 L 32.49 -141.01 L 33.62 -138.53 L 34.00 -136.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 34.00 0.00 L 33.90 1.27 L 33.62 2.53 L 33.15 3.78 L 32.49 5.01 L 31.65 6.21 L 30.63 7.38 L 29.44 8.50 L 28.09 9.58 L 26.58 10.60 L 24.92 11.56 L 23.13 12.46 L 21.20 13.29 L 19.15 14.05 L 17.00 14.72 L 14.75 15.32 L 12.42 15.82 L 10.02 16.24 L 7.57 16.57 L 5.07 16.81 L 2.54 16.95 L 0.00 17.00 L -2.54 16.95 L -5.07 16.81 L -7.57 16.57 L -10.02 16.24 L -12.42 15.82 L -14.75 15.32 L -17.00 14.72 L -19.15 14.05 L -21.20 13.29 L -23.13 12.46 L -24.92 11.56 L -26.58 10.60 L -28.09 9.58 L -29.44 8.50 L -30.63 7.38 L -31.65 6.21 L -32.49 5.01 L -33.15 3.78 L -33.62 2.53 L -33.90 1.27 L -34.00 0.00" fill="none" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="-34.00" y1="-136.00" x2="-34.00" y2="0.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="34.00" y1="-136.00" x2="34.00" y2="0.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<g class="dim">
+<line x1="-34.00" y1="-144.00" x2="-34.00" y2="-172.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="34.00" y1="-144.00" x2="34.00" y2="-172.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-34.00" y1="-172.00" x2="34.00" y2="-172.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-34.00" y1="-168.50" x2="-34.00" y2="-175.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="34.00" y1="-168.50" x2="34.00" y2="-175.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="0.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-188.00">Diameter</text>
+</g>
+<g class="dim">
+<line x1="-42.00" y1="-136.00" x2="-70.00" y2="-136.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-42.00" y1="0.00" x2="-70.00" y2="0.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-70.00" y1="-136.00" x2="-70.00" y2="0.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-73.50" y1="-136.00" x2="-66.50" y2="-136.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-73.50" y1="0.00" x2="-66.50" y2="0.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-98.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-68.00">Height</text>
+</g>
+</svg>

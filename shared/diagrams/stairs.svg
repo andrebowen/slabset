@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-217.00 -265.75 397.63 308.50" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <title>Stairs - isometric dimensions</title>
+<path d="M 0.00 0.00 L 0.00 -26.00 L -30.31 -43.50 L -30.31 -69.50 L -60.62 -87.00 L -60.62 -113.00 L -90.93 -130.50 L -90.93 -156.50 L -121.24 -174.00 L -121.24 -70.00 Z" fill="#ffffff" stroke="none"/>
+<path d="M -121.24 -174.00 L -36.37 -223.00 L -36.37 -197.00 L -121.24 -148.00 Z" fill="#ffffff" stroke="none"/>
+<line x1="-121.24" y1="-70.00" x2="-121.24" y2="-174.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="0.00" y1="0.00" x2="-121.24" y2="-70.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<path d="M -6.06 -179.50 L -6.06 -205.50 L -90.93 -156.50 L -90.93 -130.50 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M -90.93 -156.50 L -121.24 -174.00 L -36.37 -223.00 L -6.06 -205.50 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 24.25 -136.00 L 24.25 -162.00 L -60.62 -113.00 L -60.62 -87.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M -60.62 -113.00 L -90.93 -130.50 L -6.06 -179.50 L 24.25 -162.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 54.56 -92.50 L 54.56 -118.50 L -30.31 -69.50 L -30.31 -43.50 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M -30.31 -69.50 L -60.62 -87.00 L 24.25 -136.00 L 54.56 -118.50 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 84.87 -49.00 L 84.87 -75.00 L 0.00 -26.00 L 0.00 0.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<path d="M 0.00 -26.00 L -30.31 -43.50 L 54.56 -92.50 L 84.87 -75.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round"/>
+<line x1="0.00" y1="0.00" x2="0.00" y2="-26.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="0.00" y1="-26.00" x2="-30.31" y2="-43.50" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-30.31" y1="-43.50" x2="-30.31" y2="-69.50" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-30.31" y1="-69.50" x2="-60.62" y2="-87.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-60.62" y1="-87.00" x2="-60.62" y2="-113.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-60.62" y1="-113.00" x2="-90.93" y2="-130.50" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-90.93" y1="-130.50" x2="-90.93" y2="-156.50" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-90.93" y1="-156.50" x2="-121.24" y2="-174.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="-121.24" y1="-174.00" x2="-121.24" y2="-70.00" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="0.00" y1="0.00" x2="-30.31" y2="-17.50" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<text x="92.36" y="-78.57" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">1</text>
+<text x="62.05" y="-122.07" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">2</text>
+<text x="31.74" y="-165.57" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">3</text>
+<text x="1.43" y="-209.07" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">4</text>
+<line x1="-128.17" y1="-178.00" x2="-154.15" y2="-193.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-43.30" y1="-227.00" x2="-69.28" y2="-242.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-154.15" y1="-193.00" x2="-69.28" y2="-242.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-151.12" y1="-191.25" x2="-157.18" y2="-194.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-66.25" y1="-240.25" x2="-72.31" y2="-243.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-132.50" y="-229.50" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Width</text>
+<line x1="61.49" y1="-122.50" x2="97.86" y2="-143.50" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="31.18" y1="-140.00" x2="67.55" y2="-161.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="97.86" y1="-143.50" x2="67.55" y2="-161.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="94.83" y1="-141.75" x2="100.89" y2="-145.25" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="64.52" y1="-159.25" x2="70.58" y2="-162.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="103.49" y="-164.25" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Going</text>
+<line x1="0.87" y1="-209.50" x2="37.24" y2="-230.50" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="0.87" y1="-183.50" x2="37.24" y2="-204.50" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="37.24" y1="-230.50" x2="37.24" y2="-204.50" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="34.21" y1="-228.75" x2="40.27" y2="-232.25" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="34.21" y1="-202.75" x2="40.27" y2="-206.25" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="56.29" y="-217.50" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Rise</text>
+<text x="131.33" y="-90.17" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Steps</text>
+</svg>

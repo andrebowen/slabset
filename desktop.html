@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-AU" data-layout="desktop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SlabSet - Desktop · Concrete calculator</title>
+<meta name="description" content="Work out concrete volume and what to order - bags or truck. AU metric. Desktop workbench layout.">
+<meta name="theme-color" content="#121212">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://slabset.online/desktop.html">
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('slabset-theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+    document.documentElement.setAttribute('data-layout', 'desktop');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'light' ? '#f4f4f5' : '#121212');
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('data-layout', 'desktop');
+  }
+})();
+</script>
+<link rel="icon" href="shared/icons/favicon-48.png" sizes="48x48">
+<link rel="stylesheet" href="shared/styles.css">
+<link rel="stylesheet" href="shared/styles-desktop.css">
+</head>
+<body>
+<div class="stage stage--desk">
+  <div class="desk" id="app">
+    <header class="mast mast--desk">
+      <div class="mast__brand">
+        <svg class="slogo" width="34" height="34" viewBox="0 0 88 88" aria-hidden="true">
+          <rect class="slogo-bg" x="0" y="0" width="88" height="88" rx="14"/>
+          <polygon class="slogo-s" points="12,26 64,26 76,14 24,14"/>
+          <polygon class="slogo-s" points="12,50 64,50 76,38 24,38"/>
+          <polygon class="slogo-s" points="12,74 64,74 76,62 24,62"/>
+          <polygon class="slogo-s" points="12,26 24,14 24,38 12,50"/>
+          <polygon class="slogo-s" points="64,50 76,38 76,62 64,74"/>
+        </svg>
+        <div class="mast__text">
+          <div class="mast__name">SlabSet</div>
+        </div>
+      </div>
+      <div class="mast__tools">
+        <a class="mast__phone-link" href="index.html">Phone layout</a>
+        <button type="button" class="theme-toggle" id="btnTheme" aria-label="Switch to light theme" aria-pressed="false">
+          <svg class="ico-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+          </svg>
+          <svg class="ico-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="desk-grid">
+      <section class="desk-col desk-col--measure" aria-label="Measurements">
+        <div class="panel" id="panelMeasure">
+          <div class="block">
+            <div class="block__lab-row">
+              <h2 class="block__lab">Shape</h2>
+            </div>
+            <div class="shape-dd" id="shapeDd">
+              <button type="button" class="shape-card" id="shapeCard" aria-haspopup="listbox" aria-expanded="false" aria-controls="shapeMenu">
+                <svg class="shape__ico" id="shapeCardIco" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
+                <span class="shape-card__lab" id="shapeCardLab">Slab / Pad</span>
+                <svg class="shape-card__chev" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="shape-dd__menu" id="shapeMenu" aria-hidden="true">
+                <div class="shape-more-list" role="listbox" aria-label="Shapes" id="shapeMoreList">
+                  <button type="button" class="shape shape--row" role="option" data-shape="slab">
+                    <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
+                    <span>Slab / Pad</span>
+                  </button>
+                  <button type="button" class="shape shape--row" role="option" data-shape="footing">
+                    <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18v14H3V5zm4 4h10v6H7V9z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+                    <span>Strip footing</span>
+                  </button>
+                  <button type="button" class="shape shape--row" role="option" data-shape="pierfooting">
+                    <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="7" y="4" width="10" height="16" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
+                    <span>Pier footing</span>
+                  </button>
+                  <button type="button" class="shape shape--row" role="option" data-shape="column">
+                    <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="18" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
+                    <span>Column</span>
+                  </button>
+                  <button type="button" class="shape shape--row" role="option" data-shape="stairs">
+                    <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20v-4h6v-4h6v-4h6" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M4 20h18M22 20V8" stroke="currentColor" stroke-width="1.75" stroke-linecap="square"/></svg>
+                    <span>Stairs</span>
+                  </button>
+                  <button type="button" class="shape shape--row" role="option" data-shape="gutter">
+                    <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h6v8h12v4H3z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+                    <span>Gutter / Kerb</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block__lab-row">
+              <h2 class="block__lab">Dimensions</h2>
+              <button type="button" class="dims-help" id="btnDiagram" aria-label="Show dimension diagram" title="Dimension diagram">?</button>
+            </div>
+            <div class="fields">
+              <div id="fields"></div>
+              <label class="field" for="qtyInput" id="qtyField" data-key="qty">
+                <span class="field__lab">Quantity</span>
+                <input class="field__input" id="qtyInput" type="text" inputmode="numeric" enterkeyhint="done" autocomplete="off" spellcheck="false" value="1" aria-label="Quantity">
+                <span class="field__unit">×</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="block">
+            <h2 class="block__lab">Waste factor</h2>
+            <div class="waste" role="group" aria-label="Waste factor">
+              <button type="button" class="waste__btn" data-waste="0" aria-pressed="false">0%</button>
+              <button type="button" class="waste__btn" data-waste="5" aria-pressed="false">5%</button>
+              <button type="button" class="waste__btn is-on" data-waste="10" aria-pressed="true">10%</button>
+              <button type="button" class="waste__btn" data-waste="15" aria-pressed="false">15%</button>
+              <button type="button" class="waste__btn" data-waste="20" aria-pressed="false">20%</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="desk-col desk-col--results" aria-label="Results">
+        <div class="panel panel--results" id="panelResults">
+          <div class="block">
+            <div class="card card--vol">
+              <h2 class="card__lab">Volume</h2>
+              <div class="dock-live__row">
+                <span class="dock-live__num" data-total>-</span>
+                <span class="dock-live__unit" data-waste-lab>m³ (includes +10% waste)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="desk-results-body">
+            <div class="block block--order">
+              <div class="card card--rec" id="recCard" data-tone="bags" aria-label="Order options">
+                <div class="rec__choices" id="recBody"></div>
+                <p class="rec__why" data-rec-why>Fill in the dimensions on the left to get bags vs ready-mix advice.</p>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="card card--spec" aria-label="Summary">
+                <label class="job" for="jobName">
+                  <span class="job__lab">Job name</span>
+                  <input class="job__input" id="jobName" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Optional">
+                </label>
+                <div class="spec" id="specSheet"></div>
+                <div class="spec-actions" role="group" aria-label="Share job summary">
+                  <button type="button" class="btn-copy" id="btnCopy">
+                    <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.75"/></svg>
+                    Copy
+                  </button>
+                  <button type="button" class="btn-share" id="btnShare">
+                    <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+                    Share
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <section class="help" aria-label="Help and links">
+              <details class="help__more">
+                <summary class="help__lab">Help &amp; links</summary>
+
+                <section class="help__sec" aria-label="Frequently asked questions">
+                  <h3 class="help__h">FAQ</h3>
+                  <div class="faq-list">
+                    <article class="faq-item">
+                      <h4>How do I work out how much concrete I need?</h4>
+                      <p>Pick your shape, then measure it in metres (millimetres for thickness, depth or diameter) and SlabSet multiplies it out to cubic metres, wastage included.</p>
+                    </article>
+                    <article class="faq-item">
+                      <h4>How much wastage should I add?</h4>
+                      <p>10% is a normal starting point. Use less for tidy formwork and more for rough ground, uneven excavation or over-dig.</p>
+                    </article>
+                    <article class="faq-item">
+                      <h4>Should I order bags or ready-mix?</h4>
+                      <p>Use bags for fence posts, small footings, letterbox bases, and repairs under 0.5&nbsp;m³. Use ready-mix for slabs, driveways, footpaths, and any pour over 0.5&nbsp;m³. Ready-mix is typically 3–4× cheaper per cubic metre, so the crossover is around 0.5&nbsp;m³. Most ready-mix suppliers have a minimum of 0.2–0.5&nbsp;m³, with a small-load surcharge under 1&nbsp;m³.</p>
+                    </article>
+                    <article class="faq-item">
+                      <h4>Does this replace a builder or engineer?</h4>
+                      <p>No. Use SlabSet for estimating, then confirm quantities, grade and reinforcement before ordering.</p>
+                    </article>
+                  </div>
+                </section>
+
+                <section class="help__sec" aria-label="About">
+                  <h3 class="help__h">About</h3>
+                  <p>SlabSet is a metric concrete calculator built for Australian sites. This desktop workbench shows measurements and results side by side - same engine as the phone app.</p>
+                </section>
+
+                <section class="help__sec" aria-label="Other calculators">
+                  <h3 class="help__h">Other calculators</h3>
+                  <nav class="help__links">
+                    <a href="desktop.html?shape=slab">Concrete slab calculator</a>
+                    <a href="desktop.html?shape=footing">Strip footing calculator</a>
+                    <a href="desktop.html?shape=pierfooting">Pier footing calculator</a>
+                    <a href="desktop.html?shape=column">Concrete column and pier calculator</a>
+                    <a href="desktop.html?shape=stairs">Concrete stairs calculator</a>
+                    <a href="desktop.html?shape=gutter">Gutter and kerb calculator</a>
+                  </nav>
+                </section>
+              </details>
+
+              <p class="help__fine">Estimates only. Not a supplier quote. Confirm with your supplier.</p>
+              <p class="help__foot">
+                SlabSet Metric Concrete Calculator · Made for Australia ·
+                <a href="terms.html">Terms</a> ·
+                <a href="privacy.html">Privacy</a> ·
+                <a href="mailto:slabset@icloud.com">Contact</a>
+              </p>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<footer class="dock" id="dockMeasure" hidden>
+  <div class="dock-main" id="dockMain">
+    <div class="dock-live" id="dockLive" aria-live="polite">
+      <div class="card__lab">Volume</div>
+      <div class="dock-live__row">
+        <span class="dock-live__num" data-dock-vol>-</span>
+        <span class="dock-live__unit" data-dock-unit>m³</span>
+      </div>
+    </div>
+    <p class="dock-hint" id="dockHint" hidden></p>
+    <button type="button" class="btn-calc" id="btnCalc" disabled>See results →</button>
+  </div>
+  <div class="keypad" id="keypad" hidden role="group" aria-label="Number pad"></div>
+</footer>
+
+<div class="diagram-sheet" id="diagramSheet" hidden>
+  <button type="button" class="diagram-sheet__scrim" id="diagramScrim" aria-label="Close diagram"></button>
+  <div class="diagram-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="diagramTitle">
+    <header class="diagram-sheet__head">
+      <h2 class="diagram-sheet__title" id="diagramTitle">Dimensions</h2>
+      <button type="button" class="diagram-sheet__x" id="diagramClose" aria-label="Close">×</button>
+    </header>
+    <div class="diagram-sheet__art">
+      <img class="diagram-sheet__img" id="diagramImg" alt="" width="320" height="240">
+    </div>
+  </div>
+</div>
+
+<p class="toast" id="toast" hidden role="status"></p>
+<script src="shared/app.js"></script>
+</body>
+</html>

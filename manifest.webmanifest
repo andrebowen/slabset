@@ -1,10 +1,11 @@
 {
   "name": "SlabSet",
   "short_name": "SlabSet",
-  "description": "Work out concrete volume and what to order — bags or truck. AU metric.",
+  "description": "Work out concrete volume and what to order - bags or truck. AU metric.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
   "background_color": "#121212",
   "theme_color": "#121212",
   "lang": "en-AU",

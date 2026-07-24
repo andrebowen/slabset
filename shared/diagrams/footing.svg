@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-265.81 -202.50 405.18 254.00" aria-hidden="true">
+  <title>Strip footing - isometric dimensions</title>
+<path d="M 0.00 0.00 L -162.81 -94.00 L -162.81 -130.00 L 0.00 -36.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 0.00 0.00 L 36.37 -21.00 L 36.37 -57.00 L 0.00 -36.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 0.00 -36.00 L -162.81 -130.00 L -126.44 -151.00 L 36.37 -57.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="dim">
+<line x1="-169.74" y1="-126.00" x2="-193.99" y2="-112.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-169.74" y1="-90.00" x2="-193.99" y2="-76.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-193.99" y1="-112.00" x2="-193.99" y2="-76.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-197.02" y1="-110.25" x2="-190.96" y2="-113.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-197.02" y1="-74.25" x2="-190.96" y2="-77.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-216.51" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-94.00">Depth</text>
+</g>
+<g class="dim">
+<line x1="43.30" y1="-61.00" x2="67.55" y2="-75.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-119.51" y1="-155.00" x2="-95.26" y2="-169.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="67.55" y1="-75.00" x2="-95.26" y2="-169.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="64.52" y1="-73.25" x2="70.58" y2="-76.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-98.29" y1="-167.25" x2="-92.23" y2="-170.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="8.66" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-135.00">Length</text>
+</g>
+<g class="dim">
+<line x1="-169.74" y1="-134.00" x2="-193.99" y2="-148.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-133.37" y1="-155.00" x2="-157.62" y2="-169.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-193.99" y1="-148.00" x2="-157.62" y2="-169.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-190.96" y1="-146.25" x2="-197.02" y2="-149.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-154.59" y1="-167.25" x2="-160.65" y2="-170.75" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-196.59" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-170.50">Width</text>
+</g>
+</svg>
