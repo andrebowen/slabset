@@ -393,11 +393,11 @@
     if (plan.pick === 'truck') {
       body.innerHTML =
         groupHtml('Recommended', plan.mix, 'mix', true) +
-        groupHtml('Other option', plan.bags, 'bags', false);
+        groupHtml('Other options', plan.bags, 'bags', false);
     } else {
       body.innerHTML =
         groupHtml('Recommended', plan.bags, 'bags', true) +
-        groupHtml('Other option', plan.mix, 'mix', false);
+        groupHtml('Other options', plan.mix, 'mix', false);
     }
   }
 
@@ -459,7 +459,7 @@
     if (plan) {
       rows.push({ gap: true });
       rows.push({ k: 'Recommended', v: plan.order });
-      rows.push({ k: 'Other option', v: plan.altOrder || plan.altPlain });
+      rows.push({ k: 'Other options', v: plan.altOrder || plan.altPlain });
     }
     if (v.total > 0) {
       var extras = jobExtras(v.total);
@@ -506,7 +506,7 @@
     if (plan) {
       lines.push('');
       lines.push('Recommended: ' + plan.order);
-      lines.push('Other option: ' + (plan.altOrder || plan.altPlain));
+      lines.push('Other options: ' + (plan.altOrder || plan.altPlain));
     }
 
     if (v.total > 0) {
