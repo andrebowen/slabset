@@ -1175,7 +1175,9 @@
 
   function syncJobInput() {
     var input = document.getElementById('jobName');
-    if (input) input.value = jobName;
+    if (!input) return;
+    if (document.activeElement === input) return;
+    input.value = jobName;
   }
 
   function isLegacyShapeJobName(name) {
@@ -1193,13 +1195,18 @@
     syncJobInput();
   }
 
-  function saveJobName(val) {
-    jobName = (val || '').trim();
+  function persistJobName() {
     try {
       if (jobName) localStorage.setItem(JOB_KEY, jobName);
       else localStorage.removeItem(JOB_KEY);
     } catch (e) {}
-    syncJobInput();
+  }
+
+  function saveJobName(val, opts) {
+    var trim = !(opts && opts.keepRaw);
+    jobName = trim ? (val || '').trim() : (val || '');
+    persistJobName();
+    if (!(opts && opts.skipSync)) syncJobInput();
   }
 
   function renderFields() {
@@ -1529,7 +1536,7 @@
 
   document.addEventListener('input', function (e) {
     if (e.target.id === 'jobName') {
-      saveJobName(e.target.value);
+      saveJobName(e.target.value, { keepRaw: true, skipSync: true });
       return;
     }
     if (useKeypad()) return;
@@ -1570,6 +1577,12 @@
     syncQtyUi();
     bumpLive();
   });
+
+  document.addEventListener('blur', function (e) {
+    if (e.target && e.target.id === 'jobName') {
+      saveJobName(e.target.value);
+    }
+  }, true);
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
