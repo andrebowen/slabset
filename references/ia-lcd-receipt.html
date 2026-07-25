@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en-AU" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>v14 IA direction - LCD receipt + context pad</title>
+<style>
+  :root {
+    --bg: #f4f4f5;
+    --surface: #fff;
+    --surface-2: #e4e4e7;
+    --line: #d4d4d8;
+    --muted: #71717a;
+    --ink: #18181b;
+    --amber: #ffb800;
+    --on-amber: #18181b;
+    --vol-muted: #a1a1aa;
+    --font: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: #09090b;
+    color: #f5f5f5;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 16px 64px;
+  }
+  .intro {
+    max-width: 980px;
+    margin: 0 auto 24px;
+  }
+  .intro h1 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+  }
+  .intro p {
+    margin: 0;
+    color: #a1a1aa;
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: 62ch;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
+    gap: 28px;
+    justify-content: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .shot {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .shot h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+  .shot p {
+    margin: 0;
+    font-size: 13px;
+    color: #a1a1aa;
+    line-height: 1.4;
+    min-height: 2.8em;
+  }
+  .phone {
+    width: 100%;
+    max-width: 320px;
+    height: 640px;
+    background: var(--bg);
+    color: var(--ink);
+    border-radius: 28px;
+    border: 1px solid #27272a;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .mast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 8px;
+    flex-shrink: 0;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.03em;
+  }
+  .logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--amber);
+    color: #111;
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    font-size: 15px;
+  }
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .lcd-wrap {
+    padding: 4px 16px 10px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .lcd {
+    background: #000;
+    color: #e4e4e7;
+    border-radius: 16px;
+    padding: 14px 16px 12px;
+    position: relative;
+  }
+  .lcd__help {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    color: var(--vol-muted);
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .lcd__line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .lcd__line--shape {
+    font-weight: 700;
+    color: #fafafa;
+    padding-bottom: 6px;
+  }
+  .lcd__k { opacity: 0.75; font-weight: 500; }
+  .lcd__v { font-weight: 700; }
+  .lcd__line.is-on { color: var(--amber); }
+  .lcd__line.is-on .lcd__k { opacity: 1; font-weight: 700; }
+  .lcd__line.is-empty .lcd__k { opacity: 0.55; }
+  .lcd__caret {
+    display: inline-block;
+    width: 7px;
+    height: 1.05em;
+    background: var(--amber);
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .lcd__waste {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 8px;
+  }
+  .lcd__waste .lcd__k { color: var(--vol-muted); }
+  .lcd__waste .lcd__v { color: var(--vol-muted); font-weight: 600; }
+  .lcd__total {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    color: var(--amber);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+  }
+  .lcd__unit {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vol-muted);
+  }
+  .cta {
+    margin: 0 16px 10px;
+    appearance: none;
+    border: 0;
+    border-radius: 14px;
+    min-height: 48px;
+    background: var(--amber);
+    color: var(--on-amber);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(255,184,0,0.28);
+  }
+  .cta[disabled] {
+    background: var(--surface-2);
+    color: var(--muted);
+    box-shadow: none;
+  }
+  .mid {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+  }
+  .hint {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .dock {
+    flex-shrink: 0;
+    padding: 8px 12px 16px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+  }
+  .pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .pad button {
+    appearance: none;
+    border: 0;
+    border-radius: 12px;
+    min-height: 48px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .pad button.next {
+    background: var(--amber);
+    color: var(--on-amber);
+    font-size: 14px;
+  }
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 0 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  }
+  .menu button {
+    appearance: none;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 48px;
+    padding: 0 14px;
+    text-align: left;
+  }
+  .menu button:last-child { border-bottom: 0; }
+  .menu button.is-on {
+    background: #fff8e1;
+    color: var(--ink);
+  }
+  .waste {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin: 0 16px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .waste button {
+    appearance: none;
+    border: 0;
+    border-radius: 10px;
+    min-height: 40px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .waste button.is-on {
+    background: var(--amber);
+    color: var(--on-amber);
+  }
+  .note {
+    max-width: 980px;
+    margin: 28px auto 0;
+    padding: 14px 16px;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    background: #141414;
+    font-size: 13px;
+    color: #a1a1aa;
+    line-height: 1.45;
+  }
+  .note strong { color: #f5f5f5; }
+</style>
+</head>
+<body>
+  <div class="intro">
+    <h1>IA direction: LCD receipt + context pad</h1>
+    <p>
+      No Measure/Summary tabs. LCD is the whole form. Keypad (or shape/waste menu) sits directly under it.
+      Summary opens as a sheet via the amber CTA when complete.
+    </p>
+  </div>
+
+  <div class="grid">
+    <!-- 1 empty -->
+    <div class="shot">
+      <h2>1 · First open</h2>
+      <p>Labels only until typed. Soft empty state. CTA disabled. Pad ready on Length.</p>
+      <div class="phone">
+        <div class="mast">
+          <div class="brand"><span class="logo">S</span>SlabSet</div>
+          <div class="icon-btn">☀</div>
+        </div>
+        <div class="lcd-wrap">
+          <div class="lcd">
+            <div class="lcd__help">?</div>
+            <div class="lcd__line lcd__line--shape"><span class="lcd__k">Slab / Pad</span></div>
+            <div class="lcd__line is-on is-empty"><span class="lcd__k">Length</span><span class="lcd__caret"></span></div>
+            <div class="lcd__line is-empty"><span class="lcd__k">Width</span></div>
+            <div class="lcd__line is-empty"><span class="lcd__k">Depth</span></div>
+            <div class="lcd__waste">
+              <span class="lcd__k">Wastage</span><span class="lcd__v">+10%</span>
+              <span class="lcd__total">0.00<span class="lcd__unit">m³</span></span>
+            </div>
+          </div>
+        </div>
+        <button class="cta" disabled>See summary →</button>
+        <div class="mid"></div>
+        <div class="dock">
+          <div class="pad">
+            <button>1</button><button>2</button><button>3</button>
+            <button>4</button><button>5</button><button>6</button>
+            <button>7</button><button>8</button><button>9</button>
+            <button>.</button><button>0</button><button>⌫</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 typing -->
+    <div class="shot">
+      <h2>2 · Typing + Next</h2>
+      <p>Active line amber. Bottom-right key becomes Next to advance fields. No dead band.</p>
+      <div class="phone">
+        <div class="mast">
+          <div class="brand"><span class="logo">S</span>SlabSet</div>
+          <div class="icon-btn">☀</div>
+        </div>
+        <div class="lcd-wrap">
+          <div class="lcd">
+            <div class="lcd__help">?</div>
+            <div class="lcd__line lcd__line--shape"><span class="lcd__k">Slab / Pad</span></div>
+            <div class="lcd__line"><span class="lcd__k">Length</span><span class="lcd__v">2.5m</span></div>
+            <div class="lcd__line"><span class="lcd__k">Width</span><span class="lcd__v">1.2m</span></div>
+            <div class="lcd__line is-on"><span class="lcd__k">Depth</span><span class="lcd__v">150mm</span><span class="lcd__caret"></span></div>
+            <div class="lcd__waste">
+              <span class="lcd__k">Wastage</span><span class="lcd__v">+10%</span>
+              <span class="lcd__total">0.49<span class="lcd__unit">m³</span></span>
+            </div>
+          </div>
+        </div>
+        <button class="cta">See summary →</button>
+        <div class="mid"></div>
+        <div class="dock">
+          <div class="pad">
+            <button>1</button><button>2</button><button>3</button>
+            <button>4</button><button>5</button><button>6</button>
+            <button>7</button><button>8</button><button>9</button>
+            <button>.</button><button>0</button><button class="next">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 shape context -->
+    <div class="shot">
+      <h2>3 · Context: shape</h2>
+      <p>Tap shape on LCD. Number pad swaps to shape list. LCD stays visible.</p>
+      <div class="phone">
+        <div class="mast">
+          <div class="brand"><span class="logo">S</span>SlabSet</div>
+          <div class="icon-btn">☀</div>
+        </div>
+        <div class="lcd-wrap">
+          <div class="lcd">
+            <div class="lcd__help">?</div>
+            <div class="lcd__line lcd__line--shape is-on"><span class="lcd__k">Slab / Pad</span></div>
+            <div class="lcd__line"><span class="lcd__k">Length</span><span class="lcd__v">2.5m</span></div>
+            <div class="lcd__line"><span class="lcd__k">Width</span><span class="lcd__v">1.2m</span></div>
+            <div class="lcd__line"><span class="lcd__k">Depth</span><span class="lcd__v">150mm</span></div>
+            <div class="lcd__waste">
+              <span class="lcd__k">Wastage</span><span class="lcd__v">+10%</span>
+              <span class="lcd__total">0.49<span class="lcd__unit">m³</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="mid">
+          <div class="menu" style="margin-top:8px">
+            <button class="is-on">Slab / Pad</button>
+            <button>Strip footing</button>
+            <button>Pier footing</button>
+            <button>Column</button>
+            <button>Stairs</button>
+            <button>Gutter / Kerb</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 waste context -->
+    <div class="shot">
+      <h2>4 · Context: wastage</h2>
+      <p>Tap Wastage. Pad becomes waste chips. Volume updates live on the same LCD row.</p>
+      <div class="phone">
+        <div class="mast">
+          <div class="brand"><span class="logo">S</span>SlabSet</div>
+          <div class="icon-btn">☀</div>
+        </div>
+        <div class="lcd-wrap">
+          <div class="lcd">
+            <div class="lcd__help">?</div>
+            <div class="lcd__line lcd__line--shape"><span class="lcd__k">Slab / Pad</span></div>
+            <div class="lcd__line"><span class="lcd__k">Length</span><span class="lcd__v">2.5m</span></div>
+            <div class="lcd__line"><span class="lcd__k">Width</span><span class="lcd__v">1.2m</span></div>
+            <div class="lcd__line"><span class="lcd__k">Depth</span><span class="lcd__v">150mm</span></div>
+            <div class="lcd__waste is-on" style="color:var(--amber)">
+              <span class="lcd__k" style="color:inherit;opacity:1;font-weight:700">Wastage</span>
+              <span class="lcd__v" style="color:inherit">+15%</span>
+              <span class="lcd__total">0.52<span class="lcd__unit">m³</span></span>
+            </div>
+          </div>
+        </div>
+        <button class="cta">See summary →</button>
+        <div class="mid">
+          <div class="waste" style="margin-top:12px">
+            <button>0%</button>
+            <button>5%</button>
+            <button>10%</button>
+            <button class="is-on">15%</button>
+            <button>20%</button>
+          </div>
+          <p class="hint">Tap outside or Done to restore number pad</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Vs current v14:</strong> removes Measure/Summary tabs and the empty middle.
+    LCD = form. Dock = number pad <em>or</em> shape/waste context. Summary only via CTA → slide-up sheet (same as v13).
+  </div>
+</body>
+</html>

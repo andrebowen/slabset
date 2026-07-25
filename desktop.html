@@ -136,11 +136,7 @@
         <div class="panel panel--results" id="panelResults">
           <div class="block">
             <div class="card card--vol">
-              <h2 class="card__lab">Volume</h2>
-              <div class="dock-live__row">
-                <span class="dock-live__num" data-total>-</span>
-                <span class="dock-live__unit" data-waste-lab>m³ (includes +10% waste)</span>
-              </div>
+              <div class="dock-live__stack" data-dock-stack></div>
             </div>
           </div>
 
@@ -152,27 +148,32 @@
               </div>
             </div>
 
-            <div class="block">
-              <div class="card card--spec" aria-label="Summary">
-                <label class="job" for="jobName">
+            <div class="block block--job">
+              <div class="card card--spec" aria-label="Job summary">
+                <label class="job job--lead" for="jobName">
                   <span class="job__lab">Job name</span>
-                  <input class="job__input" id="jobName" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Optional">
+                  <span class="job__field">
+                    <input class="job__input" id="jobName" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Optional">
+                    <button type="button" class="job__clear" id="btnJobClear" aria-label="Clear job name" hidden>×</button>
+                  </span>
                 </label>
                 <div class="spec" id="specSheet"></div>
-                <div class="spec-actions" role="group" aria-label="Share job summary">
-                  <button type="button" class="btn-copy" id="btnCopy">
-                    <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.75"/></svg>
-                    Copy
-                  </button>
-                  <button type="button" class="btn-share" id="btnShare">
-                    <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
-                    Share
-                  </button>
-                </div>
               </div>
             </div>
 
-            <section class="help" aria-label="Help and links">
+            <div class="spec-actions spec-actions--checkout" role="group" aria-label="Share job summary">
+              <button type="button" class="btn-copy" id="btnCopy">
+                <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.75"/></svg>
+                Copy
+              </button>
+              <button type="button" class="btn-share" id="btnShare">
+                <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+                Share
+              </button>
+            </div>
+
+            <section class="help help--checkout" aria-label="Help and links">
+              <p class="help__fine">Estimates only. Not a supplier quote. Confirm with your supplier.</p>
               <details class="help__more">
                 <summary class="help__lab">Help &amp; links</summary>
 
@@ -240,23 +241,25 @@
         <span class="dock-live__unit" data-dock-unit>m³</span>
       </div>
     </div>
-    <p class="dock-hint" id="dockHint" hidden></p>
-    <button type="button" class="btn-calc" id="btnCalc" disabled>See results →</button>
+    <button type="button" class="btn-calc" id="btnCalc" disabled hidden>See summary →</button>
   </div>
   <div class="keypad" id="keypad" hidden role="group" aria-label="Number pad"></div>
 </footer>
 
 <div class="diagram-sheet" id="diagramSheet" hidden>
   <button type="button" class="diagram-sheet__scrim" id="diagramScrim" aria-label="Close diagram"></button>
-  <div class="diagram-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="diagramTitle">
+  <section class="diagram-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="diagramTitle">
+    <div class="diagram-sheet__grab" aria-hidden="true"></div>
     <header class="diagram-sheet__head">
       <h2 class="diagram-sheet__title" id="diagramTitle">Dimensions</h2>
-      <button type="button" class="diagram-sheet__x" id="diagramClose" aria-label="Close">×</button>
+      <button type="button" class="diagram-sheet__x" id="diagramClose" aria-label="Close diagram">×</button>
     </header>
-    <div class="diagram-sheet__art">
-      <img class="diagram-sheet__img" id="diagramImg" alt="" width="320" height="240">
+    <div class="diagram-sheet__body">
+      <div class="diagram-sheet__art">
+        <img class="diagram-sheet__img" id="diagramImg" alt="" width="320" height="240">
+      </div>
     </div>
-  </div>
+  </section>
 </div>
 
 <p class="toast" id="toast" hidden role="status"></p>

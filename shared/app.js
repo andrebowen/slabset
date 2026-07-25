@@ -1,24 +1,17 @@
 (function () {
   'use strict';
 
-  var DRAFT_KEY = 'slabset-v12-draft';
+  var DRAFT_KEY = 'slabset-v15-draft';
   var THEME_KEY = 'slabset-theme';
   var JOB_KEY = 'slabset-job';
-  var DRAFT_SCHEMA = 5;
+  var DRAFT_SCHEMA = 8;
   var BAG_KG = [20, 25, 30];
   var BAG_M3 = { 20: 0.01, 25: 0.0125, 30: 0.015 };
   var THIN_MM = 50;
   var MESH_SHEET_M2 = 14.4;
   var MESH_SHEET_SIZE = '6.0 × 2.4 m';
 
-  var FIELD_DEFAULTS = {
-    slab: { L: '3', W: '3', T: '100' },
-    footing: { L: '10', W: '0.3', D: '400' },
-    pierfooting: { PL: '600', PW: '600', PD: '400' },
-    column: { DIA: '300', H: '2400' },
-    stairs: { W: '1000', R: '170', G: '250', N: '3', BT: '' },
-    gutter: { L: '10', KD: '150', KH: '150', FT: '100', GW: '300' }
-  };
+  var FIELD_DEFAULTS = {};
 
   var SHAPES = {
     slab: {
@@ -242,10 +235,10 @@
   }
 
   function complete() {
-    // Preview calc OK: entered value or ghost default for every needed field
+    // v13: no ghost defaults. Volume and Summary unlock from entered values only.
     return SHAPES[st.shape].fields.every(function (f) {
       if (!f.need) return true;
-      return rawComplete(f.k) || !!fieldDefault(f.k);
+      return rawComplete(f.k);
     });
   }
 
@@ -266,13 +259,13 @@
   function guidanceText() {
     var missing = missingFields();
     if (!missing.length) return '';
-    if (missing.length === 1) return 'Enter ' + missing[0].lab.toLowerCase() + ' to continue';
+    if (missing.length === 1) return 'Enter ' + missing[0].lab.toLowerCase();
     return (
       'Enter ' +
       missing.slice(0, -1).map(function (f) { return f.lab.toLowerCase(); }).join(', ') +
       ' and ' +
       missing[missing.length - 1].lab.toLowerCase() +
-      ' to continue'
+      ''
     );
   }
 
@@ -559,16 +552,15 @@
 
   function saveDraft() {
     try {
-      parkShapeVals(st.shape);
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        schema: DRAFT_SCHEMA,
+        v: 15,
         shape: st.shape,
         waste: st.waste,
         bagKg: bagKg(),
         qty: st.qty,
-        step: st.step,
+        vals: st.vals,
         shapeVals: st.shapeVals,
-        vals: st.vals
+        step: st.step === 'results' ? 'results' : 'measure'
       }));
     } catch (e) {}
   }
@@ -576,54 +568,42 @@
   function loadDraft() {
     try {
       var raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return;
+      if (!raw) return false;
       var d = JSON.parse(raw);
-      if (!d) return;
-      if (d.shape === 'round') d.shape = 'slab';
-      if (!SHAPES[d.shape]) return;
+      if (!d || !SHAPES[d.shape]) return false;
       st.shape = d.shape;
-      st.waste = [0, 5, 10, 15, 20].indexOf(d.waste) >= 0 ? d.waste : 10;
-      st.bagKg = BAG_M3[d.bagKg] ? d.bagKg : 20;
-      if (d.qty != null) st.qty = clampQty(parseFloat(d.qty));
-      if (d.step === 'measure' || d.step === 'results') st.step = d.step;
-
+      if (typeof d.waste === 'number' && isFinite(d.waste)) st.waste = d.waste;
+      if (BAG_M3[d.bagKg]) st.bagKg = d.bagKg;
+      if (d.qty != null) st.qty = clampQty(d.qty);
+      if (d.vals && typeof d.vals === 'object') {
+        st.vals = Object.assign(emptyVals(), d.vals);
+      }
       if (d.shapeVals && typeof d.shapeVals === 'object') {
         st.shapeVals = d.shapeVals;
-        adoptShapeVals(st.shape);
-      } else if (d.vals) {
-        // Schema ≤3: one flat vals bag - keep it on the active shape only.
-        Object.keys(st.vals).forEach(function (k) {
-          if (typeof d.vals[k] === 'string' || typeof d.vals[k] === 'number') {
-            st.vals[k] = String(d.vals[k]);
-          }
-        });
-        if (d.vals.Q != null && d.qty == null) {
-          st.qty = clampQty(parseFloat(d.vals.Q));
-        }
-        parkShapeVals(st.shape);
       }
+      if (d.step === 'results' || d.step === 'measure') st.step = d.step;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
-      // Schema 2: column diameter/height are mm (was metres).
-      if ((d.schema || 1) < 2) {
-        var dia = parseFloat(st.vals.DIA);
-        var h = parseFloat(st.vals.H);
-        if (isFinite(dia) && dia > 0 && dia < 20) {
-          st.vals.DIA = String(Math.round(dia * 1000));
-        }
-        if (isFinite(h) && h > 0 && h <= 30) {
-          st.vals.H = String(Math.round(h * 1000));
-        }
-        parkShapeVals(st.shape);
-      }
-      // Schema 3: stairs width is mm (was metres).
-      if ((d.schema || 1) < 3) {
-        var sw = parseFloat(st.vals.W);
-        if (st.shape === 'stairs' && isFinite(sw) && sw > 0 && sw <= 5) {
-          st.vals.W = String(Math.round(sw * 1000));
-          parkShapeVals(st.shape);
-        }
-      }
-    } catch (e) {}
+  function measureIsBlank() {
+    return SHAPES[st.shape].fields.every(function (f) {
+      if (!f.need) return true;
+      var raw = st.vals[f.k];
+      return raw === '' || raw == null || raw === '.';
+    });
+  }
+
+  function firstIncompleteTarget() {
+    var keys = editTargets();
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      if (key === 'qty') continue;
+      if (!rawComplete(key)) return key;
+    }
+    return keys[0] || null;
   }
 
   function syncQtyUi() {
@@ -655,69 +635,127 @@
   }
 
   function shapeMenuOpen() {
-    var dd = document.getElementById('shapeDd');
-    return !!(dd && dd.classList.contains('is-open'));
+    return dockMode === 'shape';
+  }
+
+  function wasteMenuOpen() {
+    return dockMode === 'waste';
+  }
+
+  var dockMode = 'pad'; // pad | shape | waste
+  var editResumeKey = null;
+  var shapePulseUntil = 0;
+  var shapePulseTimer = null;
+  var wastePulseUntil = 0;
+  var wastePulseTimer = null;
+  var didShapePulse = false;
+  var didCtaPulse = false;
+
+  function armShapePulse() {
+    if (isDesktop()) return;
+    shapePulseUntil = Date.now() + 1400;
+    if (shapePulseTimer) clearTimeout(shapePulseTimer);
+    shapePulseTimer = setTimeout(function () {
+      shapePulseUntil = 0;
+      bumpLive();
+    }, 1450);
+  }
+
+  function armWastePulse() {
+    if (isDesktop()) return;
+    wastePulseUntil = Date.now() + 900;
+    if (wastePulseTimer) clearTimeout(wastePulseTimer);
+    wastePulseTimer = setTimeout(function () {
+      wastePulseUntil = 0;
+      bumpLive();
+    }, 950);
+    bumpLive();
+  }
+
+  function resumeEditAfterDock() {
+    var key = editResumeKey || editTargets()[0];
+    editResumeKey = null;
+    if (key && useKeypad() && st.step === 'measure') startEdit(key);
+  }
+
+  function setDockMode(mode) {
+    if (isDesktop()) return;
+    if (st.step !== 'measure') mode = 'pad';
+    dockMode = mode === 'shape' || mode === 'waste' ? mode : 'pad';
+    var dock = document.getElementById('dockMeasure');
+    var pad = document.getElementById('dockPad');
+    var shape = document.getElementById('dockShape');
+    var waste = document.getElementById('dockWaste');
+    // Shape overlays keypad temporarily; wastage stays under LCD - keypad stays mounted
+    if (dock) dock.setAttribute('data-dock-mode', 'pad');
+    if (pad) pad.hidden = false;
+    if (shape) shape.hidden = dockMode !== 'shape';
+    if (waste) waste.hidden = dockMode !== 'waste';
+    var shapeDd = document.getElementById('shapeDd');
+    var wasteDd = document.getElementById('wasteDd');
+    if (shapeDd) shapeDd.classList.toggle('is-open', dockMode === 'shape');
+    if (wasteDd) wasteDd.classList.toggle('is-open', dockMode === 'waste');
+    syncShapeUi();
+    syncWasteUi();
+    syncKeypadDecimal();
+    bumpLive();
   }
 
   function syncShapeUi() {
-    var card = document.getElementById('shapeCard');
-    var lab = document.getElementById('shapeCardLab');
-    var ico = document.getElementById('shapeCardIco');
+    var lcdShape = document.querySelector('[data-lcd="shape"]');
     var menu = document.getElementById('shapeMenu');
     var open = shapeMenuOpen();
-    if (card) card.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (menu) {
-      menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-      menu.removeAttribute('hidden');
-    }
-    if (lab) {
-      lab.textContent = (SHAPES[st.shape] && SHAPES[st.shape].label) || 'Shape';
-    }
-    if (ico) {
-      ico.innerHTML = SHAPE_ICONS[st.shape] || SHAPE_ICONS.slab;
-    }
+    if (lcdShape) lcdShape.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (menu) menu.setAttribute('aria-hidden', open ? 'false' : 'true');
     document.querySelectorAll('#shapeMoreList [data-shape]').forEach(function (btn) {
       var on = btn.getAttribute('data-shape') === st.shape;
-      btn.hidden = on;
       btn.classList.toggle('is-on', on);
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
-      btn.tabIndex = open && !on ? 0 : -1;
+      // Keep current shape visible in dock list
+      btn.hidden = false;
+      btn.tabIndex = open ? 0 : -1;
     });
   }
 
   function openShapeMenu() {
-    if (editing) stopEdit();
-    var dd = document.getElementById('shapeDd');
-    if (!dd) return;
-    dd.classList.add('is-open');
-    syncShapeUi();
+    if (dockMode === 'shape') {
+      setDockMode('pad');
+      resumeEditAfterDock();
+      return;
+    }
+    editResumeKey = editing || editTargets()[0] || null;
+    if (editing) commitEdit({ keepPad: true });
+    editing = null;
+    setDockMode('shape');
   }
 
   function closeShapeMenu() {
-    var dd = document.getElementById('shapeDd');
-    if (!dd) return;
-    dd.classList.remove('is-open');
-    syncShapeUi();
+    if (dockMode !== 'shape') return;
+    setDockMode('pad');
+    resumeEditAfterDock();
   }
 
   function toggleShapeMenu() {
-    if (shapeMenuOpen()) closeShapeMenu();
-    else openShapeMenu();
+    openShapeMenu();
   }
 
   function selectShape(shape) {
     if (!SHAPES[shape]) return;
     if (shape === st.shape) {
-      closeShapeMenu();
+      setDockMode('pad');
+      resumeEditAfterDock();
       return;
     }
-    if (editing) stopEdit();
+    if (editing) commitEdit({ keepPad: true });
     parkShapeVals(st.shape);
     st.shape = shape;
     adoptShapeVals(shape);
     saveDraft();
-    closeShapeMenu();
+    editResumeKey = firstIncompleteTarget() || editTargets()[0] || null;
+    setDockMode('pad');
+    tick(10);
     render();
+    resumeEditAfterDock();
   }
 
   function validateField(key) {
@@ -754,15 +792,15 @@
   function syncResultsPanel(v) {
     // Same gate as phone: ghost defaults do not unlock order / summary
     var ready = resultsReady();
+    var preview = complete();
     var dash = '-';
-    document.querySelectorAll('[data-total]').forEach(function (el) {
-      el.textContent = ready ? formatVol(v.total) : dash;
-    });
+    var volText = ready || (!isDesktop() && preview)
+      ? formatVol(v.total)
+      : (isDesktop() ? dash : '0.00');
+    syncDockDims(volText);
     document.querySelectorAll('[data-waste-lab]').forEach(function (el) {
       if (el.classList && el.classList.contains('dock-live__unit')) {
-        el.textContent = ready
-          ? 'm³ (includes +' + st.waste + '% waste)'
-          : 'm³';
+        el.textContent = 'm³';
       } else {
         el.textContent = ready ? ('+' + st.waste + '% waste') : 'Waste';
       }
@@ -787,14 +825,34 @@
     }
   }
 
+  function syncCalcCta(ready) {
+    var calc = document.getElementById('btnCalc');
+    if (!calc) return;
+    var showCta = !!ready;
+    var wasHidden = calc.hidden;
+    calc.disabled = !showCta;
+    calc.hidden = !showCta;
+    calc.textContent = 'See summary →';
+    if (showCta && wasHidden && !didCtaPulse && !isDesktop()) {
+      didCtaPulse = true;
+      tick(12);
+      calc.classList.remove('is-arrive');
+      void calc.offsetWidth;
+      calc.classList.add('is-arrive');
+    }
+  }
+
   function bumpLive() {
     var v = volume();
     var preview = complete();
     var ready = resultsReady();
-    var calc = document.getElementById('btnCalc');
-    if (calc) calc.disabled = !ready;
+    syncCalcCta(ready);
     syncDock(v, preview, ready);
-    validateAllFields();
+    if (!isDesktop() && st.step === 'measure') {
+      syncMeasureDockVisibility();
+    } else {
+      validateAllFields();
+    }
     if (isDesktop() || st.step === 'results') syncResultsPanel(v);
   }
 
@@ -803,14 +861,21 @@
       toast(guidanceText() || 'Enter dimensions first');
       return;
     }
-    if (editing) stopEdit();
+    if (editing) commitEdit({ keepPad: step === 'measure' });
     st.step = step;
     saveDraft();
     render();
-    // Summary always opens on Volume → Recommended (not mid-scroll from Measure)
     if (step === 'results' && !isDesktop()) {
-      var scroll = document.querySelector('.scroll');
-      if (scroll) scroll.scrollTop = 0;
+      var body = document.querySelector('.summary-sheet__body');
+      if (body) body.scrollTop = 0;
+      ignoreOutsideClick = false;
+      setDockMode('pad');
+      setPadOpen(false);
+    } else if (step === 'measure' && useKeypad()) {
+      setDockMode('pad');
+      setPadOpen(true);
+      var first = editTargets()[0];
+      if (first) startEdit(first);
     }
   }
 
@@ -834,15 +899,16 @@
 
   function setPadOpen(open) {
     open = !!open;
+    // v15: Measure keeps entry dock permanently on phone
+    if (useKeypad() && st.step === 'measure') open = true;
     var dock = document.getElementById('dockMeasure');
-    var pad = document.getElementById('keypad');
     var app = document.getElementById('app');
     padOpen = open;
-    if (dock) dock.classList.toggle('is-pad-open', open);
-    if (pad) pad.hidden = !open;
-    if (app) app.classList.toggle('is-editing-dims', open);
+    if (dock) dock.classList.toggle('is-pad-open', open && dockMode === 'pad');
+    if (app) app.classList.toggle('is-editing-dims', open && st.step === 'measure');
     if (!open) clearEditScrollSpacer();
     syncKeypadDecimal();
+    syncMeasureDockVisibility();
   }
 
   function syncKeypadDecimal() {
@@ -873,14 +939,14 @@
   }
 
   /**
-   * Pad-open: park Dimensions just under the Measure/Summary steps (scroll top).
-   * Max scroll-up: Waste may not rise more than 16px above the Volume LCD.
+   * Pad-open: park Dimensions just under the Measure / Summary toggle (scroll top).
+   * Max scroll-up: Waste may not rise more than 16px above the keypad dock.
    */
   var WASTE_ABOVE_VOL = 16;
 
   function wasteVolLimitY() {
-    var vol = document.querySelector('#dockMeasure .dock-live');
-    return vol ? vol.getBoundingClientRect().top - WASTE_ABOVE_VOL : null;
+    var dock = document.getElementById('dockMeasure');
+    return dock && !dock.hidden ? dock.getBoundingClientRect().top - WASTE_ABOVE_VOL : null;
   }
 
   function clampWasteScroll() {
@@ -918,7 +984,7 @@
     var dims = document.querySelector('#panelMeasure .block--dims');
     if (!scroll || !dims || !padOpen) return;
     var spacer = editScrollSpacer();
-    // Just below Measure/Summary - scroll viewport top
+    // Just below Measure / Summary toggle - scroll viewport top
     var edge = scroll.getBoundingClientRect().top;
 
     for (var i = 0; i < 6; i++) {
@@ -947,49 +1013,15 @@
     });
   }
 
-  function focusEditingValue() {
-    if (!editing || !useKeypad()) return;
-    var input = editing === 'qty'
-      ? document.getElementById('qtyInput')
-      : document.querySelector('input.field__input[data-key="' + editing + '"]');
-    if (!input) return;
-    try {
-      input.focus({ preventScroll: true });
-      var n = input.value.length;
-      input.setSelectionRange(n, n);
-    } catch (e) {}
-  }
-
   function refreshEditingChip() {
-    if (!editing) return;
-    if (editing === 'qty') {
-      var input = document.getElementById('qtyInput');
-      if (input) {
-        input.value = buffer === '' ? String(clampQty(st.qty)) : buffer;
-        var wrap = document.getElementById('qtyField');
-        if (wrap) {
-          wrap.classList.toggle('is-default', false);
-          wrap.classList.add('is-editing');
-        }
-      }
-      focusEditingValue();
-      return;
-    }
-    var input = document.querySelector('input.field__input[data-key="' + editing + '"]');
-    if (!input) return;
-    var ghost = buffer === '';
-    input.value = ghost ? (displayVal({ k: editing }) || '') : buffer;
-    var wrap = input.closest('.field');
-    if (wrap) {
-      wrap.classList.toggle('is-default', ghost && defaultValueShown(editing));
-      wrap.classList.add('is-editing');
-    }
-    focusEditingValue();
+    renderFieldStrip();
   }
 
   function commitEdit(opts) {
     if (!editing) return;
     var keepPad = !!(opts && opts.keepPad);
+    // v14 phone Measure: pad never closes
+    if (useKeypad() && st.step === 'measure') keepPad = true;
     var key = editing;
     if (buffer !== '' && buffer !== '.') {
       if (key === 'qty') {
@@ -1026,7 +1058,8 @@
     editing = null;
     buffer = '';
     editSnapshot = '';
-    setPadOpen(false);
+    if (!(useKeypad() && st.step === 'measure')) setPadOpen(false);
+    else setPadOpen(true);
     syncEditingUi();
     saveDraft();
     bumpLive();
@@ -1034,10 +1067,13 @@
 
   function startEdit(key) {
     if (!useKeypad()) return;
-    if (editing === key) return;
+    setDockMode('pad');
+    if (editing === key) {
+      refreshEditingChip();
+      return;
+    }
     if (shapeMenuOpen()) closeShapeMenu();
-    var opening = !padOpen;
-    // Keep keypad open when moving between fields (avoids flash/jump)
+    if (wasteMenuOpen()) closeWasteMenu();
     if (editing && editing !== key) commitEdit({ keepPad: true });
     editing = key;
     buffer = '';
@@ -1045,37 +1081,92 @@
       ? String(clampQty(st.qty))
       : String(st.vals[key] || '');
     setPadOpen(true);
-    // pointerdown opens the field; the synthetic click must not dismiss it
     ignoreOutsideClick = true;
     syncEditingUi();
     refreshEditingChip();
     bumpLive();
-    if (opening) {
-      // After the tap settles: Dimensions just under Measure/Summary.
-      setTimeout(function () {
-        requestAnimationFrame(pinDimsStack);
-      }, 0);
-    }
   }
 
   function stopEdit() {
     if (!editing) return;
-    commitEdit();
+    commitEdit({ keepPad: true });
     renderFields();
     syncQtyUi();
   }
 
+  function advanceField() {
+    var targets = editTargets();
+    if (!targets.length) return;
+    var i = targets.indexOf(editing);
+    commitEdit({ keepPad: true });
+    renderFields();
+    syncQtyUi();
+    if (i >= 0 && i < targets.length - 1) {
+      startEdit(targets[i + 1]);
+      return;
+    }
+    // End of dims → wastage picker (do not wrap to first field)
+    editResumeKey = null;
+    editing = null;
+    setDockMode('waste');
+    syncEditingUi();
+    bumpLive();
+  }
+
+  function tick(ms) {
+    if (isDesktop()) return;
+    try {
+      if (navigator.vibrate) navigator.vibrate(ms || 8);
+    } catch (err) {}
+  }
+
+  function clearDimField(key) {
+    if (!key) return;
+    if (key === 'qty') {
+      st.qty = QTY_MIN;
+      if (editing === 'qty') {
+        buffer = '';
+        editSnapshot = String(QTY_MIN);
+      }
+    } else {
+      st.vals[key] = '';
+      if (editing === key) {
+        buffer = '';
+        editSnapshot = '';
+      }
+    }
+    saveDraft();
+    syncEditingUi();
+    bumpLive();
+    tick(12);
+  }
+
   function handleKey(k) {
-    if (!editing) return;
+    if (!editing) {
+      var resume = firstIncompleteTarget() || editTargets()[0];
+      if (!resume) return;
+      if (/^[0-9.]$/.test(k) || k === 'done' || k === 'del') {
+        startEdit(resume);
+      } else {
+        return;
+      }
+      if (k === 'done') {
+        tick(10);
+        advanceField();
+        return;
+      }
+      if (k === 'del') {
+        // startEdit already loaded snapshot; clear via del path below
+      }
+    }
     if (k === 'done') {
-      // Hardware Enter: commit and close. No Next / See results on the pad.
-      commitEdit();
-      renderFields();
-      syncQtyUi();
+      tick(10);
+      advanceField();
       return;
     }
     if (k === 'del') {
       buffer = buffer.slice(0, -1);
+      tick(6);
     } else {
       if (fieldIsInt(editing)) {
         if (k === '.') return;
@@ -1087,6 +1178,7 @@
         if (buffer.length >= 7) return;
         buffer += k;
       }
+      tick(8);
     }
     refreshEditingChip();
     if (editing === 'qty') {
@@ -1104,14 +1196,29 @@
   function layoutDiagramPanel() {
     var sheet = document.getElementById('diagramSheet');
     var panel = sheet && sheet.querySelector('.diagram-sheet__panel');
+    if (!sheet || !panel || sheet.hidden) return;
+
+    // Phone: sheet fills measure-stage like Summary. Desktop: align to measure column.
+    if (!isDesktop()) {
+      panel.style.width = '';
+      sheet.style.paddingLeft = '';
+      sheet.style.paddingRight = '';
+      return;
+    }
+
     var ref =
-      document.querySelector('#panelMeasure .block--dims .field:not([hidden])') ||
-      document.querySelector('#panelMeasure .field:not([hidden])') ||
-      document.querySelector('.field[data-key]:not([hidden])');
-    if (!sheet || !panel || !ref || sheet.hidden) return;
+      document.querySelector('#panelMeasure .fields') ||
+      document.querySelector('#panelMeasure') ||
+      document.querySelector('.desk-col--measure');
+    if (!ref) return;
+
     var r = ref.getBoundingClientRect();
-    panel.style.width = Math.round(r.width) + 'px';
-    sheet.style.paddingLeft = Math.max(0, Math.round(r.left)) + 'px';
+    var width = Math.round(r.width);
+    var left = Math.round(r.left);
+    if (width < 160) return;
+    panel.style.width = width + 'px';
+    sheet.style.paddingLeft = Math.max(0, left) + 'px';
+    sheet.style.paddingRight = Math.max(0, Math.round(window.innerWidth - r.right)) + 'px';
   }
 
   var diagramFocusBefore = null;
@@ -1143,8 +1250,20 @@
     }
   }
 
+  function setDiagramOpen(open) {
+    var app = document.getElementById('app');
+    if (!app || isDesktop()) return;
+    if (open) app.setAttribute('data-diagram', 'open');
+    else app.removeAttribute('data-diagram');
+  }
+
   function openDiagram() {
     if (editing) stopEdit();
+    if (shapeMenuOpen()) {
+      setDockMode('pad');
+      editResumeKey = null;
+      editing = null;
+    }
     var meta = DIAGRAMS[st.shape];
     var sheet = document.getElementById('diagramSheet');
     var img = document.getElementById('diagramImg');
@@ -1156,6 +1275,7 @@
     img.alt = label + ' dimension diagram';
     diagramFocusBefore = document.activeElement;
     sheet.hidden = false;
+    setDiagramOpen(true);
     layoutDiagramPanel();
     document.addEventListener('keydown', onDiagramKeydown);
     var close = document.getElementById('diagramClose');
@@ -1165,6 +1285,7 @@
   function closeDiagram() {
     var sheet = document.getElementById('diagramSheet');
     if (sheet) sheet.hidden = true;
+    setDiagramOpen(false);
     document.removeEventListener('keydown', onDiagramKeydown);
     var back = diagramFocusBefore;
     diagramFocusBefore = null;
@@ -1176,8 +1297,9 @@
   function syncJobInput() {
     var input = document.getElementById('jobName');
     if (!input) return;
-    if (document.activeElement === input) return;
-    input.value = jobName;
+    if (document.activeElement !== input) input.value = jobName;
+    var clear = document.getElementById('btnJobClear');
+    if (clear) clear.hidden = !String(input.value || jobName).trim();
   }
 
   function isLegacyShapeJobName(name) {
@@ -1209,41 +1331,40 @@
     if (!(opts && opts.skipSync)) syncJobInput();
   }
 
-  function renderFields() {
+  function renderDesktopFields() {
     var box = document.getElementById('fields');
     if (!box) return;
-    var kp = useKeypad();
     var html = '';
     SHAPES[st.shape].fields.forEach(function (f) {
-      var val = (editing === f.k)
-        ? (buffer === '' ? (displayVal(f) || '') : buffer)
-        : displayVal(f);
-      var isDef = editing === f.k
-        ? (buffer === '' && defaultValueShown(f.k))
-        : defaultValueShown(f.k);
-      var editingCls = editing === f.k ? ' is-editing' : '';
+      var val = displayVal(f);
+      var isDef = defaultValueShown(f.k);
       var mode = f.int ? 'numeric' : 'decimal';
       html +=
         '<div class="field-wrap">' +
-        '<label class="field' + (isDef ? ' is-default' : '') + editingCls + '" data-key="' + f.k + '">' +
+        '<label class="field' + (isDef ? ' is-default' : '') + '" data-key="' + f.k + '">' +
         '<span class="field__lab">' + f.lab + '</span>' +
-        '<input class="field__input" type="text" ' +
-        (kp
-          ? 'readonly inputmode="none" '
-          : 'inputmode="' + mode + '" enterkeyhint="next" ') +
-        'autocomplete="off" spellcheck="false" data-key="' + f.k + '" value="' +
-        String(val).replace(/"/g, '&quot;') + '" placeholder="0" aria-label="' +
-        f.lab + (f.unit ? (' in ' + f.unit) : '') + '">' +
+        '<input class="field__input" type="text" inputmode="' + mode +
+        '" enterkeyhint="next" autocomplete="off" spellcheck="false" data-key="' + f.k +
+        '" value="' + String(val).replace(/"/g, '&quot;') +
+        '" placeholder="0" aria-label="' + f.lab + (f.unit ? (' in ' + f.unit) : '') + '">' +
         '<span class="field__unit">' + (f.unit || '') + '</span>' +
         '</label>' +
         '<span class="field__thin" hidden aria-live="polite"></span>' +
-        '<div class="field__meta">' +
-        '<span class="field__warn" aria-live="polite"></span>' +
-        '</div>' +
+        '<div class="field__meta"><span class="field__warn" aria-live="polite"></span></div>' +
         '</div>';
     });
     box.innerHTML = html;
     validateAllFields();
+  }
+
+  function renderFields() {
+    if (isDesktop()) {
+      renderDesktopFields();
+      return;
+    }
+    var box = document.getElementById('fields');
+    if (box) box.innerHTML = '';
+    renderFieldStrip();
   }
 
   function renderSpec() {
@@ -1260,28 +1381,302 @@
     }).join('');
   }
 
-  function syncDock(v, preview, ready) {
-    var volEl = document.querySelector('[data-dock-vol]');
-    var unitEl = document.querySelector('[data-dock-unit]');
-    var live = document.querySelector('.dock-live');
-    var hint = document.getElementById('dockHint');
-    if (live) live.classList.toggle('is-example', !!preview && !ready);
-    if (preview) {
-      if (volEl) volEl.textContent = formatVol(v.total);
-      if (unitEl) {
-        unitEl.textContent = ready
-          ? 'm³ (includes +' + st.waste + '% waste)'
-          : 'example only';
+  function liveFieldRaw(key) {
+    if (editing === key) {
+      if (buffer === '') return editSnapshot || (key === 'qty' ? String(clampQty(st.qty)) : '');
+      return buffer;
+    }
+    if (key === 'qty') return String(clampQty(st.qty));
+    return st.vals[key] || '';
+  }
+
+  function lcdFieldLab(f) {
+    if (!f) return '';
+    if (f.k === 'T' && f.lab === 'Thickness') return 'Depth';
+    return String(f.lab || '').replace(/\s*\(optional\)/i, '');
+  }
+
+  function lcdLine(opts) {
+    var tap = !isDesktop() && !opts.static;
+    var tag = tap ? 'button' : 'div';
+    var typeAttr = tap ? ' type="button"' : '';
+    var cls = 'dock-live__line' +
+      (opts.on ? ' is-on' : '') +
+      (opts.pulse ? ' is-pulse' : '') +
+      (opts.incomplete ? ' is-incomplete' : '') +
+      (opts.field ? ' dock-live__line--field' : '') +
+      (opts.shapeRow ? ' dock-live__line--shape' : '') +
+      (opts.mod ? (' ' + opts.mod) : '');
+    var attrs = '';
+    if (opts.focusKey && tap) attrs += ' data-focus-key="' + opts.focusKey + '"';
+    if (opts.lcd && tap) {
+      attrs += ' data-lcd="' + opts.lcd + '"';
+      if (opts.lcd === 'shape') {
+        attrs += ' data-dock-shape aria-haspopup="listbox" aria-controls="shapeMenu" aria-expanded="' + (shapeMenuOpen() ? 'true' : 'false') + '"';
       }
-    } else {
-      if (volEl) volEl.textContent = '-';
-      if (unitEl) unitEl.textContent = 'm³';
+      if (opts.lcd === 'waste') {
+        attrs += ' data-dock-waste aria-haspopup="listbox" aria-controls="wasteMenu" aria-expanded="' + (wasteMenuOpen() ? 'true' : 'false') + '"';
+      }
     }
-    // No guidance line under the dock LCD - CTA / fields carry the next step
-    if (hint) {
-      hint.hidden = true;
-      hint.textContent = '';
+    if (opts.aria && tap) attrs += ' aria-label="' + opts.aria + '"';
+
+    var body = '';
+    if (opts.field) {
+      body +=
+        '<span class="dock-live__cur" aria-hidden="true">' +
+        (opts.on && !opts.static ? '▸' : '') +
+        '</span>';
     }
+    if (opts.lab) {
+      body += '<span class="dock-live__k">' + opts.lab + '</span>';
+    }
+    if (opts.num != null) {
+      body +=
+        '<span class="dock-live__vals">' +
+        '<span class="dock-live__numwrap">' +
+        '<span class="dock-live__num">' + opts.num + '</span>' +
+        (opts.caret ? '<span class="dock-live__caret" aria-hidden="true"></span>' : '') +
+        '</span>' +
+        (opts.unit ? '<span class="dock-live__unit">' + opts.unit + '</span>' : '') +
+        (opts.chevron ? '<span class="dock-live__chev" aria-hidden="true">›</span>' : '') +
+        '</span>';
+    } else if (opts.chevron) {
+      body += '<span class="dock-live__chev" aria-hidden="true">›</span>';
+    }
+
+    // Phone Shape row: picker hit + trailing info.circle (separate control)
+    if (opts.diagram && opts.shapeRow && tap) {
+      var shapeLab = (SHAPES[st.shape] && SHAPES[st.shape].label) || 'shape';
+      var infoIco =
+        '<svg class="dock-live__diagram-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.75"/>' +
+        '<circle cx="12" cy="8" r="1.15" fill="currentColor"/>' +
+        '<path d="M12 11.25v5.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+        '</svg>';
+      return (
+        '<div class="' + cls + '">' +
+        '<button type="button" class="dock-live__shape-hit"' + attrs + '>' + body + '</button>' +
+        '<button type="button" class="dock-live__diagram" data-diagram aria-label="Dimension diagram for ' +
+        shapeLab + '">' + infoIco + '</button>' +
+        '</div>'
+      );
+    }
+
+    return '<' + tag + typeAttr + ' class="' + cls + '"' + attrs + '>' + body + '</' + tag + '>';
+  }
+
+  function lcdShapeLab() {
+    var lab = (SHAPES[st.shape] && SHAPES[st.shape].label) || 'Shape';
+    // Short display: "Slab / Pad" → "Slab"
+    if (st.shape === 'slab') return 'Slab';
+    return lab;
+  }
+
+  function lcdFieldParts(f, raw) {
+    var empty = raw === '' || raw === '.';
+    var show = empty ? '—' : raw;
+    var unit = f.unit || '';
+    if (f.k === 'DIA') {
+      return { num: empty ? '—' : ('Ø' + show), unit: unit };
+    }
+    if (f.int && f.lab.toLowerCase().indexOf('step') !== -1) {
+      if (empty) return { num: '—', unit: 'steps' };
+      return { num: show, unit: show === '1' ? 'step' : 'steps' };
+    }
+    return { num: show, unit: unit };
+  }
+
+  function lcdStackHtml(volText) {
+    var shapeLab = lcdShapeLab();
+    var shapeOn = dockMode === 'shape';
+    var wasteOn = dockMode === 'waste';
+    var padOn = dockMode === 'pad';
+    var pulsing = !isDesktop() && Date.now() < shapePulseUntil;
+    var html = lcdLine({
+      lab: 'Shape',
+      num: shapeLab,
+      field: true,
+      shapeRow: true,
+      diagram: !isDesktop(),
+      lcd: 'shape',
+      on: shapeOn,
+      pulse: pulsing && !shapeOn,
+      aria: 'Shape ' + ((SHAPES[st.shape] && SHAPES[st.shape].label) || shapeLab)
+    });
+
+    SHAPES[st.shape].fields.forEach(function (f) {
+      var raw = liveFieldRaw(f.k);
+      if (!f.need && (raw === '' || raw === '.')) return;
+      var parts = lcdFieldParts(f, raw);
+      var on = padOn && editing === f.k;
+      var done = raw !== '' && raw !== '.' && parseFloat(raw) > 0;
+      html += lcdLine({
+        lab: lcdFieldLab(f),
+        num: parts.num,
+        unit: parts.unit,
+        field: true,
+        on: on,
+        incomplete: !done,
+        caret: true,
+        focusKey: f.k,
+        aria: lcdFieldLab(f) + ' ' + parts.num + (parts.unit ? (' ' + parts.unit) : '')
+      });
+    });
+
+    if (shapeUsesQty(st.shape)) {
+      var q = liveFieldRaw('qty');
+      var qn = parseInt(q, 10) || 1;
+      var qtyOn = padOn && editing === 'qty';
+      html += lcdLine({
+        lab: 'Quantity',
+        num: String(qn),
+        unit: '×',
+        field: true,
+        on: qtyOn,
+        caret: true,
+        focusKey: 'qty',
+        aria: 'Quantity ×' + qn
+      });
+    }
+
+    html += lcdLine({
+      lab: 'Wastage',
+      num: '+' + st.waste,
+      unit: '%',
+      field: true,
+      lcd: 'waste',
+      on: wasteOn,
+      pulse: !isDesktop() && Date.now() < wastePulseUntil,
+      caret: true,
+      aria: 'Wastage +' + st.waste + '%'
+    });
+
+    html += lcdLine({
+      lab: 'Volume',
+      num: volText == null ? '0.00' : volText,
+      unit: 'm³',
+      field: true,
+      mod: 'dock-live__line--vol',
+      static: true,
+      aria: 'Volume ' + (volText == null ? '0.00' : volText) + ' m³'
+    });
+
+    return html;
+  }
+
+  function syncDockDims(volText) {
+    var html = lcdStackHtml(volText == null ? '0.00' : volText);
+    document.querySelectorAll('[data-dock-stack]').forEach(function (el) {
+      el.innerHTML = html;
+    });
+  }
+
+  function syncDock(v, preview, ready) {
+    var live = document.getElementById('dockLive');
+    var volText = preview ? formatVol(v.total) : '0.00';
+    if (isDesktop() && !ready) volText = '-';
+    syncDockDims(volText);
+    if (live) live.classList.toggle('is-example', !!preview && !ready);
+  }
+
+  function syncMeasureDockVisibility() {
+    var dock = document.getElementById('dockMeasure');
+    if (!dock || isDesktop()) return;
+    // Keep dock mounted so keypad position/size stay fixed; sheets cover via CSS.
+    dock.hidden = false;
+    if (st.step === 'measure' && dockMode === 'pad') {
+      var pad = document.getElementById('keypad');
+      if (pad) pad.hidden = false;
+    }
+  }
+
+  function syncSummarySheet() {
+    var sheet = document.getElementById('summarySheet');
+    if (!sheet || isDesktop()) return;
+    var open = st.step === 'results';
+    sheet.hidden = !open;
+    if (!open) return;
+    var phone = document.querySelector('.phone');
+    var mast = document.querySelector('.phone > .mast');
+    if (phone && mast) {
+      var top = Math.round(mast.getBoundingClientRect().bottom - phone.getBoundingClientRect().top);
+      phone.style.setProperty('--summary-top', Math.max(0, top) + 'px');
+    }
+  }
+
+  function syncWasteUi() {
+    var lcdWaste = document.querySelector('[data-lcd="waste"]');
+    var menu = document.getElementById('wasteMenu');
+    var open = wasteMenuOpen();
+    if (lcdWaste) lcdWaste.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (menu) {
+      menu.hidden = false;
+      menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+    document.querySelectorAll('.waste__btn[data-waste]').forEach(function (btn) {
+      var w = parseInt(btn.getAttribute('data-waste'), 10);
+      var on = w === st.waste;
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function openWasteMenu() {
+    if (dockMode === 'waste') {
+      closeWasteMenu();
+      return;
+    }
+    editResumeKey = editing || editTargets()[0] || null;
+    if (editing) commitEdit({ keepPad: true });
+    editing = null;
+    setDockMode('waste');
+    armWastePulse();
+    tick(8);
+  }
+
+  function closeWasteMenu() {
+    if (dockMode !== 'waste') return;
+    setDockMode('pad');
+    // When measure is complete, leave LCD clear so See summary is primary
+    if (resultsReady()) {
+      editResumeKey = null;
+      editing = null;
+      syncEditingUi();
+      bumpLive();
+      return;
+    }
+    resumeEditAfterDock();
+  }
+
+  function toggleWasteMenu() {
+    openWasteMenu();
+  }
+
+  function renderFieldStrip() {
+    var strip = document.getElementById('fieldStrip');
+    if (!strip) return;
+    var keys = editTargets();
+    strip.innerHTML = keys.map(function (key) {
+      var fdef = key === 'qty' ? { lab: 'Qty', unit: '×' } : fieldDef(key);
+      var lab = fdef ? (key === 'qty' ? 'Qty' : fdef.lab) : key;
+      var short = lab.length > 8 ? lab.slice(0, 7) + '…' : lab;
+      var on = editing === key;
+      var done = key === 'qty' ? true : rawComplete(key);
+      var raw = liveFieldRaw(key);
+      var show = raw === '' || raw === '.' ? '—' : raw;
+      var unit = fdef && fdef.unit ? fdef.unit : '';
+      return (
+        '<button type="button" class="field-strip__btn' +
+        (on ? ' is-on' : '') +
+        (done && !on ? ' is-done' : '') +
+        '" role="tab" aria-selected="' + (on ? 'true' : 'false') +
+        '" data-focus-key="' + key + '"' +
+        ' aria-label="' + lab + (unit ? (' ' + unit) : '') + ': ' + show + '">' +
+        '<span class="field-strip__lab">' + short + '</span>' +
+        '<span class="field-strip__val">' + show + (unit && show !== '—' ? ' ' + unit : '') + '</span>' +
+        '</button>'
+      );
+    }).join('');
   }
 
   function copySpec() {
@@ -1300,7 +1695,9 @@
     if (!resultsReady()) { toast(guidanceText() || 'Enter dimensions first'); return; }
     var text = specText();
     if (navigator.share) {
-      navigator.share({ title: 'SlabSet job summary', text: text }).catch(function () {});
+      navigator.share({ title: 'SlabSet job summary', text: text })
+        .then(function () { toast('Shared'); })
+        .catch(function () {});
       return;
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1326,27 +1723,31 @@
       if (panelResults) panelResults.hidden = false;
       if (dockMeasure) dockMeasure.hidden = true;
     } else {
-      if (panelMeasure) panelMeasure.hidden = !measure;
-      if (panelResults) panelResults.hidden = measure;
-      if (dockMeasure) dockMeasure.hidden = !measure;
+      if (panelMeasure) panelMeasure.hidden = false;
+      syncSummarySheet();
     }
 
-    document.querySelectorAll('.steps__btn').forEach(function (btn) {
-      var on = btn.getAttribute('data-step') === st.step;
-      btn.classList.toggle('is-on', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-
-    document.querySelectorAll('.waste__btn[data-waste]').forEach(function (btn) {
-      var w = parseInt(btn.getAttribute('data-waste'), 10);
-      var on = w === st.waste;
-      btn.classList.toggle('is-on', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-
     syncShapeUi();
+    syncWasteUi();
     syncQtyUi();
     if (desk || measure) renderFields();
+    if (!desk && measure && useKeypad()) {
+      if (dockMode !== 'shape' && dockMode !== 'waste') setDockMode('pad');
+      setPadOpen(true);
+      if (!didShapePulse) {
+        didShapePulse = true;
+        if (measureIsBlank()) {
+          // Cold start: teach Shape first. Digits still bootstrap via handleKey.
+          armShapePulse();
+          bumpLive();
+        } else {
+          var bootField = firstIncompleteTarget() || editTargets()[0];
+          if (bootField) startEdit(bootField);
+        }
+      } else if (editing) {
+        refreshEditingChip();
+      }
+    }
 
     var v = volume();
     var preview = complete();
@@ -1354,21 +1755,14 @@
     if (!desk && st.step === 'results' && !ready) {
       st.step = 'measure';
       measure = true;
-      if (panelMeasure) panelMeasure.hidden = false;
-      if (panelResults) panelResults.hidden = true;
-      if (dockMeasure) dockMeasure.hidden = false;
       if (app) app.setAttribute('data-step', 'measure');
-      document.querySelectorAll('.steps__btn').forEach(function (btn) {
-        var on = btn.getAttribute('data-step') === 'measure';
-        btn.classList.toggle('is-on', on);
-        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
+      syncSummarySheet();
     }
-    var calc = document.getElementById('btnCalc');
-    if (calc) calc.disabled = !ready;
+    syncCalcCta(ready);
     syncDock(v, preview, ready);
+    syncMeasureDockVisibility();
 
-    if (desk || !measure) syncResultsPanel(v);
+    if (desk || st.step === 'results') syncResultsPanel(v);
   }
 
   document.addEventListener('click', function (e) {
@@ -1376,29 +1770,64 @@
       applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
       return;
     }
-    var stepBtn = e.target.closest('.steps__btn');
-    if (stepBtn) {
-      setStep(stepBtn.getAttribute('data-step'));
-      return;
+    var diagramSheet = document.getElementById('diagramSheet');
+    if (diagramSheet && !diagramSheet.hidden) {
+      // Tap anywhere outside the diagram panel dismisses (LCD, mast, scrim, pad)
+      if (!e.target.closest('.diagram-sheet__panel')) {
+        closeDiagram();
+        return;
+      }
+      if (
+        e.target.closest('#diagramClose') ||
+        e.target.closest('#diagramScrim')
+      ) {
+        closeDiagram();
+        return;
+      }
     }
     var shape = e.target.closest('#shapeMoreList .shape[data-shape]');
     if (shape) {
       selectShape(shape.getAttribute('data-shape'));
       return;
     }
-    if (e.target.closest('#shapeCard')) {
+    if (e.target.closest('[data-diagram]')) {
+      openDiagram();
+      return;
+    }
+    if (e.target.closest('[data-lcd="shape"]')) {
       toggleShapeMenu();
       return;
     }
-    if (shapeMenuOpen() && !e.target.closest('#shapeDd')) {
+    if (e.target.closest('[data-lcd="waste"]')) {
+      toggleWasteMenu();
+      return;
+    }
+    if (shapeMenuOpen() && !e.target.closest('#dockShape') && !e.target.closest('[data-lcd="shape"]')) {
       closeShapeMenu();
+    }
+    if (wasteMenuOpen() && !e.target.closest('#dockWaste') && !e.target.closest('[data-lcd="waste"]')) {
+      closeWasteMenu();
     }
     var waste = e.target.closest('.waste__btn[data-waste]');
     if (waste) {
-      if (editing) stopEdit();
       st.waste = parseInt(waste.getAttribute('data-waste'), 10);
+      var readyAfter = false;
+      closeWasteMenu();
       saveDraft();
-      render();
+      readyAfter = resultsReady();
+      tick(10);
+      // Completion moment belongs to See summary CTA, not another waste flash
+      if (!readyAfter) armWastePulse();
+      bumpLive();
+      return;
+    }
+    var focusTab = e.target.closest('[data-focus-key]');
+    if (focusTab && useKeypad() && st.step === 'measure') {
+      if (longPressFired) {
+        longPressFired = false;
+        return;
+      }
+      startEdit(focusTab.getAttribute('data-focus-key'));
       return;
     }
     var bagBtn = e.target.closest('.bag-size__btn[data-bag]');
@@ -1410,55 +1839,62 @@
       render();
       return;
     }
-    var keyBtn = e.target.closest('#keypad [data-k]');
+    var keyBtn = e.target.closest('#dockPad [data-k]');
     if (keyBtn) {
       e.preventDefault();
       handleKey(keyBtn.getAttribute('data-k'));
       return;
     }
-    if (useKeypad()) {
-      // Field open is handled on pointerdown (avoids focus scroll-into-view).
-      // Any tap inside the dims stack (including gaps) must not dismiss.
-      if (e.target.closest('.fields') || e.target.closest('#qtyField')) {
-        ignoreOutsideClick = false;
-        return;
-      }
-      // Same gesture that opened/switched a field - don't dismiss
-      if (ignoreOutsideClick) {
-        ignoreOutsideClick = false;
-        return;
-      }
-      // Don't dismiss the pad after a scroll gesture - user may be heading to Shape.
-      if (editing && tapMoved) return;
-      if (editing && !e.target.closest('#keypad') && !e.target.closest('.field.is-editing') && !e.target.closest('#qtyField.is-editing')) {
-        stopEdit();
-      }
-    }
     if (e.target.closest('#btnCalc')) {
+      tick(12);
       setStep('results');
       return;
     }
-    if (e.target.closest('#btnEdit')) {
+    if (e.target.closest('#btnEdit') || e.target.closest('#summaryScrim')) {
       setStep('measure');
-      return;
-    }
-    if (e.target.closest('#btnCopy')) {
-      copySpec();
-      return;
-    }
-    if (e.target.closest('#btnShare')) {
-      shareSpec();
       return;
     }
     if (e.target.closest('#btnDiagram')) {
       openDiagram();
       return;
     }
-    if (
-      e.target.closest('#diagramClose') ||
-      e.target.closest('#diagramScrim')
-    ) {
-      closeDiagram();
+    if (useKeypad()) {
+      if (ignoreOutsideClick) {
+        ignoreOutsideClick = false;
+        return;
+      }
+      // Tap outside an editable LCD row clears highlight; pad stays put
+      if (
+        st.step === 'measure' &&
+        editing &&
+        !e.target.closest('[data-focus-key]') &&
+        !e.target.closest('#dockPad') &&
+        !e.target.closest('[data-lcd]') &&
+        !e.target.closest('#dockShape') &&
+        !e.target.closest('#dockWaste')
+      ) {
+        stopEdit();
+      }
+    }
+    if (e.target.closest('#btnJobClear')) {
+      e.preventDefault();
+      saveJobName('');
+      var jobIn = document.getElementById('jobName');
+      if (jobIn) {
+        jobIn.value = '';
+        jobIn.focus();
+      }
+      syncJobInput();
+      return;
+    }
+    if (e.target.closest('#btnCopy')) {
+      tick(8);
+      copySpec();
+      return;
+    }
+    if (e.target.closest('#btnShare')) {
+      tick(8);
+      shareSpec();
       return;
     }
     if (e.target.closest('#btnInstall')) {
@@ -1474,7 +1910,7 @@
     if (e.target.closest('#btnInstallDismiss')) {
       var ban = document.getElementById('installBanner');
       if (ban) ban.hidden = true;
-      try { sessionStorage.setItem('slabset-v12-install-dismiss', '1'); } catch (err) {}
+      try { sessionStorage.setItem('slabset-v13-install-dismiss', '1'); } catch (err) {}
     }
   });
 
@@ -1484,11 +1920,38 @@
 
   var tapMoved = false;
   var tapStartY = 0;
+  var longPressTimer = null;
+  var longPressKey = null;
+  var longPressFired = false;
+
+  function cancelLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    longPressKey = null;
+  }
+
   document.addEventListener('pointerdown', function (e) {
     tapMoved = false;
     tapStartY = e.clientY;
+    longPressFired = false;
+    cancelLongPress();
     if (!useKeypad()) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    var lcdDim = e.target.closest('[data-focus-key]');
+    if (lcdDim && st.step === 'measure') {
+      var holdKey = lcdDim.getAttribute('data-focus-key');
+      if (holdKey) {
+        longPressKey = holdKey;
+        longPressTimer = setTimeout(function () {
+          longPressTimer = null;
+          longPressFired = true;
+          clearDimField(holdKey);
+        }, 520);
+      }
+    }
 
     var qtyTap = e.target.closest('#qtyField');
     if (qtyTap && shapeUsesQty(st.shape)) {
@@ -1502,18 +1965,38 @@
       fieldTap.getAttribute('data-key') !== 'qty' &&
       fieldTap.closest('.fields')
     ) {
-      // Prevent input focus so the browser doesn't scroll Length into view
-      // and push Shape off-screen.
       e.preventDefault();
       startEdit(fieldTap.getAttribute('data-key'));
     }
   }, { passive: false });
 
   document.addEventListener('pointermove', function (e) {
-    if (Math.abs(e.clientY - tapStartY) > 8) tapMoved = true;
+    if (Math.abs(e.clientY - tapStartY) > 8) {
+      tapMoved = true;
+      cancelLongPress();
+    }
   }, { passive: true });
 
+  document.addEventListener('pointerup', function () {
+    cancelLongPress();
+  });
+  document.addEventListener('pointercancel', function () {
+    cancelLongPress();
+  });
+
   document.addEventListener('focusin', function (e) {
+    if (e.target.id === 'jobName') {
+      var jobEl = e.target;
+      requestAnimationFrame(function () {
+        try { jobEl.select(); } catch (err) {}
+        try {
+          jobEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch (err2) {
+          try { jobEl.scrollIntoView(true); } catch (err3) {}
+        }
+      });
+      return;
+    }
     if (!isMeasureInput(e.target)) return;
     if (useKeypad()) {
       e.target.blur();
@@ -1537,6 +2020,8 @@
   document.addEventListener('input', function (e) {
     if (e.target.id === 'jobName') {
       saveJobName(e.target.value, { keepRaw: true, skipSync: true });
+      var clearBtn = document.getElementById('btnJobClear');
+      if (clearBtn) clearBtn.hidden = !String(e.target.value || '').trim();
       return;
     }
     if (useKeypad()) return;
@@ -1591,9 +2076,20 @@
         e.preventDefault();
         return;
       }
+      if (wasteMenuOpen()) {
+        closeWasteMenu();
+        e.preventDefault();
+        return;
+      }
       var sheet = document.getElementById('diagramSheet');
       if (sheet && !sheet.hidden) {
         closeDiagram();
+        e.preventDefault();
+        return;
+      }
+      var summary = document.getElementById('summarySheet');
+      if (summary && !summary.hidden && !isDesktop()) {
+        setStep('measure');
         e.preventDefault();
         return;
       }
@@ -1628,7 +2124,10 @@
     }
   });
 
-  window.addEventListener('resize', layoutDiagramPanel);
+  window.addEventListener('resize', function () {
+    layoutDiagramPanel();
+    if (st.step === 'results') syncSummarySheet();
+  });
 
   (function bindEditScrollClamp() {
     var scroll = document.querySelector('.scroll');
@@ -1649,7 +2148,7 @@
     e.preventDefault();
     deferredInstall = e;
     try {
-      if (sessionStorage.getItem('slabset-v12-install-dismiss')) return;
+      if (sessionStorage.getItem('slabset-v13-install-dismiss')) return;
     } catch (err) {}
     var ban = document.getElementById('installBanner');
     if (ban) ban.hidden = false;
@@ -1679,7 +2178,7 @@
   syncThemeBtn();
   render();
   if (st.step === 'results' && !isDesktop()) {
-    var bootScroll = document.querySelector('.scroll');
-    if (bootScroll) bootScroll.scrollTop = 0;
+    var bootBody = document.querySelector('.summary-sheet__body');
+    if (bootBody) bootBody.scrollTop = 0;
   }
 })();

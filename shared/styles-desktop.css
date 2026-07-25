@@ -41,7 +41,7 @@ html[data-layout="desktop"] body {
 }
 
 .mast__phone-link {
-  font-size: 13px;
+  font-size: var(--type-sm);
   font-weight: 600;
   color: var(--muted);
   text-decoration: none;
@@ -80,11 +80,11 @@ html[data-layout="desktop"] body {
   padding-left: 28px;
 }
 
-/* Same column rhythm as mobile panel: Volume → order → summary */
+/* Same column rhythm as mobile summary: order → job → share → help */
 html[data-layout="desktop"] .desk-results-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 html[data-layout="desktop"] .panel--results.is-pending .desk-results-body {
@@ -101,12 +101,38 @@ html[data-layout="desktop"] .panel--results:not(.is-pending) .desk-results-body 
 
 html[data-layout="desktop"] .btn-edit,
 html[data-layout="desktop"] .steps,
+html[data-layout="desktop"] .vol-head,
 html[data-layout="desktop"] .install,
 html[data-layout="desktop"] .phone__notch,
 html[data-layout="desktop"] .phone__status,
 html[data-layout="desktop"] .phone__home,
-html[data-layout="desktop"] #dockMeasure {
+html[data-layout="desktop"] #dockMeasure,
+html[data-layout="desktop"] .summary-sheet,
+html[data-layout="desktop"] .vol-help,
+html[data-layout="desktop"] .btn-calc {
   display: none !important;
+}
+
+/* Desktop diagram: fixed modal over the measure column */
+html[data-layout="desktop"] .diagram-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+html[data-layout="desktop"] .diagram-sheet__panel {
+  max-height: min(88dvh, 640px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+  padding: 8px 0 14px;
 }
 
 html[data-layout="desktop"] .actions {

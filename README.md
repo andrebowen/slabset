@@ -1,7 +1,12 @@
-# SlabSet
+# SlabSet - v14 (preview)
 
-Metric concrete volume & ordering guide for Australia.
+Always-pad calculator IA: Volume display at the top, keypad always on Measure, compact one-field input stage.
 
-**Live:** https://slabset.online
+```bash
+python3 dev-server.py
+# → http://127.0.0.1:8827/
+```
 
-Built as a static PWA. Edit and bump `sw.js` `VERSION` on each deploy.
+Not live. Live remains v12 until promoted.
+
+See `CONTEXT.md` for the IA goal.
