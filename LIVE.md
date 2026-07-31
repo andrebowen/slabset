@@ -1,13 +1,10 @@
 # Live version
 
-**Live on slabset.online = V15** (`app-v15/`).
+**Live on slabset.online = V18** (`app-v18/`).
 
-Confirmed 2026-07-28 against the deployed service worker: `VERSION = 'v15-preview-33'`,
-which matches `app-v15/sw.js`. Earlier copies of this file across every `app-v*/` said
-V12; that was stale from the 2026-07-24 promote and is superseded.
+Confirmed 2026-07-31 against the deployed service worker: `VERSION = 'v18-preview-2'`,
+which matches `app-v18/sw.js`. Promoted from v15 (`v15-preview-33`) on Andre's sign-off;
+bumped to `-preview-2` on this deploy to bust caches for the session's fixes (Quantity
+field, diagram centring/sizing, warning copy, badge colour, scroll-area overflow-x).
 
-v18 is preview only. Do not promote without Andre sign-off.
-
-On promote: bump `sw.js` VERSION (currently `v18-preview-1`), refresh `sitemap.xml`
-lastmod, push to `andrebowen/slabset`, then update this file in every `app-v*/` and the
-live row in the root `CONTEXT.md`.
+**This is the live tree.** Edit here only for hotfixes, and bump `sw.js` VERSION when you do.

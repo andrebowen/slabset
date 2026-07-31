@@ -221,6 +221,9 @@ body {
   flex: 1;
   min-height: 0;            /* without this a flex child refuses to scroll */
   overflow-y: auto;
+  overflow-x: hidden;       /* setting only overflow-y left overflow-x computed to "auto"
+                               too (per spec), so any touch drag not perfectly vertical
+                               could rubber-band the section sideways */
   overscroll-behavior: contain;
   padding: 16px;
   display: flex;
