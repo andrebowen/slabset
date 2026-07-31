@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-132.14 -220.40 414.50 300.44" aria-hidden="true">
+  <title>Gutter / Kerb - oblique dimensions</title>
+<path d="M 240.00 -60.00 L 60.00 -60.00 L 80.36 -80.36 L 260.36 -80.36 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 60.00 -120.00 L 0.00 -120.00 L 20.36 -140.36 L 80.36 -140.36 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="240.00" y1="-60.00" x2="260.36" y2="-80.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="60.00" y1="-60.00" x2="80.36" y2="-80.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="60.00" y1="-120.00" x2="80.36" y2="-140.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="80.36" y1="-80.36" x2="80.36" y2="-140.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="260.36" y1="-80.36" x2="260.36" y2="-20.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<line x1="240.00" y1="0.00" x2="260.36" y2="-20.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
+<path d="M 240.00 0.00 L 240.00 -60.00 L 60.00 -60.00 L 60.00 -120.00 L 0.00 -120.00 L 0.00 0.00 L 60.00 0.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="dim">
+<line x1="-8.00" y1="0.00" x2="-19.00" y2="0.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-8.00" y1="-60.00" x2="-19.00" y2="-60.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-19.00" y1="0.00" x2="-19.00" y2="-60.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-22.50" y1="0.00" x2="-15.50" y2="0.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-22.50" y1="-60.00" x2="-15.50" y2="-60.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-61.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-38.40">Flag<tspan x="-61.00" dy="16.80">thickness</tspan></text>
+</g>
+<g class="dim">
+<line x1="260.36" y1="-88.36" x2="260.36" y2="-150.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="80.36" y1="-88.36" x2="80.36" y2="-150.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="260.36" y1="-150.00" x2="80.36" y2="-150.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="260.36" y1="-153.50" x2="260.36" y2="-146.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="80.36" y1="-153.50" x2="80.36" y2="-146.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="170.36" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-178.40">Gutter<tspan x="170.36" dy="16.80">width</tspan></text>
+</g>
+<g class="dim">
+<line x1="-8.00" y1="-60.00" x2="-19.00" y2="-60.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-8.00" y1="-120.00" x2="-19.00" y2="-120.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-19.00" y1="-60.00" x2="-19.00" y2="-120.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-22.50" y1="-60.00" x2="-15.50" y2="-60.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-22.50" y1="-120.00" x2="-15.50" y2="-120.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-56.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-98.40">Kerb<tspan x="-56.00" dy="16.80">height</tspan></text>
+</g>
+<g class="dim">
+<line x1="80.36" y1="-144.70" x2="80.36" y2="-150.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="20.36" y1="-144.70" x2="20.36" y2="-150.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="80.36" y1="-150.00" x2="20.36" y2="-150.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="80.36" y1="-153.50" x2="80.36" y2="-146.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="20.36" y1="-153.50" x2="20.36" y2="-146.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="50.36" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-178.40">Kerb<tspan x="50.36" dy="16.80">depth</tspan></text>
+</g>
+<g class="dim">
+<line x1="-8.00" y1="-120.00" x2="-19.00" y2="-120.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="12.36" y1="-140.36" x2="1.36" y2="-140.36" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-19.00" y1="-120.00" x2="1.36" y2="-140.36" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-22.50" y1="-120.00" x2="-15.50" y2="-120.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-2.14" y1="-140.36" x2="4.86" y2="-140.36" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-46.82" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-130.18">Length</text>
+</g>
+</svg>

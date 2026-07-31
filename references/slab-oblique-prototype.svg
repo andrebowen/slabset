@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60.00 -43.21 280.89 197.21" aria-hidden="true">
+  <title>Slab / Pad - oblique dimensions (prototype)</title>
+<path d="M 0.00 0.00 L 160.00 0.00 L 181.21 -21.21 L 21.21 -21.21 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 160.00 0.00 L 160.00 100.00 L 181.21 78.79 L 181.21 -21.21 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 0.00 0.00 L 160.00 0.00 L 160.00 100.00 L 0.00 100.00 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="0.00" y1="108.00" x2="0.00" y2="120.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="160.00" y1="108.00" x2="160.00" y2="120.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<g class="dim">
+<line x1="0.00" y1="120.00" x2="160.00" y2="120.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="0.00" y1="116.50" x2="0.00" y2="123.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="160.00" y1="116.50" x2="160.00" y2="123.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="80.00" y="132.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Length</text>
+</g>
+<line x1="-8.00" y1="0.00" x2="-20.00" y2="0.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-8.00" y1="100.00" x2="-20.00" y2="100.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<g class="dim">
+<line x1="-20.00" y1="0.00" x2="-20.00" y2="100.00" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-23.50" y1="0.00" x2="-16.50" y2="0.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-23.50" y1="100.00" x2="-16.50" y2="100.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-38.00" y="50.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Width</text>
+</g>
+<line x1="165.66" y1="105.66" x2="172.73" y2="112.73" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="186.87" y1="84.44" x2="193.94" y2="91.51" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<g class="dim">
+<line x1="172.73" y1="112.73" x2="193.94" y2="91.51" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="170.25" y1="115.20" x2="175.20" y2="110.25" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="191.47" y1="93.99" x2="196.42" y2="89.04" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="198.89" y="117.68" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b">Thickness</text>
+</g>
+</svg>

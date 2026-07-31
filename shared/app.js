@@ -1,2184 +1,858 @@
+/* SlabSet v18 - flat stack, no card containers, iPhone first.
+   Engine and shape maths carried from v15/v16/v17 unchanged. */
 (function () {
   'use strict';
 
-  var DRAFT_KEY = 'slabset-v15-draft';
-  var THEME_KEY = 'slabset-theme';
-  var JOB_KEY = 'slabset-job';
-  var DRAFT_SCHEMA = 8;
-  var BAG_KG = [20, 25, 30];
-  var BAG_M3 = { 20: 0.01, 25: 0.0125, 30: 0.015 };
-  var THIN_MM = 50;
-  var MESH_SHEET_M2 = 14.4;
-  var MESH_SHEET_SIZE = '6.0 × 2.4 m';
+  // Field ids are namespaced per shape so a shared label like "Width" can't carry a wrong
+  // unit across shapes. vol() receives every field already normalised to metres; counts
+  // stay raw.
+  //
+  // `lo`/`hi` are trade-plausible bounds in metres (raw for counts). They gate nothing -
+  // they raise a caution. One mis-tap on a unit badge used to turn a 3 x 2 x 100mm slab
+  // into 79,939 m3 and cheerfully recommend 7,993,986 bags in total silence.
+  //
+  // Anchored to published figures, not guesses (2026-07-30 pass): NCC/BCA stair geometry
+  // (riser/going/width minimums for a private stairway), AS 2870 residential footing depth
+  // and pier-bore practice in reactive soil, AS 3600 slab thickness ranges from screed to
+  // heavy industrial floors, and common kerb & channel profile dimensions. Each shape's
+  // fields note their source below. Still worth a tradesperson's read before this is
+  // treated as gospel - these are code minimums/maximums and common practice, not a
+  // structural engineer's sign-off on any specific job.
+  var shapes = [
+    {id:'slab', label:'Slab / Pad', diagram:'slab',
+     // Thickness: 75mm covers a light path/screed slab; 350mm spans ordinary residential
+     // through heavy-duty industrial floors (AS 3600). A "slab" under 300mm on a side reads
+     // more like a stepping pad than a poured slab, hence the length/width floor.
+     fields:[{id:'slabL',label:'Length',lo:0.3,hi:100},
+             {id:'slabW',label:'Width',lo:0.3,hi:100},
+             {id:'slabT',label:'Thickness',lo:0.075,hi:0.35}],
+     vol:function(v){ return v.slabL * v.slabW * v.slabT; }},
 
-  var FIELD_DEFAULTS = {};
+    {id:'pierfooting', label:'Pier footing', diagram:'pierfooting',
+     // Domestic pier/pad footings run roughly 300-600mm square; depth follows AS 2870 -
+     // deeper in reactive clay, but a bored pier past ~4m is unusual for this class of pour.
+     // Quantity carried over from v15/live - a job pours a set of identical piers, not one.
+     fields:[{id:'pierL',label:'Length',lo:0.2,hi:3},
+             {id:'pierW',label:'Width',lo:0.2,hi:3},
+             {id:'pierD',label:'Depth',lo:0.2,hi:4},
+             {id:'pierQty',label:'Quantity',count:true,lo:1,hi:60}],
+     vol:function(v){ return v.pierL * v.pierW * v.pierD * v.pierQty; }},
 
-  var SHAPES = {
-    slab: {
-      label: 'Slab / Pad',
-      fields: [
-        { k: 'L', lab: 'Length', unit: 'm', need: true, max: 30 },
-        { k: 'W', lab: 'Width', unit: 'm', need: true, max: 30 },
-        { k: 'T', lab: 'Thickness', unit: 'mm', need: true, mm: true, max: 1000 }
-      ],
-      vol: function (v) { return v.L * v.W * (v.T / 1000); }
-    },
-    pierfooting: {
-      label: 'Pier footing',
-      fields: [
-        { k: 'PL', lab: 'Length', unit: 'mm', need: true, mm: true, max: 3000 },
-        { k: 'PW', lab: 'Width', unit: 'mm', need: true, mm: true, max: 3000 },
-        { k: 'PD', lab: 'Depth', unit: 'mm', need: true, mm: true, max: 2000 }
-      ],
-      vol: function (v) {
-        return (v.PL / 1000) * (v.PW / 1000) * (v.PD / 1000);
-      }
-    },
-    column: {
-      label: 'Column',
-      fields: [
-        { k: 'DIA', lab: 'Diameter', unit: 'mm', need: true, mm: true, max: 3000 },
-        { k: 'H', lab: 'Height', unit: 'mm', need: true, mm: true, max: 10000 }
-      ],
-      vol: function (v) {
-        return Math.PI * Math.pow((v.DIA / 1000) / 2, 2) * (v.H / 1000);
-      }
-    },
-    footing: {
-      label: 'Strip footing',
-      fields: [
-        { k: 'L', lab: 'Length', unit: 'm', need: true, max: 30 },
-        { k: 'W', lab: 'Width', unit: 'm', need: true, max: 2 },
-        { k: 'D', lab: 'Depth', unit: 'mm', need: true, mm: true, max: 2000 }
-      ],
-      vol: function (v) { return v.L * v.W * (v.D / 1000); }
-    },
-    stairs: {
-      label: 'Stairs',
-      fields: [
-        { k: 'W', lab: 'Width', unit: 'mm', need: true, mm: true, max: 3000 },
-        { k: 'R', lab: 'Rise', unit: 'mm', need: true, mm: true, max: 300 },
-        { k: 'G', lab: 'Going', unit: 'mm', need: true, mm: true, max: 500 },
-        { k: 'N', lab: 'Steps', unit: '', need: true, max: 60, int: true },
-        { k: 'BT', lab: 'Base slab (optional)', unit: 'mm', need: false, mm: true, max: 300 }
-      ],
-      vol: function (v) {
-        var w = v.W / 1000;
-        var wedge = w * (v.G / 1000) * (v.R / 1000) * (v.N * (v.N + 1) / 2);
-        return wedge + w * (v.G / 1000 * v.N) * (v.BT / 1000);
-      }
-    },
-    gutter: {
-      label: 'Gutter / Kerb',
-      fields: [
-        { k: 'L', lab: 'Length', unit: 'm', need: true, max: 100 },
-        { k: 'KD', lab: 'Kerb depth', unit: 'mm', need: true, mm: true, max: 500 },
-        { k: 'KH', lab: 'Kerb height', unit: 'mm', need: true, mm: true, max: 500 },
-        { k: 'FT', lab: 'Flag thickness', unit: 'mm', need: true, mm: true, max: 300 },
-        { k: 'GW', lab: 'Gutter width', unit: 'mm', need: true, mm: true, max: 1000 }
-      ],
-      vol: function (v) {
-        var kd = v.KD / 1000;
-        var kh = v.KH / 1000;
-        var ft = v.FT / 1000;
-        var gw = v.GW / 1000;
-        return v.L * (kd * (kh + ft) + gw * ft);
-      }
-    }
+    {id:'column', label:'Column', diagram:'column',
+     // Verandah posts start around 75-90mm; structural columns for a two-storey pour rarely
+     // exceed ~1.2m diameter or 8m height in residential/light-commercial work. Quantity
+     // carried over from v15/live, same reasoning as pier footing.
+     fields:[{id:'colDia',label:'Diameter',lo:0.075,hi:1.2},
+             {id:'colH',label:'Height',lo:0.3,hi:8},
+             {id:'colQty',label:'Quantity',count:true,lo:1,hi:40}],
+     vol:function(v){ return Math.PI * Math.pow(v.colDia/2, 2) * v.colH * v.colQty; }},
+
+    {id:'footing', label:'Strip footing', diagram:'footing',
+     // 250mm is close to the narrowest strip footing code allows; wider than ~1.2m starts
+     // reading as a raft, not a strip. Depth 200mm-1.5m covers standard to reactive-soil runs.
+     fields:[{id:'ftgL',label:'Length',lo:0.5,hi:300},
+             {id:'ftgW',label:'Width',lo:0.25,hi:1.2},
+             {id:'ftgD',label:'Depth',lo:0.2,hi:1.5}],
+     vol:function(v){ return v.ftgL * v.ftgW * v.ftgD; }},
+
+    {id:'stairs', label:'Stairs', diagram:'stairs',
+     // Rise/going/width follow NCC private-stairway geometry (max riser ~190mm, min going
+     // ~240mm, min width ~700mm) with a small margin either side for garden/outdoor steps.
+     // A single continuous flight past ~30 risers with no landing is worth a second look.
+     fields:[{id:'stN',label:'Steps',count:true,lo:1,hi:30},
+             {id:'stR',label:'Rise',lo:0.1,hi:0.22},
+             {id:'stG',label:'Going',lo:0.2,hi:0.4},
+             {id:'stW',label:'Width',lo:0.7,hi:3},
+             {id:'stBT',label:'Base slab',optional:true,lo:0,hi:0.3}],
+     vol:function(v){
+       var wedge = v.stW * v.stG * v.stR * (v.stN * (v.stN + 1) / 2);
+       return wedge + v.stW * (v.stG * v.stN) * v.stBT;
+     }},
+
+    {id:'gutter', label:'Gutter / Kerb', diagram:'gutter',
+     // Kerb & channel profile dims from common civil practice: upstand height ~50-300mm
+     // (mountable to barrier kerb), full profile depth 150-450mm, flag/invert 75-200mm,
+     // channel width 150mm domestic to ~1.2m arterial.
+     fields:[{id:'gutL',label:'Length',lo:0.5,hi:500},
+             {id:'gutKD',label:'Kerb depth',lo:0.15,hi:0.45},
+             {id:'gutKH',label:'Kerb height',lo:0.05,hi:0.3},
+             {id:'gutFT',label:'Flag thickness',lo:0.075,hi:0.2},
+             {id:'gutGW',label:'Gutter width',lo:0.15,hi:1.2}],
+     vol:function(v){ return v.gutL * (v.gutKD * (v.gutKH + v.gutFT) + v.gutGW * v.gutFT); }}
+  ];
+
+  // Dimensions start empty. A prefilled measurement reads as an answer, and v12 shipped
+  // that problem as "0.99 example only" - a number nobody should act on, sitting where
+  // the real one goes. Wastage and bag size are defaults, not measurements, so they stay -
+  // Quantity joins them: a single pier/column is the common case, not a measurement to
+  // force typing every time.
+  var vals = { wastage: '10', pierQty: '1', colQty: '1' };
+
+  var DEFAULT_UNITS = {
+    slabL:'m', slabW:'m', slabT:'mm',
+    pierL:'mm', pierW:'mm', pierD:'mm',
+    colDia:'mm', colH:'mm',
+    ftgL:'m', ftgW:'m', ftgD:'mm',
+    stR:'mm', stG:'mm', stW:'mm', stBT:'mm',
+    gutL:'m', gutKD:'mm', gutKH:'mm', gutFT:'mm', gutGW:'mm'
   };
+  var units = {};
+  for (var k in DEFAULT_UNITS) { units[k] = DEFAULT_UNITS[k]; }
 
-  var QTY_MIN = 1;
-  var QTY_MAX = 999;
+  var UNIT_OPTS = ['m', 'mm'];
+  var UNIT_FACTOR = { m: 1, mm: 0.001 };
 
-  var SHAPE_ICONS = {
-    slab: '<rect x="3" y="9" width="18" height="6" rx="1" stroke="currentColor" stroke-width="1.75"/>',
-    footing: '<path d="M3 5h18v14H3V5zm4 4h10v6H7V9z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>',
-    pierfooting: '<rect x="7" y="4" width="10" height="16" rx="1" stroke="currentColor" stroke-width="1.75"/>',
-    column: '<rect x="9" y="3" width="6" height="18" rx="1" stroke="currentColor" stroke-width="1.75"/>',
-    stairs: '<path d="M4 20v-4h6v-4h6v-4h6" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M4 20h18M22 20V8" stroke="currentColor" stroke-width="1.75" stroke-linecap="square"/>',
-    gutter: '<path d="M3 6h6v8h12v4H3z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>'
-  };
+  // Wastage is a fixed preset list, not a typed value, so it is a pull-down like Shape
+  // rather than another keypad-editable field - carried over from v17. Each preset
+  // carries a two-to-three word site condition so the number means something without a
+  // trade background to read it.
+  var WASTE_OPTS = [0, 5, 10, 15, 20];
+  var WASTE_DEFAULT = 10;
+  var WASTE_NOTES = { 0: 'No wastage', 5: 'Smooth, flat site', 10: 'Recommended', 15: 'Uneven ground', 20: 'Rough ground' };
 
-  var DIAGRAMS = {
-    slab: { src: 'shared/diagrams/slab.svg' },
-    footing: { src: 'shared/diagrams/footing.svg' },
-    pierfooting: { src: 'shared/diagrams/pierfooting.svg' },
-    column: { src: 'shared/diagrams/column.svg' },
-    stairs: { src: 'shared/diagrams/stairs.svg' },
-    gutter: { src: 'shared/diagrams/gutter.svg' }
-  };
-
-  function fieldDef(key) {
-    return SHAPES[st.shape].fields.filter(function (f) { return f.k === key; })[0];
-  }
-
-  function fieldIsInt(key) {
-    if (key === 'qty') return true;
-    var f = fieldDef(key);
-    return !!(f && f.int);
-  }
-
-  function emptyVals() {
-    return {
-      L: '', W: '', T: '', D: '', DIA: '', H: '',
-      PL: '', PW: '', PD: '', R: '', G: '', N: '', BT: '',
-      KD: '', KH: '', FT: '', GW: ''
-    };
-  }
-
-  var st = {
-    step: 'measure',
+  var state = {
     shape: 'slab',
-    waste: 10,
-    bagKg: 20,
-    qty: 1,
-    vals: emptyVals(),
-    shapeVals: {}
+    focus: 'slabL',
+    bagSize: 20
   };
 
-  function bagKg() {
-    return BAG_M3[st.bagKg] ? st.bagKg : 20;
+  var DRAFT_KEY = 'slabset-draft';
+  var THEME_KEY = 'slabset-theme';
+
+  // Carried over from v15: a soft vibrate on key entry, shape pick and the moment the
+  // volume first becomes computable. Feature-detected, so it silently no-ops on desktop
+  // and any browser without the Vibration API.
+  function tick(ms) {
+    try { if (navigator.vibrate) navigator.vibrate(ms || 8); } catch (e) {}
   }
 
-  function bagVol() {
-    return BAG_M3[bagKg()];
-  }
-
-  function bagSizeSegHtml() {
-    var cur = bagKg();
-    return (
-      '<div class="bag-size" role="group" aria-label="Bag size">' +
-      BAG_KG.map(function (kg) {
-        var on = kg === cur;
-        return (
-          '<button type="button" class="bag-size__btn' + (on ? ' is-on' : '') +
-          '" data-bag="' + kg + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
-          kg + ' kg</button>'
-        );
-      }).join('') +
-      '</div>'
-    );
-  }
-
-  var deferredInstall = null;
-  var editing = null; // field key | 'qty' | null
-  var buffer = '';
-  var editSnapshot = '';
-  var jobName = '';
-
-  function parkShapeVals(shape) {
-    var s = shape || st.shape;
-    st.shapeVals[s] = Object.assign(emptyVals(), st.vals);
-  }
-
-  function adoptShapeVals(shape) {
-    var saved = st.shapeVals[shape];
-    st.vals = emptyVals();
-    if (!saved) return;
-    Object.keys(st.vals).forEach(function (k) {
-      if (saved[k] != null && String(saved[k]) !== '') {
-        st.vals[k] = String(saved[k]);
-      }
-    });
-  }
-
-  function fieldDefault(key) {
-    var defs = FIELD_DEFAULTS[st.shape] || {};
-    return defs[key] != null ? String(defs[key]) : '';
-  }
-
-  function rawComplete(key) {
-    var raw = (st.vals[key] || '').toString().trim();
-    return raw !== '' && raw !== '.' && parseFloat(raw) > 0;
-  }
-
-  function defaultInUse(key) {
-    return !rawComplete(key) && !!fieldDefault(key);
-  }
-
-  function defaultValueShown(key) {
-    var def = fieldDefault(key);
-    if (!def) return false;
-    if (defaultInUse(key)) return true;
-    if (!rawComplete(key)) return false;
-    return parseFloat(st.vals[key]) === parseFloat(def);
-  }
-
-  function effectiveRaw(key) {
-    return rawComplete(key) ? st.vals[key] : fieldDefault(key);
-  }
-
-  function numEff(key) {
-    var n = parseFloat(effectiveRaw(key));
-    return isFinite(n) ? n : 0;
-  }
-
-  function clampQty(n) {
-    n = Math.round(n);
-    if (!isFinite(n) || n < QTY_MIN) return QTY_MIN;
-    if (n > QTY_MAX) return QTY_MAX;
-    return n;
-  }
-
-  function shapeUsesQty(shape) {
-    return shape === 'pierfooting' || shape === 'column';
-  }
-
-  function effectiveQty() {
-    return shapeUsesQty(st.shape) ? clampQty(st.qty) : 1;
-  }
-
-  function parseVals() {
-    var v = {};
-    SHAPES[st.shape].fields.forEach(function (f) { v[f.k] = numEff(f.k); });
-    return v;
-  }
-
-  function complete() {
-    // v13: no ghost defaults. Volume and Summary unlock from entered values only.
-    return SHAPES[st.shape].fields.every(function (f) {
-      if (!f.need) return true;
-      return rawComplete(f.k);
-    });
-  }
-
-  function resultsReady() {
-    // Unlock Results only after the user has entered each needed field
-    return SHAPES[st.shape].fields.every(function (f) {
-      if (!f.need) return true;
-      return rawComplete(f.k);
-    });
-  }
-
-  function missingFields() {
-    return SHAPES[st.shape].fields.filter(function (f) {
-      return f.need && !rawComplete(f.k);
-    });
-  }
-
-  function guidanceText() {
-    var missing = missingFields();
-    if (!missing.length) return '';
-    if (missing.length === 1) return 'Enter ' + missing[0].lab.toLowerCase();
-    return (
-      'Enter ' +
-      missing.slice(0, -1).map(function (f) { return f.lab.toLowerCase(); }).join(', ') +
-      ' and ' +
-      missing[missing.length - 1].lab.toLowerCase() +
-      ''
-    );
-  }
-
-  function volume() {
-    if (!complete()) return { net: 0, total: 0 };
-    var qty = effectiveQty();
-    var net = SHAPES[st.shape].vol(parseVals()) * qty;
-    var total = net * (1 + st.waste / 100);
-    return { net: net, total: total };
-  }
-
-  function ceil1(n) {
-    return Math.ceil(n * 10) / 10;
-  }
-
-  /** Never show 0.00 when volume is positive but tiny. */
-  function formatVol(n) {
-    if (!(n > 0)) return '0.00';
-    if (n < 0.01) return '<0.01';
-    return n.toFixed(2);
-  }
-
-  function recommend(total) {
-    if (total <= 0) return null;
-    var kg = bagKg();
-    var bagsN = Math.ceil(total / bagVol());
-    var truck = ceil1(total);
-    var truckTxt = truck.toFixed(1);
-    var bagsOrder = bagsN + ' × ' + kg + ' kg bags';
-    var mixOrder = truckTxt + ' m³ Ready-mix';
-    var bagsQtyHtml =
-      '<div class="qty-stack">' +
-      '<div class="qty-line">' + bagsOrder + '</div>' +
-      bagSizeSegHtml() +
-      '</div>';
-    var mixQtyHtml =
-      '<div class="qty-line">' + truckTxt + ' m³ Ready-mix</div>';
-
-    if (total < 0.5) {
-      return {
-        tone: 'bags',
-        why: '',
-        pick: 'bags',
-        order: bagsOrder,
-        altOrder: mixOrder,
-        altPlain: mixOrder + '. Most ready-mix suppliers have a minimum of 0.2-0.5 m³, with a small-load surcharge under 1 m³.',
-        bags: {
-          name: 'Bags',
-          summary: bagsOrder,
-          qtyHtml: bagsQtyHtml,
-          note: 'Best for small pours where a truck would trigger minimum load fees.'
-        },
-        mix: {
-          name: 'Ready-mix',
-          summary: truckTxt + ' m³ Ready-mix',
-          qtyHtml: mixQtyHtml,
-          note: 'Usually not worth it for this volume - most suppliers charge short-load fees under ~1 m³.'
-        }
-      };
-    }
-    return {
-      tone: 'truck',
-      why: '',
-      pick: 'truck',
-      order: mixOrder,
-      altOrder: bagsOrder,
-      altPlain: bagsOrder + '. Use this option if truck access is difficult.',
-      bags: {
-        name: 'Bags',
-        summary: bagsOrder,
-        qtyHtml: bagsQtyHtml,
-        note: 'Use this option if truck access is difficult.'
-      },
-      mix: {
-        name: 'Ready-mix',
-        summary: truckTxt + ' m³ Ready-mix',
-        qtyHtml: mixQtyHtml,
-        note: 'Less labour, more consistent pour, and usually cheaper past 0.5 m³.'
-      }
-    };
-  }
-
-  function choiceHtml(opt, kind) {
-    var note = opt.note
-      ? '<p class="rec-choice__note">' + opt.note + '</p>'
-      : '';
-    return (
-      '<div class="rec-choice" data-choice="' + kind + '">' +
-      '<div class="rec-choice__qty">' + opt.qtyHtml + '</div>' +
-      note +
-      '</div>'
-    );
-  }
-
-  function groupHtml(label, opt, kind, isRec) {
-    var labClass = 'rec-group__lab' + (isRec ? ' rec-group__lab--rec' : '');
-    var groupClass = 'rec-group' + (isRec ? ' is-recommended' : ' is-alternative');
-    return (
-      '<div class="' + groupClass + '">' +
-      '<h3 class="' + labClass + '">' + label + '</h3>' +
-      choiceHtml(opt, kind) +
-      '</div>'
-    );
-  }
-
-  function renderRec(total) {
-    var card = document.getElementById('recCard');
-    var body = document.getElementById('recBody');
-    var plan = recommend(total);
-    if (!card || !body || !plan) return;
-    card.setAttribute('data-tone', plan.tone);
-    var why = card.querySelector('[data-rec-why]');
-    if (why) {
-      why.textContent = plan.why || '';
-      why.hidden = !plan.why;
-    }
-
-    if (plan.pick === 'truck') {
-      body.innerHTML =
-        groupHtml('Recommended', plan.mix, 'mix', true) +
-        groupHtml('Other options', plan.bags, 'bags', false);
-    } else {
-      body.innerHTML =
-        groupHtml('Recommended', plan.bags, 'bags', true) +
-        groupHtml('Other options', plan.mix, 'mix', false);
-    }
-  }
-
-  function displayVal(f) {
-    if (rawComplete(f.k)) return st.vals[f.k];
-    return fieldDefault(f.k) || '';
-  }
-
-  function jobExtras(total) {
-    var v = parseVals();
-    var qty = effectiveQty();
-    var area = 0;
-    var edge = 0;
-    if (st.shape === 'slab' || st.shape === 'footing') {
-      area = v.L * v.W * qty;
-      edge = 2 * (v.L + v.W) * qty;
-    } else if (st.shape === 'pierfooting') {
-      area = (v.PL / 1000) * (v.PW / 1000) * qty;
-      edge = 2 * ((v.PL / 1000) + (v.PW / 1000)) * qty;
-    } else if (st.shape === 'column') {
-      edge = Math.PI * (v.DIA / 1000) * qty;
-    } else if (st.shape === 'stairs') {
-      var run = (v.G / 1000) * v.N;
-      var w = v.W / 1000;
-      area = w * run * qty;
-      edge = 2 * (w + run) * qty;
-    } else if (st.shape === 'gutter') {
-      edge = 2 * v.L * qty;
-    }
-    return {
-      mesh: area ? Math.ceil(area / MESH_SHEET_M2) : 0,
-      edge: edge,
-      weight: total * 2.4
-    };
-  }
-
-  function specRows() {
-    var v = volume();
-    var sh = SHAPES[st.shape];
-    var rows = [
-      { k: 'Date', v: specDate() },
-      { gap: true }
-    ];
-    rows.push({ k: 'Shape', v: sh.label });
-    sh.fields.forEach(function (f) {
-      if (!f.need && !rawComplete(f.k)) return;
-      var shown = displayVal(f) || '0';
-      rows.push({
-        k: f.lab,
-        v: shown + (f.unit ? (' ' + f.unit) : '')
-      });
-    });
-    if (shapeUsesQty(st.shape)) {
-      rows.push({ k: 'Quantity', v: String(effectiveQty()) + ' ×' });
-    }
-    rows.push({ k: 'Waste', v: '+' + st.waste + '%' });
-    rows.push({ k: 'Volume', v: formatVol(v.total) + ' m³' });
-    var plan = recommend(v.total);
-    if (plan) {
-      rows.push({ gap: true });
-      rows.push({ k: 'Recommended', v: plan.order });
-      rows.push({ k: 'Other options', v: plan.altOrder || plan.altPlain });
-    }
-    if (v.total > 0) {
-      var extras = jobExtras(v.total);
-      rows.push({ gap: true });
-      if (extras.mesh > 0) {
-        rows.push({
-          k: 'Mesh (' + MESH_SHEET_SIZE + ')',
-          v: extras.mesh === 1 ? '1 sheet' : extras.mesh + ' sheets'
-        });
-      }
-      rows.push({ k: 'Formwork length', v: extras.edge.toFixed(1) + ' m' });
-      rows.push({ k: 'Weight', v: extras.weight.toFixed(2) + ' t' });
-    }
-    return rows;
-  }
-
-  function specDate() {
+  function todayISO() {
     var d = new Date();
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    // Local date, not toISOString - that shifts to UTC and can land yesterday in AEST.
+    var m = String(d.getMonth() + 1);
+    var day = String(d.getDate());
+    return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
   }
 
-  function specText() {
-    var v = volume();
-    var sh = SHAPES[st.shape];
-    var lines = ['SPEC SHEET', ''];
-    if (jobName) lines.push('Job: ' + jobName);
-    lines.push('Date: ' + specDate());
-
-    lines.push('');
-    lines.push('Shape: ' + sh.label);
-    sh.fields.forEach(function (f) {
-      if (!f.need && !rawComplete(f.k)) return;
-      var shown = displayVal(f) || '0';
-      lines.push(f.lab + ': ' + shown + (f.unit ? (' ' + f.unit) : ''));
-    });
-    if (shapeUsesQty(st.shape)) {
-      lines.push('Quantity: ' + String(effectiveQty()) + ' ×');
-    }
-    lines.push('Waste: +' + st.waste + '%');
-    lines.push('Volume: ' + formatVol(v.total) + ' m³');
-
-    var plan = recommend(v.total);
-    if (plan) {
-      lines.push('');
-      lines.push('Recommended: ' + plan.order);
-      lines.push('Other options: ' + (plan.altOrder || plan.altPlain));
-    }
-
-    if (v.total > 0) {
-      var extras = jobExtras(v.total);
-      lines.push('');
-      if (extras.mesh > 0) {
-        lines.push(
-          'Mesh (' + MESH_SHEET_SIZE + '): ' +
-          (extras.mesh === 1 ? '1 sheet' : extras.mesh + ' sheets')
-        );
-      }
-      lines.push('Formwork length: ' + extras.edge.toFixed(1) + ' m');
-      lines.push('Weight: ' + extras.weight.toFixed(2) + ' t');
-    }
-
-    lines.push('');
-    lines.push('by SlabSet');
-    return lines.join('\n');
-  }
-
-  function currentTheme() {
-    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  }
-
-  function syncThemeBtn() {
-    var btn = document.getElementById('btnTheme');
-    if (!btn) return;
-    var light = currentTheme() === 'light';
-    btn.setAttribute('aria-pressed', light ? 'true' : 'false');
-    btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
-  }
-
-  function applyTheme(theme) {
-    var next = theme === 'light' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-    var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', next === 'light' ? '#f4f4f5' : '#121212');
-    syncThemeBtn();
-  }
-
-  function toast(msg) {
-    var el = document.getElementById('toast');
-    if (!el) return;
-    el.hidden = false;
-    el.textContent = msg;
-    clearTimeout(toast._t);
-    toast._t = setTimeout(function () { el.hidden = true; }, 1800);
-  }
-
+  // ── Draft ────────────────────────────────────────────────────────────────────
   function saveDraft() {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        v: 15,
-        shape: st.shape,
-        waste: st.waste,
-        bagKg: bagKg(),
-        qty: st.qty,
-        vals: st.vals,
-        shapeVals: st.shapeVals,
-        step: st.step === 'results' ? 'results' : 'measure'
+        vals: vals, units: units,
+        shape: state.shape, focus: state.focus,
+        bagSize: state.bagSize
       }));
     } catch (e) {}
   }
 
   function loadDraft() {
-    try {
-      var raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return false;
-      var d = JSON.parse(raw);
-      if (!d || !SHAPES[d.shape]) return false;
-      st.shape = d.shape;
-      if (typeof d.waste === 'number' && isFinite(d.waste)) st.waste = d.waste;
-      if (BAG_M3[d.bagKg]) st.bagKg = d.bagKg;
-      if (d.qty != null) st.qty = clampQty(d.qty);
-      if (d.vals && typeof d.vals === 'object') {
-        st.vals = Object.assign(emptyVals(), d.vals);
+    var raw = null;
+    try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) {}
+    if (!raw) return;
+    var d;
+    try { d = JSON.parse(raw); } catch (e) { return; }
+    if (!d || typeof d !== 'object') return;
+
+    if (d.vals && typeof d.vals === 'object') { vals = d.vals; }
+    if (typeof vals.wastage !== 'string') { vals.wastage = String(WASTE_DEFAULT); }
+    // A draft saved before wastage became a fixed preset list may carry a value outside
+    // it (e.g. a freely typed "7") - snap those back to the default.
+    if (WASTE_OPTS.indexOf(parseFloat(vals.wastage)) === -1) { vals.wastage = String(WASTE_DEFAULT); }
+    // A draft saved before Quantity existed won't carry pierQty/colQty - default them to
+    // 1 rather than leaving them blank and blocking isComplete() on an old draft.
+    if (!vals.pierQty || parseFloat(vals.pierQty) <= 0) { vals.pierQty = '1'; }
+    if (!vals.colQty || parseFloat(vals.colQty) <= 0) { vals.colQty = '1'; }
+    if (d.units && typeof d.units === 'object') {
+      for (var id in DEFAULT_UNITS) {
+        if (UNIT_OPTS.indexOf(d.units[id]) !== -1) { units[id] = d.units[id]; }
       }
-      if (d.shapeVals && typeof d.shapeVals === 'object') {
-        st.shapeVals = d.shapeVals;
-      }
-      if (d.step === 'results' || d.step === 'measure') st.step = d.step;
-      return true;
-    } catch (e) {
-      return false;
     }
+    if (shapeById(d.shape)) { state.shape = d.shape; }
+    if ([20, 25, 30].indexOf(d.bagSize) !== -1) { state.bagSize = d.bagSize; }
+    state.focus = fieldById(d.focus) ? d.focus : currentShape().fields[0].id;
   }
 
-  function measureIsBlank() {
-    return SHAPES[st.shape].fields.every(function (f) {
-      if (!f.need) return true;
-      var raw = st.vals[f.k];
-      return raw === '' || raw == null || raw === '.';
+  function shapeById(id) {
+    for (var i = 0; i < shapes.length; i++) { if (shapes[i].id === id) return shapes[i]; }
+    return null;
+  }
+  function currentShape() { return shapeById(state.shape) || shapes[0]; }
+  function fieldById(id) {
+    var f = currentShape().fields;
+    for (var i = 0; i < f.length; i++) { if (f[i].id === id) return f[i]; }
+    return null;
+  }
+
+  // ── Values ───────────────────────────────────────────────────────────────────
+  function baseValueMetres(id) {
+    return (parseFloat(vals[id]) || 0) * UNIT_FACTOR[units[id]];
+  }
+  function formatNum(n) { return String(Math.round(n * 1000) / 1000); }
+
+  // A caution can put four or five digits in front of the decimal point (100m Thickness ->
+  // 66000 bags); unformatted, a number that size defeats the "safe to act on" doctrine
+  // just as much as an un-cautioned one. Comma the integer part only.
+  function withCommas(numStr) {
+    var parts = String(numStr).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  // m ⇄ mm, carried over from v17. Wastage's unit ('%') has nothing to swap to, so its
+  // badge is never wired to this.
+  function toggleUnit(id, evt) {
+    evt.stopPropagation();
+    var next = UNIT_OPTS[(UNIT_OPTS.indexOf(units[id]) + 1) % UNIT_OPTS.length];
+    // Convert through metres so the measurement survives the unit change.
+    if (vals[id]) { vals[id] = formatNum(baseValueMetres(id) / UNIT_FACTOR[next]); }
+    units[id] = next;
+    renderFields(); renderResults(); saveDraft();
+  }
+
+  // Every dimension the maths needs must be typed. Optional extras (a stairs base slab
+  // that isn't being poured) and wastage don't gate the answer.
+  function isComplete() {
+    var f = currentShape().fields;
+    for (var i = 0; i < f.length; i++) {
+      if (f[i].optional) continue;
+      if (!vals[f[i].id] || parseFloat(vals[f[i].id]) <= 0) return false;
+    }
+    return true;
+  }
+
+  // Fields the user has finished with. A half-typed number is almost always implausible -
+  // typing "100" passes through "1", which is 1mm - so judging a field while it is being
+  // edited just nags. A field is only assessed once you have moved on from it, and going
+  // back to edit it clears the verdict until you leave again.
+  var settled = {};
+
+  // Tapping into a field selects its whole value, like a native number input - the
+  // next digit replaces rather than appends. True only for the keystroke right after
+  // a tap; typing itself consumes it.
+  var selectFocused = false;
+
+  function settle(id) { if (id && vals[id]) { settled[id] = true; } }
+  function settleAll() {
+    currentShape().fields.forEach(function (f) { settle(f.id); });
+  }
+
+  // A caution, not a gate. Returns a sentence or null.
+  function warnFor(f) {
+    var raw = vals[f.id];
+    if (!raw) return null;
+    if (!settled[f.id]) return null;
+    var n = parseFloat(raw);
+    if (isNaN(n)) return null;
+    if (f.optional && n === 0) return null;
+    var metres = f.count ? n : baseValueMetres(f.id);
+    if (f.lo != null && metres < f.lo && !(f.optional && metres === 0)) {
+      return f.count
+        ? 'Unusually few for ' + f.label.toLowerCase() + '.'
+        : 'That is a small ' + f.label.toLowerCase() + '. Check dimensions.';
+    }
+    if (f.hi != null && metres > f.hi) {
+      return f.count
+        ? 'That is a lot of ' + f.label.toLowerCase() + '. Worth a second look.'
+        : 'That is a large ' + f.label.toLowerCase() + '. Check dimensions.';
+    }
+    return null;
+  }
+  function anyWarnings() {
+    return currentShape().fields.filter(function (f) { return warnFor(f); });
+  }
+
+  function computeVolume() {
+    var s = currentShape();
+    var m = {};
+    s.fields.forEach(function (f) {
+      m[f.id] = f.count ? (parseFloat(vals[f.id]) || 0) : baseValueMetres(f.id);
+    });
+    return s.vol(m);
+  }
+  function orderVolume() {
+    return computeVolume() * (1 + (parseFloat(vals.wastage) || 0) / 100);
+  }
+
+  // ── Recommendation ───────────────────────────────────────────────────────────
+  function getRec(withWaste) {
+    var buffer = 0.05, threshold = 0.5;
+    if (withWaste > threshold + buffer) return 'ready';
+    if (withWaste < threshold - buffer) return 'bags';
+    return null;   // too close to call - don't pretend
+  }
+  function bagCount(withWaste) {
+    var bagVol = state.bagSize * 0.0005;
+    // epsilon absorbs float drift (3*2*0.1 = 0.6000000000000001) that would bill a phantom bag
+    return bagVol > 0 ? Math.ceil(withWaste / bagVol - 1e-9) : 0;
+  }
+  function readyOrder(withWaste) {
+    var order = Math.ceil(withWaste / 0.1) * 0.1;
+    return order < 1.0 ? 1.0 : order;
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+  function renderShapeRow() {
+    var el = document.getElementById('shape-select');
+    el.innerHTML = shapes.map(function (s) {
+      return '<option value="' + s.id + '"' + (s.id === state.shape ? ' selected' : '') + '>' + s.label + '</option>';
+    }).join('');
+    document.getElementById('shape-current').textContent = currentShape().label;
+  }
+
+  function valueBox(f) {
+    var raw = vals[f.id] || '';
+    var focused = state.focus === f.id;
+    return '<div class="field-val' + (focused ? ' focused' : '') + (raw ? '' : ' is-empty') + '"' +
+             ' role="button" tabindex="0" data-field="' + f.id + '"' +
+             ' aria-label="' + f.label + (raw ? ', ' + raw : ', not set') + '">' +
+             (raw || '—') +
+           '</div>';
+  }
+
+  // m ⇄ mm toggles per field, like v17.
+  function renderFields() {
+    var el = document.getElementById('fields');
+    el.innerHTML = currentShape().fields.map(function (f) {
+      var unitEl;
+      if (f.count) {
+        unitEl = '<div class="unit-badge" aria-hidden="true" style="visibility:hidden;">-</div>';
+      } else {
+        unitEl = '<button type="button" class="unit-badge switchable" data-unit-for="' + f.id + '"' +
+                   ' aria-label="' + f.label + ' unit, ' + units[f.id] + ', tap to switch">' +
+                   units[f.id] +
+                 '</button>';
+      }
+      var warn = warnFor(f);
+      return '<div class="field-row" data-row="' + f.id + '">' +
+        '<div class="field-line">' +
+          '<span class="field-label">' + f.label + (f.optional ? ' (optional)' : '') + '</span>' +
+          '<div class="field-controls">' + valueBox(f) + unitEl + '</div>' +
+        '</div>' +
+        (warn ? '<div class="field-warn"><svg class="ti" aria-hidden="true"><use href="#i-alert"/></svg><span>' + warn + '</span></div>' : '') +
+      '</div>';
+    }).join('') + wastageRow();
+    wireFieldBoxes(el);
+    renderWastagePulldown();
+    highlightDim();
+  }
+
+  // Last row of the same list: it changes the volume like the rows above it. A fixed
+  // preset list, not a typed value, so it is a pull-down like Shape rather than another
+  // keypad-editable field - carried over from v17.
+  // Two boxes, same width/gap as field-val + unit-badge above, so "10%" and the chevron
+  // land on the exact same verticals as the dimension value and its unit badge.
+  function wastageRow() {
+    return '<div class="field-row" data-row="wastage">' +
+      '<div class="field-line">' +
+        '<span class="field-label">Wastage</span>' +
+        '<div class="wastage-pulldown">' +
+          '<div class="wastage-value-box"><span id="wastage-current"></span></div>' +
+          '<div class="wastage-chevron-box"><svg class="ti" aria-hidden="true"><use href="#i-chevron-down"/></svg></div>' +
+          '<select id="wastage-select" aria-label="Wastage"></select>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderWastagePulldown() {
+    var sel = document.getElementById('wastage-select');
+    sel.innerHTML = WASTE_OPTS.map(function (p) {
+      var label = p + '% — ' + WASTE_NOTES[p];
+      return '<option value="' + p + '"' + (String(p) === vals.wastage ? ' selected' : '') + '>' + label + '</option>';
+    }).join('');
+    document.getElementById('wastage-current').textContent = vals.wastage + '%';
+    sel.onchange = function () {
+      vals.wastage = sel.value;
+      document.getElementById('wastage-current').textContent = vals.wastage + '%';
+      renderResults(); saveDraft();
+    };
+  }
+
+  function wireFieldBoxes(root) {
+    Array.prototype.forEach.call(root.querySelectorAll('[data-field]'), function (box) {
+      box.addEventListener('click', function () { focusField(box.getAttribute('data-field')); });
+      box.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusField(box.getAttribute('data-field')); }
+      });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-unit-for]'), function (u) {
+      u.addEventListener('click', function (e) { toggleUnit(u.getAttribute('data-unit-for'), e); });
     });
   }
 
-  function firstIncompleteTarget() {
-    var keys = editTargets();
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      if (key === 'qty') continue;
-      if (!rawComplete(key)) return key;
-    }
-    return keys[0] || null;
-  }
-
-  function syncQtyUi() {
-    var field = document.getElementById('qtyField');
-    var input = document.getElementById('qtyInput');
-    var show = shapeUsesQty(st.shape);
-    if (!show) st.qty = 1;
-    var q = clampQty(st.qty);
-    st.qty = q;
-    if (field) {
-      field.hidden = !show;
-      field.classList.toggle('is-editing', editing === 'qty');
-      if (!field.getAttribute('data-key')) field.setAttribute('data-key', 'qty');
-    }
-    if (input) {
-      if (useKeypad()) {
-        input.setAttribute('readonly', '');
-        input.setAttribute('inputmode', 'none');
-      } else {
-        input.removeAttribute('readonly');
-        input.setAttribute('inputmode', 'numeric');
-      }
-      if (document.activeElement !== input && editing !== 'qty') {
-        input.value = String(q);
-      } else if (editing === 'qty') {
-        input.value = buffer === '' ? String(q) : buffer;
-      }
-    }
-  }
-
-  function shapeMenuOpen() {
-    return dockMode === 'shape';
-  }
-
-  function wasteMenuOpen() {
-    return dockMode === 'waste';
-  }
-
-  var dockMode = 'pad'; // pad | shape | waste
-  var editResumeKey = null;
-  var shapePulseUntil = 0;
-  var shapePulseTimer = null;
-  var wastePulseUntil = 0;
-  var wastePulseTimer = null;
-  var didShapePulse = false;
-  var didCtaPulse = false;
-
-  function armShapePulse() {
-    if (isDesktop()) return;
-    shapePulseUntil = Date.now() + 1400;
-    if (shapePulseTimer) clearTimeout(shapePulseTimer);
-    shapePulseTimer = setTimeout(function () {
-      shapePulseUntil = 0;
-      bumpLive();
-    }, 1450);
-  }
-
-  function armWastePulse() {
-    if (isDesktop()) return;
-    wastePulseUntil = Date.now() + 900;
-    if (wastePulseTimer) clearTimeout(wastePulseTimer);
-    wastePulseTimer = setTimeout(function () {
-      wastePulseUntil = 0;
-      bumpLive();
-    }, 950);
-    bumpLive();
-  }
-
-  function resumeEditAfterDock() {
-    var key = editResumeKey || editTargets()[0];
-    editResumeKey = null;
-    if (key && useKeypad() && st.step === 'measure') startEdit(key);
-  }
-
-  function setDockMode(mode) {
-    if (isDesktop()) return;
-    if (st.step !== 'measure') mode = 'pad';
-    dockMode = mode === 'shape' || mode === 'waste' ? mode : 'pad';
-    var dock = document.getElementById('dockMeasure');
-    var pad = document.getElementById('dockPad');
-    var shape = document.getElementById('dockShape');
-    var waste = document.getElementById('dockWaste');
-    // Shape overlays keypad temporarily; wastage stays under LCD - keypad stays mounted
-    if (dock) dock.setAttribute('data-dock-mode', 'pad');
-    if (pad) pad.hidden = false;
-    if (shape) shape.hidden = dockMode !== 'shape';
-    if (waste) waste.hidden = dockMode !== 'waste';
-    var shapeDd = document.getElementById('shapeDd');
-    var wasteDd = document.getElementById('wasteDd');
-    if (shapeDd) shapeDd.classList.toggle('is-open', dockMode === 'shape');
-    if (wasteDd) wasteDd.classList.toggle('is-open', dockMode === 'waste');
-    syncShapeUi();
-    syncWasteUi();
-    syncKeypadDecimal();
-    bumpLive();
-  }
-
-  function syncShapeUi() {
-    var lcdShape = document.querySelector('[data-lcd="shape"]');
-    var menu = document.getElementById('shapeMenu');
-    var open = shapeMenuOpen();
-    if (lcdShape) lcdShape.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (menu) menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-    document.querySelectorAll('#shapeMoreList [data-shape]').forEach(function (btn) {
-      var on = btn.getAttribute('data-shape') === st.shape;
-      btn.classList.toggle('is-on', on);
-      btn.setAttribute('aria-selected', on ? 'true' : 'false');
-      // Keep current shape visible in dock list
-      btn.hidden = false;
-      btn.tabIndex = open ? 0 : -1;
-    });
-  }
-
-  function openShapeMenu() {
-    if (dockMode === 'shape') {
-      setDockMode('pad');
-      resumeEditAfterDock();
-      return;
-    }
-    editResumeKey = editing || editTargets()[0] || null;
-    if (editing) commitEdit({ keepPad: true });
-    editing = null;
-    setDockMode('shape');
-  }
-
-  function closeShapeMenu() {
-    if (dockMode !== 'shape') return;
-    setDockMode('pad');
-    resumeEditAfterDock();
-  }
-
-  function toggleShapeMenu() {
-    openShapeMenu();
-  }
-
-  function selectShape(shape) {
-    if (!SHAPES[shape]) return;
-    if (shape === st.shape) {
-      setDockMode('pad');
-      resumeEditAfterDock();
-      return;
-    }
-    if (editing) commitEdit({ keepPad: true });
-    parkShapeVals(st.shape);
-    st.shape = shape;
-    adoptShapeVals(shape);
-    saveDraft();
-    editResumeKey = firstIncompleteTarget() || editTargets()[0] || null;
-    setDockMode('pad');
-    tick(10);
-    render();
-    resumeEditAfterDock();
-  }
-
-  function validateField(key) {
-    var fdef = fieldDef(key);
-    if (!fdef) return;
-    var field = document.querySelector('.field[data-key="' + key + '"]');
-    if (!field) return;
-    var wrap = field.closest('.field-wrap') || field;
-    var warnEl = wrap.querySelector('.field__warn');
-    var thinEl = wrap.querySelector('.field__thin');
-    var raw = effectiveRaw(key);
-    var val = parseFloat(raw) || 0;
-    var bad = !!(fdef.max && val > fdef.max);
-    var thin = !!(fdef.mm && val > 0 && val < THIN_MM && !bad);
-    field.classList.toggle('warn', bad);
-    field.classList.toggle('thin', thin);
-    if (warnEl) {
-      warnEl.textContent = bad ? 'That looks too large. Check units.' : '';
-    }
-    if (thinEl) {
-      thinEl.hidden = !thin;
-      thinEl.textContent = thin ? 'Looks thin. Check units' : '';
-    }
-  }
-
-  function validateAllFields() {
-    SHAPES[st.shape].fields.forEach(function (f) { validateField(f.k); });
-  }
-
-  function isDesktop() {
-    return document.documentElement.getAttribute('data-layout') === 'desktop';
-  }
-
-  function syncResultsPanel(v) {
-    // Same gate as phone: ghost defaults do not unlock order / summary
-    var ready = resultsReady();
-    var preview = complete();
-    var dash = '-';
-    var volText = ready || (!isDesktop() && preview)
-      ? formatVol(v.total)
-      : (isDesktop() ? dash : '0.00');
-    syncDockDims(volText);
-    document.querySelectorAll('[data-waste-lab]').forEach(function (el) {
-      if (el.classList && el.classList.contains('dock-live__unit')) {
-        el.textContent = 'm³';
-      } else {
-        el.textContent = ready ? ('+' + st.waste + '% waste') : 'Waste';
-      }
-    });
-    var results = document.getElementById('panelResults');
-    if (results) results.classList.toggle('is-pending', !ready);
-    if (ready) {
-      renderRec(v.total);
-      renderSpec();
-    } else if (isDesktop()) {
-      var why = document.querySelector('[data-rec-why]');
-      if (why) {
-        why.textContent = 'Fill in the dimensions on the left to get bags vs ready-mix advice.';
-        why.hidden = false;
-      }
-      var body = document.getElementById('recBody');
-      if (body) body.innerHTML = '';
-      var card = document.getElementById('recCard');
-      if (card) card.setAttribute('data-tone', 'bags');
-      var spec = document.getElementById('specSheet');
-      if (spec) spec.innerHTML = '';
-    }
-  }
-
-  function syncCalcCta(ready) {
-    var calc = document.getElementById('btnCalc');
-    if (!calc) return;
-    var showCta = !!ready;
-    var wasHidden = calc.hidden;
-    calc.disabled = !showCta;
-    calc.hidden = !showCta;
-    calc.textContent = 'See summary →';
-    if (showCta && wasHidden && !didCtaPulse && !isDesktop()) {
-      didCtaPulse = true;
-      tick(12);
-      calc.classList.remove('is-arrive');
-      void calc.offsetWidth;
-      calc.classList.add('is-arrive');
-    }
-  }
-
-  function bumpLive() {
-    var v = volume();
-    var preview = complete();
-    var ready = resultsReady();
-    syncCalcCta(ready);
-    syncDock(v, preview, ready);
-    if (!isDesktop() && st.step === 'measure') {
-      syncMeasureDockVisibility();
-    } else {
-      validateAllFields();
-    }
-    if (isDesktop() || st.step === 'results') syncResultsPanel(v);
-  }
-
-  function setStep(step) {
-    if (step === 'results' && !resultsReady()) {
-      toast(guidanceText() || 'Enter dimensions first');
-      return;
-    }
-    if (editing) commitEdit({ keepPad: step === 'measure' });
-    st.step = step;
-    saveDraft();
-    render();
-    if (step === 'results' && !isDesktop()) {
-      var body = document.querySelector('.summary-sheet__body');
-      if (body) body.scrollTop = 0;
-      ignoreOutsideClick = false;
-      setDockMode('pad');
-      setPadOpen(false);
-    } else if (step === 'measure' && useKeypad()) {
-      setDockMode('pad');
-      setPadOpen(true);
-      var first = editTargets()[0];
-      if (first) startEdit(first);
-    }
-  }
-
-  function useKeypad() {
-    return !isDesktop();
-  }
-
-  function dimFieldKeys() {
-    return SHAPES[st.shape].fields.map(function (f) { return f.k; });
-  }
-
-  function editTargets() {
-    var keys = dimFieldKeys();
-    if (shapeUsesQty(st.shape)) keys.push('qty');
-    return keys;
-  }
-
-  var padOpen = false;
-  /** Ignore the click that follows the pointerdown which opened/switched a field. */
-  var ignoreOutsideClick = false;
-
-  function setPadOpen(open) {
-    open = !!open;
-    // v15: Measure keeps entry dock permanently on phone
-    if (useKeypad() && st.step === 'measure') open = true;
-    var dock = document.getElementById('dockMeasure');
-    var app = document.getElementById('app');
-    padOpen = open;
-    if (dock) dock.classList.toggle('is-pad-open', open && dockMode === 'pad');
-    if (app) app.classList.toggle('is-editing-dims', open && st.step === 'measure');
-    if (!open) clearEditScrollSpacer();
-    syncKeypadDecimal();
-    syncMeasureDockVisibility();
-  }
-
-  function syncKeypadDecimal() {
-    var btn = document.querySelector('#keypad [data-k="."]');
-    if (!btn) return;
-    var intOnly = !!(editing && fieldIsInt(editing));
-    btn.disabled = intOnly;
-    btn.setAttribute('aria-disabled', intOnly ? 'true' : 'false');
-  }
-
-  function editScrollSpacer() {
-    var scroll = document.querySelector('.scroll');
-    if (!scroll) return null;
-    var el = document.getElementById('editScrollSpacer');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'editScrollSpacer';
-      el.setAttribute('aria-hidden', 'true');
-      el.style.cssText = 'flex:0 0 auto; width:100%; height:0; pointer-events:none;';
-      scroll.appendChild(el);
-    }
-    return el;
-  }
-
-  function clearEditScrollSpacer() {
-    var el = document.getElementById('editScrollSpacer');
-    if (el) el.style.height = '0px';
-  }
-
-  /**
-   * Pad-open: park Dimensions just under the Measure / Summary toggle (scroll top).
-   * Max scroll-up: Waste may not rise more than 16px above the keypad dock.
-   */
-  var WASTE_ABOVE_VOL = 16;
-
-  function wasteVolLimitY() {
-    var dock = document.getElementById('dockMeasure');
-    return dock && !dock.hidden ? dock.getBoundingClientRect().top - WASTE_ABOVE_VOL : null;
-  }
-
-  function clampWasteScroll() {
-    if (!padOpen || !useKeypad()) return;
-    var scroll = document.querySelector('.scroll');
-    var waste = document.querySelector('#panelMeasure .block--waste');
-    var limit = wasteVolLimitY();
-    if (!scroll || !waste || limit == null) return;
-    var bottom = waste.getBoundingClientRect().bottom;
-    if (bottom < limit - 0.5) {
-      scroll.scrollTop = Math.max(0, scroll.scrollTop - (limit - bottom));
-    }
-  }
-
-  function capEditSpacer() {
-    var scroll = document.querySelector('.scroll');
-    var waste = document.querySelector('#panelMeasure .block--waste');
-    var spacer = document.getElementById('editScrollSpacer');
-    var limit = wasteVolLimitY();
-    if (!scroll || !waste || !spacer || limit == null) return;
-    var saved = scroll.scrollTop;
-    var max = scroll.scrollHeight - scroll.clientHeight;
-    if (max <= 0) return;
-    scroll.scrollTop = max;
-    var bottom = waste.getBoundingClientRect().bottom;
-    if (bottom < limit - 1) {
-      var cur = parseFloat(spacer.style.height) || 0;
-      spacer.style.height = Math.max(0, cur - (limit - bottom)) + 'px';
-    }
-    scroll.scrollTop = Math.min(saved, Math.max(0, scroll.scrollHeight - scroll.clientHeight));
-  }
-
-  function pinDimsStack() {
-    var scroll = document.querySelector('.scroll');
-    var dims = document.querySelector('#panelMeasure .block--dims');
-    if (!scroll || !dims || !padOpen) return;
-    var spacer = editScrollSpacer();
-    // Just below Measure / Summary toggle - scroll viewport top
-    var edge = scroll.getBoundingClientRect().top;
-
-    for (var i = 0; i < 6; i++) {
-      var delta = dims.getBoundingClientRect().top - edge;
-      if (Math.abs(delta) <= 1) break;
-      var target = scroll.scrollTop + delta;
-      if (target < 0) target = 0;
-      var max = scroll.scrollHeight - scroll.clientHeight;
-      if (target > max && spacer) {
-        var cur = parseFloat(spacer.style.height) || 0;
-        spacer.style.height = (cur + (target - max) + 8) + 'px';
-        void scroll.offsetHeight;
-        max = scroll.scrollHeight - scroll.clientHeight;
-      }
-      scroll.scrollTop = Math.min(Math.max(0, target), Math.max(0, max));
-    }
-    // Don't pull down after pin (keeps Dimensions under steps); only cap further up.
-    capEditSpacer();
-  }
-
-  function syncEditingUi() {
-    document.querySelectorAll('.field[data-key], #qtyField').forEach(function (el) {
-      var key = el.getAttribute('data-key') || (el.id === 'qtyField' ? 'qty' : '');
-      var on = editing === key;
-      el.classList.toggle('is-editing', on);
-    });
-  }
-
-  function refreshEditingChip() {
-    renderFieldStrip();
-  }
-
-  function commitEdit(opts) {
-    if (!editing) return;
-    var keepPad = !!(opts && opts.keepPad);
-    // v14 phone Measure: pad never closes
-    if (useKeypad() && st.step === 'measure') keepPad = true;
-    var key = editing;
-    if (buffer !== '' && buffer !== '.') {
-      if (key === 'qty') {
-        st.qty = clampQty(parseInt(buffer, 10) || QTY_MIN);
-      } else if (fieldIsInt(key)) {
-        var n = parseInt(buffer, 10);
-        st.vals[key] = isFinite(n) && n > 0 ? String(n) : editSnapshot;
-      } else {
-        st.vals[key] = buffer;
-      }
-    } else {
-      if (key === 'qty') {
-        st.qty = clampQty(parseInt(editSnapshot, 10) || QTY_MIN);
-      } else {
-        st.vals[key] = editSnapshot;
-      }
-    }
-    editing = null;
-    buffer = '';
-    editSnapshot = '';
-    if (!keepPad) setPadOpen(false);
-    syncEditingUi();
-    saveDraft();
-    bumpLive();
-  }
-
-  function discardEdit() {
-    if (!editing) return;
-    if (editing === 'qty') {
-      st.qty = clampQty(parseInt(editSnapshot, 10) || QTY_MIN);
-    } else {
-      st.vals[editing] = editSnapshot;
-    }
-    editing = null;
-    buffer = '';
-    editSnapshot = '';
-    if (!(useKeypad() && st.step === 'measure')) setPadOpen(false);
-    else setPadOpen(true);
-    syncEditingUi();
-    saveDraft();
-    bumpLive();
-  }
-
-  function startEdit(key) {
-    if (!useKeypad()) return;
-    setDockMode('pad');
-    if (editing === key) {
-      refreshEditingChip();
-      return;
-    }
-    if (shapeMenuOpen()) closeShapeMenu();
-    if (wasteMenuOpen()) closeWasteMenu();
-    if (editing && editing !== key) commitEdit({ keepPad: true });
-    editing = key;
-    buffer = '';
-    editSnapshot = key === 'qty'
-      ? String(clampQty(st.qty))
-      : String(st.vals[key] || '');
-    setPadOpen(true);
-    ignoreOutsideClick = true;
-    syncEditingUi();
-    refreshEditingChip();
-    bumpLive();
-  }
-
-  function stopEdit() {
-    if (!editing) return;
-    commitEdit({ keepPad: true });
+  function focusField(id) {
+    if (state.focus !== id) { settle(state.focus); }  // done with the one you are leaving
+    delete settled[id];                               // re-editing this one: verdict off
+    state.focus = id;
+    selectFocused = true;
+    showKeypad(true);
     renderFields();
-    syncQtyUi();
-  }
-
-  function advanceField() {
-    var targets = editTargets();
-    if (!targets.length) return;
-    var i = targets.indexOf(editing);
-    commitEdit({ keepPad: true });
-    renderFields();
-    syncQtyUi();
-    if (i >= 0 && i < targets.length - 1) {
-      startEdit(targets[i + 1]);
-      return;
-    }
-    // End of dims → wastage picker (do not wrap to first field)
-    editResumeKey = null;
-    editing = null;
-    setDockMode('waste');
-    syncEditingUi();
-    bumpLive();
-  }
-
-  function tick(ms) {
-    if (isDesktop()) return;
-    try {
-      if (navigator.vibrate) navigator.vibrate(ms || 8);
-    } catch (err) {}
-  }
-
-  function clearDimField(key) {
-    if (!key) return;
-    if (key === 'qty') {
-      st.qty = QTY_MIN;
-      if (editing === 'qty') {
-        buffer = '';
-        editSnapshot = String(QTY_MIN);
-      }
-    } else {
-      st.vals[key] = '';
-      if (editing === key) {
-        buffer = '';
-        editSnapshot = '';
-      }
-    }
+    // Settling a field can newly trigger (or clear) its caution - the check-strip above
+    // Copy/Share needs to catch that the moment you leave the field, not wait for the
+    // next keystroke, or a caution earned by tapping away goes unseen until send.
+    renderResults();
+    var box = document.querySelector('[data-field="' + id + '"]');
+    if (box) { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     saveDraft();
-    syncEditingUi();
-    bumpLive();
-    tick(12);
   }
 
-  function handleKey(k) {
-    if (!editing) {
-      var resume = firstIncompleteTarget() || editTargets()[0];
-      if (!resume) return;
-      if (/^[0-9.]$/.test(k) || k === 'done' || k === 'del') {
-        startEdit(resume);
-      } else {
-        return;
-      }
-      if (k === 'done') {
-        tick(10);
-        advanceField();
-        return;
-      }
-      if (k === 'del') {
-        // startEdit already loaded snapshot; clear via del path below
-      }
+  // Tapping anywhere outside the field list and the keypad de-highlights whatever was
+  // focused - the field-val ring and the diagram's blue line both clear, and the
+  // keypad dismisses, same as tapping outside a text field dismisses the keyboard.
+  // Taps inside any field-row (the focused one or another) are left alone; those
+  // already have their own handling (focus-switch, unit toggle).
+  function blurField() {
+    if (state.focus == null) return;
+    settle(state.focus);
+    state.focus = null;
+    showKeypad(false);
+    renderFields();
+    renderResults();
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.field-row') || e.target.closest('#keypad-wrap')) return;
+    blurField();
+  });
+
+  // Volume alone decides which option is advised; nothing is ever "chosen" from a click.
+  // Falls back to bags in the dead-band around the 0.5 m³ threshold, where getRec()
+  // declines to call it - the docket still has to say something.
+  function orderPrimary(withWaste) {
+    return getRec(withWaste) || 'bags';
+  }
+
+  // Fires once per shape, the moment the volume first becomes computable - not on every
+  // render after that, and not again until the shape resets it (see shape-select) or the
+  // user clears a field and completes it again.
+  var didCompletePulse = false;
+
+  function renderResults() {
+    var complete = isComplete();
+    if (complete && !didCompletePulse) { tick(12); didCompletePulse = true; }
+    else if (!complete) { didCompletePulse = false; }
+    var withWaste = complete ? orderVolume() : 0;
+    var rec = complete ? getRec(withWaste) : null;
+
+    var volEl = document.getElementById('volume-val');
+    volEl.textContent = withCommas((complete ? withWaste : 0).toFixed(2)) + ' m³';
+    volEl.classList.toggle('is-empty', !complete);
+
+    var el = document.getElementById('options');
+
+    if (!complete) {
+      el.innerHTML = '<p class="order-empty">Enter every dimension to see the order.</p>';
+    } else {
+      var bags = bagCount(withWaste);
+      var ready = readyOrder(withWaste);
+
+      // Per the v18 wireframe: name, quantity on the right, reason text off-screen
+      // (Copy/Share still write the full docket, see specText()). Recommended badge sits
+      // beside the option name it advises - doctrine 7, restored 2026-07-31. Icons dropped
+      // 2026-07-31: nowhere else in the flat stack uses one, and with the badge back the
+      // row's leading edge was crowded. Bag size still cycles 20/25/30kg on tap, same as
+      // v17, styled like the field unit badges.
+      el.innerHTML =
+        '<div class="order-row">' +
+          '<span class="order-row-name">Bags' +
+            (rec === 'bags' ? ' <span class="badge-recommended">Recommended</span>' : '') +
+          '</span>' +
+          '<span class="order-row-value">' + withCommas(bags) + ' × <button type="button" class="order-unit-box" id="bagSizeBtn" aria-label="Bag size, ' + state.bagSize + ' kg, tap to change">' + state.bagSize + 'kg</button></span>' +
+        '</div>' +
+        '<div class="order-row">' +
+          '<span class="order-row-name">Ready-mix' +
+            (rec === 'ready' ? ' <span class="badge-recommended">Recommended</span>' : '') +
+          '</span>' +
+          '<span class="order-row-value">' + withCommas(ready.toFixed(1)) + ' m³</span>' +
+        '</div>';
+
+      var BAG_SIZES = [20, 25, 30];
+      document.getElementById('bagSizeBtn').addEventListener('click', function () {
+        state.bagSize = BAG_SIZES[(BAG_SIZES.indexOf(state.bagSize) + 1) % BAG_SIZES.length];
+        renderResults(); saveDraft();
+      });
     }
-    if (k === 'done') {
-      tick(10);
-      advanceField();
+
+    // A caution that scrolled off the field is a caution nobody read. Repeat it where the
+    // decision is actually made.
+    var strip = document.getElementById('check-strip');
+    var warned = anyWarnings();
+    if (warned.length) {
+      strip.hidden = false;
+      strip.innerHTML = '<svg class="ti" aria-hidden="true"><use href="#i-alert"/></svg><span>' +
+        'Check ' + warned.map(function (f) { return f.label.toLowerCase(); }).join(', ') +
+        ' before you send this — the figure above may be wrong by a factor of 1000.</span>';
+    } else {
+      strip.hidden = true;
+      strip.innerHTML = '';
+    }
+
+    // An empty docket is not worth sending.
+    document.getElementById('btnCopy').disabled = !complete;
+    document.getElementById('btnShare').disabled = !complete;
+  }
+
+  // ── Diagram ──────────────────────────────────────────────────────────────────
+  // Inlined, not an <img>, so the focused dimension can light up: the drawing answers
+  // "which one is Going and which is Rise" exactly while you are on that field, instead
+  // of costing space to be decoration. Carried over from v17.
+  var diagramCache = {};
+
+  function drawDiagram() {
+    var host = document.getElementById('diagram');
+    var s = currentShape();
+    var key = s.diagram;
+    host.setAttribute('aria-label', s.label + ' dimension diagram');
+    if (diagramCache[key]) { injectDiagram(host, diagramCache[key]); return; }
+    fetch('shared/diagrams/oblique/' + key + '.svg')
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(); })
+      .then(function (txt) {
+        diagramCache[key] = txt;
+        if (currentShape().diagram === key) { injectDiagram(host, txt); }
+      })
+      .catch(function () { host.innerHTML = ''; });
+  }
+
+  // `width:100%; max-width; height:auto; max-height` on an SVG asks each engine to
+  // resolve two independent caps into one aspect-ratio-preserving box, and browsers
+  // don't agree on that resolution - it was rendering centred in Chrome but landing
+  // left-shifted with dead space on the right elsewhere. Read the viewBox and set an
+  // explicit pixel width/height instead, so every engine centres the exact same box.
+  var DIAGRAM_MAX_W = 300, DIAGRAM_MAX_H = 120;
+  // Pier footing and Column are tall/narrow, so they hit the height cap and render
+  // smaller than the wide shapes - bumped larger to read clearly at a glance.
+  var DIAGRAM_SCALE = { pierfooting: 1.25, column: 1.25, stairs: 1.1 };
+  function sizeDiagram(svg) {
+    var vb = (svg.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+    if (vb.length !== 4 || !vb[2] || !vb[3]) return;
+    var ratio = vb[2] / vb[3];
+    var w = DIAGRAM_MAX_W, h = w / ratio;
+    if (h > DIAGRAM_MAX_H) { h = DIAGRAM_MAX_H; w = h * ratio; }
+    var scale = DIAGRAM_SCALE[currentShape().diagram] || 1;
+    svg.style.width = (w * scale) + 'px';
+    svg.style.height = (h * scale) + 'px';
+  }
+
+  // _gen_oblique.py's fit() estimates each label's glyph width from character count to
+  // decide the viewBox - a guess, not a measurement, and wrong by a different amount in
+  // every font-rendering engine. The box it produces still centres correctly by its own
+  // (guessed) numbers, which is why the SVG element's own box always measured centred in
+  // testing - the drawing inside it, positioned by real glyph metrics the guess didn't
+  // match, did not. Recentre for real here using getBBox(), which reads the metrics the
+  // browser actually rendered with, so this is exact in whichever engine runs it.
+  //
+  // Horizontal centre comes from the solid shape's own bbox, not the full content bbox -
+  // centring on everything (shape + dimension leaders) reads as centred by the numbers
+  // but not by eye whenever the leaders are lopsided (pier footing's Depth and Width
+  // leaders both sit to the left of the shape with nothing balancing them on the right,
+  // so a full-content centre dragged the block itself off to the right). The box still
+  // has to be wide enough to hold every leader without clipping, so half-width is the
+  // larger of the two distances from the shape's centre to the full content's edges.
+  function recenterDiagram(svg) {
+    var pad = 22;
+    function box(els) {
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      els.forEach(function (el) {
+        var b;
+        try { b = el.getBBox(); } catch (e) { return; }
+        if (!b || (!b.width && !b.height)) return;
+        minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
+        maxX = Math.max(maxX, b.x + b.width); maxY = Math.max(maxY, b.y + b.height);
+      });
+      return minX === Infinity ? null : { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+    }
+    var all = Array.prototype.filter.call(svg.children, function (el) { return el.tagName !== 'title'; });
+    var full = box(all);
+    if (!full) return;
+    var shapeEls = Array.prototype.filter.call(svg.querySelectorAll('path'), function (el) {
+      return el.getAttribute('fill') !== 'none';
+    });
+    var shape = box(shapeEls) || full;
+    var cx = (shape.minX + shape.maxX) / 2;
+    var cy = (full.minY + full.maxY) / 2;
+    var halfW = Math.max(cx - full.minX, full.maxX - cx) + pad;
+    var halfH = (full.maxY - full.minY) / 2 + pad;
+    svg.setAttribute('viewBox', [cx - halfW, cy - halfH, halfW * 2, halfH * 2].join(' '));
+  }
+
+  function injectDiagram(host, txt) {
+    host.innerHTML = txt;
+    var svg = host.querySelector('svg');
+    if (svg) {
+      svg.classList.add('diagram-svg');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.removeAttribute('width');
+      svg.removeAttribute('height');
+      recenterDiagram(svg);
+      sizeDiagram(svg);
+    }
+    highlightDim();
+  }
+
+  // A <text> wrapping to a second line is built as <text>Flag<tspan>thickness</tspan></text>
+  // (see text() in _gen_oblique.py) - .textContent on that concatenates to "Flagthickness"
+  // with nothing between the lines, which never equals the field label "Flag thickness".
+  // Read the direct text node and each tspan separately and rejoin with a space instead.
+  function labelText(t) {
+    var parts = [];
+    Array.prototype.forEach.call(t.childNodes, function (n) {
+      if (n.nodeType === 3 || (n.tagName && n.tagName.toLowerCase() === 'tspan')) {
+        parts.push(n.textContent);
+      }
+    });
+    return parts.join(' ').trim();
+  }
+
+  // Every measurable dimension carries a <g class="dim"> group (leader line, extension
+  // lines, tick marks, and a label text used only to match against the focused field -
+  // the text itself is hidden in CSS, colour on the line is the signal now). Count
+  // fields (Steps, Quantity) have no such group - nothing to draw a line for - so
+  // focusing one matches nothing and the whole drawing fades, same as the neutral state.
+  function highlightDim() {
+    var svg = document.querySelector('#diagram svg');
+    if (!svg) return;
+    var groups = svg.querySelectorAll('g.dim');
+
+    // Neutral / click-off state: no field is focused at all, so nothing has earned full
+    // ink - the whole drawing reads as dimmed, not as a default "everything lit" state.
+    if (state.focus == null) {
+      Array.prototype.forEach.call(groups, function (g) {
+        g.classList.remove('is-active');
+        g.classList.add('is-muted');
+      });
       return;
     }
-    if (k === 'del') {
-      buffer = buffer.slice(0, -1);
-      tick(6);
-    } else {
-      if (fieldIsInt(editing)) {
-        if (k === '.') return;
-        if (!/^\d$/.test(k)) return;
-        if (buffer.length >= (editing === 'qty' ? 3 : 2)) return;
-        buffer += k;
+
+    var f = fieldById(state.focus);
+    var want = f ? f.label : null;
+
+    var matched = false;
+    Array.prototype.forEach.call(groups, function (g) {
+      var t = g.querySelector('text');
+      var hit = !!(t && want && labelText(t) === want);
+      if (hit) matched = true;
+      g.classList.toggle('is-active', hit);
+      g.classList.toggle('is-muted', !!want && !hit);
+    });
+
+    // Nothing to point at. A count field (Steps, Quantity) has no drawn dimension at all -
+    // no line ever represents it, so it reads the same as having nothing focused: fade
+    // the whole drawing rather than leaving it at full ink for a field it can't actually
+    // illustrate. Any other unmatched field (none currently exist) keeps the drawing at
+    // full ink instead of a uniformly dimmed one.
+    if (!matched) {
+      if (f && f.count) {
+        Array.prototype.forEach.call(groups, function (g) {
+          g.classList.remove('is-active');
+          g.classList.add('is-muted');
+        });
       } else {
-        if (k === '.' && buffer.indexOf('.') >= 0) return;
-        if (buffer.length >= 7) return;
-        buffer += k;
+        Array.prototype.forEach.call(svg.querySelectorAll('.is-muted'), function (n) {
+          n.classList.remove('is-muted');
+        });
       }
+    }
+  }
+
+  // ── Keypad ───────────────────────────────────────────────────────────────────
+  function appendKey(k) {
+    var f = state.focus;
+    var field = fieldById(f);
+    var cur = vals[f] || '';
+
+    if (selectFocused) {
+      cur = '';               // typing over the selected value replaces it
+      selectFocused = false;
+    }
+
+    if (k === 'back') { cur = cur.slice(0, -1); tick(6); }
+    else if (k === '.') {
+      if (field && field.count) return;          // steps are whole numbers
+      if (cur.indexOf('.') !== -1) return;
+      cur = cur === '' ? '0.' : cur + '.';
+      tick(8);
+    } else {
+      if (cur.length >= 6) return;
+      cur = (cur === '0') ? k : cur + k;
       tick(8);
     }
-    refreshEditingChip();
-    if (editing === 'qty') {
-      st.qty = buffer === ''
-        ? clampQty(parseInt(editSnapshot, 10) || QTY_MIN)
-        : clampQty(parseInt(buffer, 10) || QTY_MIN);
-    } else {
-      st.vals[editing] = (buffer === '' || buffer === '.')
-        ? editSnapshot
-        : buffer;
-    }
-    bumpLive();
+
+    vals[f] = cur;
+    renderFields(); renderResults(); saveDraft();
   }
 
-  function layoutDiagramPanel() {
-    var sheet = document.getElementById('diagramSheet');
-    var panel = sheet && sheet.querySelector('.diagram-sheet__panel');
-    if (!sheet || !panel || sheet.hidden) return;
+  // Plain 3-col, 12-key grid per the wireframe - no Next/advance key. Backspace is the
+  // literal '⌫' glyph the wireframe uses, not an icon.
+  var KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
 
-    // Phone: sheet fills measure-stage like Summary. Desktop: align to measure column.
-    if (!isDesktop()) {
-      panel.style.width = '';
-      sheet.style.paddingLeft = '';
-      sheet.style.paddingRight = '';
-      return;
-    }
-
-    var ref =
-      document.querySelector('#panelMeasure .fields') ||
-      document.querySelector('#panelMeasure') ||
-      document.querySelector('.desk-col--measure');
-    if (!ref) return;
-
-    var r = ref.getBoundingClientRect();
-    var width = Math.round(r.width);
-    var left = Math.round(r.left);
-    if (width < 160) return;
-    panel.style.width = width + 'px';
-    sheet.style.paddingLeft = Math.max(0, left) + 'px';
-    sheet.style.paddingRight = Math.max(0, Math.round(window.innerWidth - r.right)) + 'px';
-  }
-
-  var diagramFocusBefore = null;
-
-  function diagramFocusables() {
-    var sheet = document.getElementById('diagramSheet');
-    if (!sheet || sheet.hidden) return [];
-    return Array.prototype.slice.call(
-      sheet.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
-    ).filter(function (el) {
-      return !el.disabled && el.getAttribute('aria-hidden') !== 'true';
-    });
-  }
-
-  function onDiagramKeydown(e) {
-    if (e.key !== 'Tab') return;
-    var sheet = document.getElementById('diagramSheet');
-    if (!sheet || sheet.hidden) return;
-    var list = diagramFocusables();
-    if (!list.length) return;
-    var first = list[0];
-    var last = list[list.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-
-  function setDiagramOpen(open) {
-    var app = document.getElementById('app');
-    if (!app || isDesktop()) return;
-    if (open) app.setAttribute('data-diagram', 'open');
-    else app.removeAttribute('data-diagram');
-  }
-
-  function openDiagram() {
-    if (editing) stopEdit();
-    if (shapeMenuOpen()) {
-      setDockMode('pad');
-      editResumeKey = null;
-      editing = null;
-    }
-    var meta = DIAGRAMS[st.shape];
-    var sheet = document.getElementById('diagramSheet');
-    var img = document.getElementById('diagramImg');
-    var title = document.getElementById('diagramTitle');
-    if (!meta || !sheet || !img) return;
-    var label = (SHAPES[st.shape] && SHAPES[st.shape].label) || 'Shape';
-    if (title) title.textContent = label;
-    img.src = meta.src;
-    img.alt = label + ' dimension diagram';
-    diagramFocusBefore = document.activeElement;
-    sheet.hidden = false;
-    setDiagramOpen(true);
-    layoutDiagramPanel();
-    document.addEventListener('keydown', onDiagramKeydown);
-    var close = document.getElementById('diagramClose');
-    if (close) close.focus();
-  }
-
-  function closeDiagram() {
-    var sheet = document.getElementById('diagramSheet');
-    if (sheet) sheet.hidden = true;
-    setDiagramOpen(false);
-    document.removeEventListener('keydown', onDiagramKeydown);
-    var back = diagramFocusBefore;
-    diagramFocusBefore = null;
-    if (back && typeof back.focus === 'function') {
-      try { back.focus(); } catch (e) {}
-    }
-  }
-
-  function syncJobInput() {
-    var input = document.getElementById('jobName');
-    if (!input) return;
-    if (document.activeElement !== input) input.value = jobName;
-    var clear = document.getElementById('btnJobClear');
-    if (clear) clear.hidden = !String(input.value || jobName).trim();
-  }
-
-  function isLegacyShapeJobName(name) {
-    if (!name) return false;
-    return Object.keys(SHAPES).some(function (k) {
-      var label = (SHAPES[k] && SHAPES[k].label) || '';
-      return label.split(' / ')[0] === name;
-    });
-  }
-
-  function loadJobName() {
-    try { jobName = localStorage.getItem(JOB_KEY) || ''; } catch (e) { jobName = ''; }
-    // Drop old auto-filled shape names ("Slab", "Stairs", …)
-    if (isLegacyShapeJobName(jobName)) jobName = '';
-    syncJobInput();
-  }
-
-  function persistJobName() {
-    try {
-      if (jobName) localStorage.setItem(JOB_KEY, jobName);
-      else localStorage.removeItem(JOB_KEY);
-    } catch (e) {}
-  }
-
-  function saveJobName(val, opts) {
-    var trim = !(opts && opts.keepRaw);
-    jobName = trim ? (val || '').trim() : (val || '');
-    persistJobName();
-    if (!(opts && opts.skipSync)) syncJobInput();
-  }
-
-  function renderDesktopFields() {
-    var box = document.getElementById('fields');
-    if (!box) return;
-    var html = '';
-    SHAPES[st.shape].fields.forEach(function (f) {
-      var val = displayVal(f);
-      var isDef = defaultValueShown(f.k);
-      var mode = f.int ? 'numeric' : 'decimal';
-      html +=
-        '<div class="field-wrap">' +
-        '<label class="field' + (isDef ? ' is-default' : '') + '" data-key="' + f.k + '">' +
-        '<span class="field__lab">' + f.lab + '</span>' +
-        '<input class="field__input" type="text" inputmode="' + mode +
-        '" enterkeyhint="next" autocomplete="off" spellcheck="false" data-key="' + f.k +
-        '" value="' + String(val).replace(/"/g, '&quot;') +
-        '" placeholder="0" aria-label="' + f.lab + (f.unit ? (' in ' + f.unit) : '') + '">' +
-        '<span class="field__unit">' + (f.unit || '') + '</span>' +
-        '</label>' +
-        '<span class="field__thin" hidden aria-live="polite"></span>' +
-        '<div class="field__meta"><span class="field__warn" aria-live="polite"></span></div>' +
-        '</div>';
-    });
-    box.innerHTML = html;
-    validateAllFields();
-  }
-
-  function renderFields() {
-    if (isDesktop()) {
-      renderDesktopFields();
-      return;
-    }
-    var box = document.getElementById('fields');
-    if (box) box.innerHTML = '';
-    renderFieldStrip();
-  }
-
-  function renderSpec() {
-    var el = document.getElementById('specSheet');
-    if (!el) return;
-    el.innerHTML = specRows().map(function (r) {
-      if (r.gap) return '<div class="spec__gap"></div>';
-      return (
-        '<div class="spec__row">' +
-        '<span class="spec__k">' + (r.k || '') + '</span>' +
-        '<span class="spec__v">' + r.v + '</span>' +
-        '</div>'
-      );
+  function renderKeypad() {
+    var el = document.getElementById('keypad');
+    el.innerHTML = KEYS.map(function (k) {
+      var key = k === '⌫' ? 'back' : k;
+      var label = k === '⌫' ? 'Backspace' : k;
+      return '<div class="key" role="button" tabindex="-1" aria-label="' + label + '" data-key="' + key + '">' + k + '</div>';
     }).join('');
-  }
-
-  function liveFieldRaw(key) {
-    if (editing === key) {
-      if (buffer === '') return editSnapshot || (key === 'qty' ? String(clampQty(st.qty)) : '');
-      return buffer;
-    }
-    if (key === 'qty') return String(clampQty(st.qty));
-    return st.vals[key] || '';
-  }
-
-  function lcdFieldLab(f) {
-    if (!f) return '';
-    if (f.k === 'T' && f.lab === 'Thickness') return 'Depth';
-    return String(f.lab || '').replace(/\s*\(optional\)/i, '');
-  }
-
-  function lcdLine(opts) {
-    var tap = !isDesktop() && !opts.static;
-    var tag = tap ? 'button' : 'div';
-    var typeAttr = tap ? ' type="button"' : '';
-    var cls = 'dock-live__line' +
-      (opts.on ? ' is-on' : '') +
-      (opts.pulse ? ' is-pulse' : '') +
-      (opts.incomplete ? ' is-incomplete' : '') +
-      (opts.field ? ' dock-live__line--field' : '') +
-      (opts.shapeRow ? ' dock-live__line--shape' : '') +
-      (opts.mod ? (' ' + opts.mod) : '');
-    var attrs = '';
-    if (opts.focusKey && tap) attrs += ' data-focus-key="' + opts.focusKey + '"';
-    if (opts.lcd && tap) {
-      attrs += ' data-lcd="' + opts.lcd + '"';
-      if (opts.lcd === 'shape') {
-        attrs += ' data-dock-shape aria-haspopup="listbox" aria-controls="shapeMenu" aria-expanded="' + (shapeMenuOpen() ? 'true' : 'false') + '"';
-      }
-      if (opts.lcd === 'waste') {
-        attrs += ' data-dock-waste aria-haspopup="listbox" aria-controls="wasteMenu" aria-expanded="' + (wasteMenuOpen() ? 'true' : 'false') + '"';
-      }
-    }
-    if (opts.aria && tap) attrs += ' aria-label="' + opts.aria + '"';
-
-    var body = '';
-    if (opts.field) {
-      body +=
-        '<span class="dock-live__cur" aria-hidden="true">' +
-        (opts.on && !opts.static ? '▸' : '') +
-        '</span>';
-    }
-    if (opts.lab) {
-      body += '<span class="dock-live__k">' + opts.lab + '</span>';
-    }
-    if (opts.num != null) {
-      body +=
-        '<span class="dock-live__vals">' +
-        '<span class="dock-live__numwrap">' +
-        '<span class="dock-live__num">' + opts.num + '</span>' +
-        (opts.caret ? '<span class="dock-live__caret" aria-hidden="true"></span>' : '') +
-        '</span>' +
-        (opts.unit ? '<span class="dock-live__unit">' + opts.unit + '</span>' : '') +
-        (opts.chevron ? '<span class="dock-live__chev" aria-hidden="true">›</span>' : '') +
-        '</span>';
-    } else if (opts.chevron) {
-      body += '<span class="dock-live__chev" aria-hidden="true">›</span>';
-    }
-
-    // Phone Shape row: picker hit + trailing info.circle (separate control)
-    if (opts.diagram && opts.shapeRow && tap) {
-      var shapeLab = (SHAPES[st.shape] && SHAPES[st.shape].label) || 'shape';
-      var infoIco =
-        '<svg class="dock-live__diagram-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' +
-        '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.75"/>' +
-        '<circle cx="12" cy="8" r="1.15" fill="currentColor"/>' +
-        '<path d="M12 11.25v5.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
-        '</svg>';
-      return (
-        '<div class="' + cls + '">' +
-        '<button type="button" class="dock-live__shape-hit"' + attrs + '>' + body + '</button>' +
-        '<button type="button" class="dock-live__diagram" data-diagram aria-label="Dimension diagram for ' +
-        shapeLab + '">' + infoIco + '</button>' +
-        '</div>'
-      );
-    }
-
-    return '<' + tag + typeAttr + ' class="' + cls + '"' + attrs + '>' + body + '</' + tag + '>';
-  }
-
-  function lcdShapeLab() {
-    var lab = (SHAPES[st.shape] && SHAPES[st.shape].label) || 'Shape';
-    // Short display: "Slab / Pad" → "Slab"
-    if (st.shape === 'slab') return 'Slab';
-    return lab;
-  }
-
-  function lcdFieldParts(f, raw) {
-    var empty = raw === '' || raw === '.';
-    var show = empty ? '—' : raw;
-    var unit = f.unit || '';
-    if (f.k === 'DIA') {
-      return { num: empty ? '—' : ('Ø' + show), unit: unit };
-    }
-    if (f.int && f.lab.toLowerCase().indexOf('step') !== -1) {
-      if (empty) return { num: '—', unit: 'steps' };
-      return { num: show, unit: show === '1' ? 'step' : 'steps' };
-    }
-    return { num: show, unit: unit };
-  }
-
-  function lcdStackHtml(volText) {
-    var shapeLab = lcdShapeLab();
-    var shapeOn = dockMode === 'shape';
-    var wasteOn = dockMode === 'waste';
-    var padOn = dockMode === 'pad';
-    var pulsing = !isDesktop() && Date.now() < shapePulseUntil;
-    var html = lcdLine({
-      lab: 'Shape',
-      num: shapeLab,
-      field: true,
-      shapeRow: true,
-      diagram: !isDesktop(),
-      lcd: 'shape',
-      on: shapeOn,
-      pulse: pulsing && !shapeOn,
-      aria: 'Shape ' + ((SHAPES[st.shape] && SHAPES[st.shape].label) || shapeLab)
-    });
-
-    SHAPES[st.shape].fields.forEach(function (f) {
-      var raw = liveFieldRaw(f.k);
-      if (!f.need && (raw === '' || raw === '.')) return;
-      var parts = lcdFieldParts(f, raw);
-      var on = padOn && editing === f.k;
-      var done = raw !== '' && raw !== '.' && parseFloat(raw) > 0;
-      html += lcdLine({
-        lab: lcdFieldLab(f),
-        num: parts.num,
-        unit: parts.unit,
-        field: true,
-        on: on,
-        incomplete: !done,
-        caret: true,
-        focusKey: f.k,
-        aria: lcdFieldLab(f) + ' ' + parts.num + (parts.unit ? (' ' + parts.unit) : '')
-      });
-    });
-
-    if (shapeUsesQty(st.shape)) {
-      var q = liveFieldRaw('qty');
-      var qn = parseInt(q, 10) || 1;
-      var qtyOn = padOn && editing === 'qty';
-      html += lcdLine({
-        lab: 'Quantity',
-        num: String(qn),
-        unit: '×',
-        field: true,
-        on: qtyOn,
-        caret: true,
-        focusKey: 'qty',
-        aria: 'Quantity ×' + qn
-      });
-    }
-
-    html += lcdLine({
-      lab: 'Wastage',
-      num: '+' + st.waste,
-      unit: '%',
-      field: true,
-      lcd: 'waste',
-      on: wasteOn,
-      pulse: !isDesktop() && Date.now() < wastePulseUntil,
-      caret: true,
-      aria: 'Wastage +' + st.waste + '%'
-    });
-
-    html += lcdLine({
-      lab: 'Volume',
-      num: volText == null ? '0.00' : volText,
-      unit: 'm³',
-      field: true,
-      mod: 'dock-live__line--vol',
-      static: true,
-      aria: 'Volume ' + (volText == null ? '0.00' : volText) + ' m³'
-    });
-
-    return html;
-  }
-
-  function syncDockDims(volText) {
-    var html = lcdStackHtml(volText == null ? '0.00' : volText);
-    document.querySelectorAll('[data-dock-stack]').forEach(function (el) {
-      el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll('.key'), function (c) {
+      c.addEventListener('click', function () { appendKey(c.getAttribute('data-key')); });
     });
   }
 
-  function syncDock(v, preview, ready) {
-    var live = document.getElementById('dockLive');
-    var volText = preview ? formatVol(v.total) : '0.00';
-    if (isDesktop() && !ready) volText = '-';
-    syncDockDims(volText);
-    if (live) live.classList.toggle('is-example', !!preview && !ready);
+  function showKeypad(on) {
+    document.getElementById('keypad-wrap').classList.toggle('is-hidden', !on);
   }
 
-  function syncMeasureDockVisibility() {
-    var dock = document.getElementById('dockMeasure');
-    if (!dock || isDesktop()) return;
-    // Keep dock mounted so keypad position/size stay fixed; sheets cover via CSS.
-    dock.hidden = false;
-    if (st.step === 'measure' && dockMode === 'pad') {
-      var pad = document.getElementById('keypad');
-      if (pad) pad.hidden = false;
-    }
+  // ── Docket ───────────────────────────────────────────────────────────────────
+  // No preview surface: the stack IS the spec, so Copy/Share render straight from it.
+  function prettyDate(iso) {
+    var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    if (!p) return '';
+    return String(Number(p[3])) + ' ' + m[Number(p[2]) - 1] + ' ' + p[1];
   }
 
-  function syncSummarySheet() {
-    var sheet = document.getElementById('summarySheet');
-    if (!sheet || isDesktop()) return;
-    var open = st.step === 'results';
-    sheet.hidden = !open;
-    if (!open) return;
-    var phone = document.querySelector('.phone');
-    var mast = document.querySelector('.phone > .mast');
-    if (phone && mast) {
-      var top = Math.round(mast.getBoundingClientRect().bottom - phone.getBoundingClientRect().top);
-      phone.style.setProperty('--summary-top', Math.max(0, top) + 'px');
-    }
-  }
+  function bagsLine(withWaste) { return withCommas(bagCount(withWaste)) + ' x ' + state.bagSize + ' kg bags'; }
+  function readyLine(withWaste) { return withCommas(readyOrder(withWaste).toFixed(1)) + ' m³ ready-mix'; }
 
-  function syncWasteUi() {
-    var lcdWaste = document.querySelector('[data-lcd="waste"]');
-    var menu = document.getElementById('wasteMenu');
-    var open = wasteMenuOpen();
-    if (lcdWaste) lcdWaste.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (menu) {
-      menu.hidden = false;
-      menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-    }
-    document.querySelectorAll('.waste__btn[data-waste]').forEach(function (btn) {
-      var w = parseInt(btn.getAttribute('data-waste'), 10);
-      var on = w === st.waste;
-      btn.classList.toggle('is-on', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  function specText() {
+    var s = currentShape();
+    var withWaste = orderVolume();
+    var rec = orderPrimary(withWaste);
+    var primary = rec === 'bags' ? bagsLine(withWaste) : readyLine(withWaste);
+    var alt     = rec === 'bags' ? readyLine(withWaste) : bagsLine(withWaste);
+
+    var lines = ['SPEC SHEET', 'by SlabSet.online', ''];
+    lines.push('Date: ' + prettyDate(todayISO()));
+    lines.push('');
+    lines.push('Shape: ' + s.label);
+    s.fields.forEach(function (f) {
+      var v = vals[f.id];
+      if (!v) return;
+      lines.push(f.label + ': ' + v + (f.count ? '' : ' ' + units[f.id]));
     });
+    lines.push('Wastage: +' + (parseFloat(vals.wastage) || 0) + '%');
+    lines.push('');
+    lines.push('Order volume: ' + withCommas(withWaste.toFixed(3)) + ' m³');
+    lines.push('');
+    lines.push('Order quantity:');
+    lines.push(primary);
+    lines.push('or');
+    lines.push(alt);
+    lines.push('');
+    lines.push('Estimate only. Confirm with your supplier.');
+    return lines.join('\n');
   }
 
-  function openWasteMenu() {
-    if (dockMode === 'waste') {
-      closeWasteMenu();
-      return;
-    }
-    editResumeKey = editing || editTargets()[0] || null;
-    if (editing) commitEdit({ keepPad: true });
-    editing = null;
-    setDockMode('waste');
-    armWastePulse();
-    tick(8);
+  function flashLabel(id, word) {
+    var el = document.getElementById(id);
+    if (el.dataset.was === undefined) { el.dataset.was = el.textContent; }
+    el.textContent = word;
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.textContent = el.dataset.was; }, 1600);
   }
 
-  function closeWasteMenu() {
-    if (dockMode !== 'waste') return;
-    setDockMode('pad');
-    // When measure is complete, leave LCD clear so See summary is primary
-    if (resultsReady()) {
-      editResumeKey = null;
-      editing = null;
-      syncEditingUi();
-      bumpLive();
-      return;
-    }
-    resumeEditAfterDock();
+  // Per the wireframe: a toast above the CTAs instead of a persistent visible spec
+  // sheet. Copy/Share still write the full docket to the clipboard (see specText()) -
+  // this just confirms it happened.
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.hidden = true; }, 1600);
   }
 
-  function toggleWasteMenu() {
-    openWasteMenu();
+  // ── Wiring ───────────────────────────────────────────────────────────────────
+  function renderAll() {
+    renderShapeRow(); renderFields(); drawDiagram(); renderResults();
   }
 
-  function renderFieldStrip() {
-    var strip = document.getElementById('fieldStrip');
-    if (!strip) return;
-    var keys = editTargets();
-    strip.innerHTML = keys.map(function (key) {
-      var fdef = key === 'qty' ? { lab: 'Qty', unit: '×' } : fieldDef(key);
-      var lab = fdef ? (key === 'qty' ? 'Qty' : fdef.lab) : key;
-      var short = lab.length > 8 ? lab.slice(0, 7) + '…' : lab;
-      var on = editing === key;
-      var done = key === 'qty' ? true : rawComplete(key);
-      var raw = liveFieldRaw(key);
-      var show = raw === '' || raw === '.' ? '—' : raw;
-      var unit = fdef && fdef.unit ? fdef.unit : '';
-      return (
-        '<button type="button" class="field-strip__btn' +
-        (on ? ' is-on' : '') +
-        (done && !on ? ' is-done' : '') +
-        '" role="tab" aria-selected="' + (on ? 'true' : 'false') +
-        '" data-focus-key="' + key + '"' +
-        ' aria-label="' + lab + (unit ? (' ' + unit) : '') + ': ' + show + '">' +
-        '<span class="field-strip__lab">' + short + '</span>' +
-        '<span class="field-strip__val">' + show + (unit && show !== '—' ? ' ' + unit : '') + '</span>' +
-        '</button>'
-      );
-    }).join('');
+  document.getElementById('shape-select').addEventListener('change', function () {
+    tick(10);
+    state.shape = this.value;
+    state.focus = currentShape().fields[0].id;
+    settled = {};                       // different fields, no verdicts carried over
+    didCompletePulse = false;           // a fresh shape has its own "first complete" moment
+    showKeypad(true);
+    renderAll(); saveDraft();
+  });
+
+  // Sending is the moment everything gets judged - otherwise a bad value in the field you
+  // never left could go out unflagged. Still a caution: the send proceeds either way.
+  function settleAndRender() {
+    settleAll();
+    renderFields(); renderResults();
   }
 
-  function copySpec() {
-    var text = specText();
-    if (!resultsReady()) { toast(guidanceText() || 'Enter dimensions first'); return; }
+  document.getElementById('btnCopy').addEventListener('click', function () {
+    if (this.disabled) return;
+    settleAndRender();
+    var btn = this;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () {
-        toast('Summary copied');
-      }).catch(function () { toast('Copy failed'); });
-    } else {
-      toast('Copy unavailable');
+      navigator.clipboard.writeText(specText()).then(function () {
+        flashLabel('copyLabel', '✓ Copied');
+        showToast('Spec copied to clipboard');
+        btn.classList.add('is-confirmed');
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { btn.classList.remove('is-confirmed'); }, 1600);
+      }, function () {});
     }
-  }
+  });
 
-  function shareSpec() {
-    if (!resultsReady()) { toast(guidanceText() || 'Enter dimensions first'); return; }
+  document.getElementById('btnShare').addEventListener('click', function () {
+    if (this.disabled) return;
+    settleAndRender();
     var text = specText();
     if (navigator.share) {
-      navigator.share({ title: 'SlabSet job summary', text: text })
-        .then(function () { toast('Shared'); })
-        .catch(function () {});
-      return;
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.share({ title: 'SlabSet spec sheet', text: text }).catch(function () {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      // no share target on desktop - copying is the honest fallback
       navigator.clipboard.writeText(text).then(function () {
-        toast('Copied. Paste into Messages or Notes');
-      }).catch(function () { toast('Share unavailable'); });
-      return;
+        flashLabel('shareLabel', 'Copied');
+        showToast('Spec copied to clipboard');
+      }, function () {});
     }
-    toast('Share unavailable');
+  });
+
+  // Theme - follows the OS until the user picks, then their choice sticks.
+  function applyTheme(mode) {
+    document.documentElement.setAttribute('data-theme', mode);
+    var btn = document.getElementById('btnTheme');
+    var toDark = mode !== 'dark';
+    btn.setAttribute('aria-label', 'Switch to ' + (toDark ? 'dark' : 'light') + ' theme');
+    btn.setAttribute('aria-pressed', String(mode === 'dark'));
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', mode === 'dark' ? '#1c1c1e' : '#f2f2f7');
   }
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 
-  function render() {
-    var desk = isDesktop();
-    var measure = st.step === 'measure';
-    var panelMeasure = document.getElementById('panelMeasure');
-    var panelResults = document.getElementById('panelResults');
-    var dockMeasure = document.getElementById('dockMeasure');
-    var app = document.getElementById('app');
-    if (app) app.setAttribute('data-step', st.step);
-
-    if (desk) {
-      if (panelMeasure) panelMeasure.hidden = false;
-      if (panelResults) panelResults.hidden = false;
-      if (dockMeasure) dockMeasure.hidden = true;
-    } else {
-      if (panelMeasure) panelMeasure.hidden = false;
-      syncSummarySheet();
-    }
-
-    syncShapeUi();
-    syncWasteUi();
-    syncQtyUi();
-    if (desk || measure) renderFields();
-    if (!desk && measure && useKeypad()) {
-      if (dockMode !== 'shape' && dockMode !== 'waste') setDockMode('pad');
-      setPadOpen(true);
-      if (!didShapePulse) {
-        didShapePulse = true;
-        if (measureIsBlank()) {
-          // Cold start: teach Shape first. Digits still bootstrap via handleKey.
-          armShapePulse();
-          bumpLive();
-        } else {
-          var bootField = firstIncompleteTarget() || editTargets()[0];
-          if (bootField) startEdit(bootField);
-        }
-      } else if (editing) {
-        refreshEditingChip();
-      }
-    }
-
-    var v = volume();
-    var preview = complete();
-    var ready = resultsReady();
-    if (!desk && st.step === 'results' && !ready) {
-      st.step = 'measure';
-      measure = true;
-      if (app) app.setAttribute('data-step', 'measure');
-      syncSummarySheet();
-    }
-    syncCalcCta(ready);
-    syncDock(v, preview, ready);
-    syncMeasureDockVisibility();
-
-    if (desk || st.step === 'results') syncResultsPanel(v);
-  }
-
-  document.addEventListener('click', function (e) {
-    if (e.target.closest('#btnTheme')) {
-      applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
-      return;
-    }
-    var diagramSheet = document.getElementById('diagramSheet');
-    if (diagramSheet && !diagramSheet.hidden) {
-      // Tap anywhere outside the diagram panel dismisses (LCD, mast, scrim, pad)
-      if (!e.target.closest('.diagram-sheet__panel')) {
-        closeDiagram();
-        return;
-      }
-      if (
-        e.target.closest('#diagramClose') ||
-        e.target.closest('#diagramScrim')
-      ) {
-        closeDiagram();
-        return;
-      }
-    }
-    var shape = e.target.closest('#shapeMoreList .shape[data-shape]');
-    if (shape) {
-      selectShape(shape.getAttribute('data-shape'));
-      return;
-    }
-    if (e.target.closest('[data-diagram]')) {
-      openDiagram();
-      return;
-    }
-    if (e.target.closest('[data-lcd="shape"]')) {
-      toggleShapeMenu();
-      return;
-    }
-    if (e.target.closest('[data-lcd="waste"]')) {
-      toggleWasteMenu();
-      return;
-    }
-    if (shapeMenuOpen() && !e.target.closest('#dockShape') && !e.target.closest('[data-lcd="shape"]')) {
-      closeShapeMenu();
-    }
-    if (wasteMenuOpen() && !e.target.closest('#dockWaste') && !e.target.closest('[data-lcd="waste"]')) {
-      closeWasteMenu();
-    }
-    var waste = e.target.closest('.waste__btn[data-waste]');
-    if (waste) {
-      st.waste = parseInt(waste.getAttribute('data-waste'), 10);
-      var readyAfter = false;
-      closeWasteMenu();
-      saveDraft();
-      readyAfter = resultsReady();
-      tick(10);
-      // Completion moment belongs to See summary CTA, not another waste flash
-      if (!readyAfter) armWastePulse();
-      bumpLive();
-      return;
-    }
-    var focusTab = e.target.closest('[data-focus-key]');
-    if (focusTab && useKeypad() && st.step === 'measure') {
-      if (longPressFired) {
-        longPressFired = false;
-        return;
-      }
-      startEdit(focusTab.getAttribute('data-focus-key'));
-      return;
-    }
-    var bagBtn = e.target.closest('.bag-size__btn[data-bag]');
-    if (bagBtn) {
-      var nextKg = parseInt(bagBtn.getAttribute('data-bag'), 10);
-      if (!BAG_M3[nextKg] || nextKg === bagKg()) return;
-      st.bagKg = nextKg;
-      saveDraft();
-      render();
-      return;
-    }
-    var keyBtn = e.target.closest('#dockPad [data-k]');
-    if (keyBtn) {
-      e.preventDefault();
-      handleKey(keyBtn.getAttribute('data-k'));
-      return;
-    }
-    if (e.target.closest('#btnCalc')) {
-      tick(12);
-      setStep('results');
-      return;
-    }
-    if (e.target.closest('#btnEdit') || e.target.closest('#summaryScrim')) {
-      setStep('measure');
-      return;
-    }
-    if (e.target.closest('#btnDiagram')) {
-      openDiagram();
-      return;
-    }
-    if (useKeypad()) {
-      if (ignoreOutsideClick) {
-        ignoreOutsideClick = false;
-        return;
-      }
-      // Tap outside an editable LCD row clears highlight; pad stays put
-      if (
-        st.step === 'measure' &&
-        editing &&
-        !e.target.closest('[data-focus-key]') &&
-        !e.target.closest('#dockPad') &&
-        !e.target.closest('[data-lcd]') &&
-        !e.target.closest('#dockShape') &&
-        !e.target.closest('#dockWaste')
-      ) {
-        stopEdit();
-      }
-    }
-    if (e.target.closest('#btnJobClear')) {
-      e.preventDefault();
-      saveJobName('');
-      var jobIn = document.getElementById('jobName');
-      if (jobIn) {
-        jobIn.value = '';
-        jobIn.focus();
-      }
-      syncJobInput();
-      return;
-    }
-    if (e.target.closest('#btnCopy')) {
-      tick(8);
-      copySpec();
-      return;
-    }
-    if (e.target.closest('#btnShare')) {
-      tick(8);
-      shareSpec();
-      return;
-    }
-    if (e.target.closest('#btnInstall')) {
-      if (!deferredInstall) return;
-      deferredInstall.prompt();
-      deferredInstall.userChoice.finally(function () {
-        deferredInstall = null;
-        var ban = document.getElementById('installBanner');
-        if (ban) ban.hidden = true;
-      });
-      return;
-    }
-    if (e.target.closest('#btnInstallDismiss')) {
-      var ban = document.getElementById('installBanner');
-      if (ban) ban.hidden = true;
-      try { sessionStorage.setItem('slabset-v13-install-dismiss', '1'); } catch (err) {}
-    }
+  document.getElementById('btnTheme').addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
   });
 
-  function isMeasureInput(el) {
-    return !!(el && (el.id === 'qtyInput' || el.classList.contains('field__input')));
-  }
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+  loadDraft();
 
-  var tapMoved = false;
-  var tapStartY = 0;
-  var longPressTimer = null;
-  var longPressKey = null;
-  var longPressFired = false;
-
-  function cancelLongPress() {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
+  // ?shape= deep-links from the search shells. An explicit link beats the saved draft.
+  try {
+    var wanted = new URLSearchParams(window.location.search).get('shape');
+    if (wanted && shapeById(wanted) && wanted !== state.shape) {
+      state.shape = wanted;
+      state.focus = currentShape().fields[0].id;
     }
-    longPressKey = null;
-  }
+  } catch (e) {}
 
-  document.addEventListener('pointerdown', function (e) {
-    tapMoved = false;
-    tapStartY = e.clientY;
-    longPressFired = false;
-    cancelLongPress();
-    if (!useKeypad()) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+  // Anything restored from a draft was entered in an earlier session, so it counts as
+  // moved-on and is judged straight away - except whatever the cursor is sitting in.
+  settleAll();
+  delete settled[state.focus];
 
-    var lcdDim = e.target.closest('[data-focus-key]');
-    if (lcdDim && st.step === 'measure') {
-      var holdKey = lcdDim.getAttribute('data-focus-key');
-      if (holdKey) {
-        longPressKey = holdKey;
-        longPressTimer = setTimeout(function () {
-          longPressTimer = null;
-          longPressFired = true;
-          clearDimField(holdKey);
-        }, 520);
-      }
-    }
-
-    var qtyTap = e.target.closest('#qtyField');
-    if (qtyTap && shapeUsesQty(st.shape)) {
-      e.preventDefault();
-      startEdit('qty');
-      return;
-    }
-    var fieldTap = e.target.closest('.field[data-key]');
-    if (
-      fieldTap &&
-      fieldTap.getAttribute('data-key') !== 'qty' &&
-      fieldTap.closest('.fields')
-    ) {
-      e.preventDefault();
-      startEdit(fieldTap.getAttribute('data-key'));
-    }
-  }, { passive: false });
-
-  document.addEventListener('pointermove', function (e) {
-    if (Math.abs(e.clientY - tapStartY) > 8) {
-      tapMoved = true;
-      cancelLongPress();
-    }
-  }, { passive: true });
-
-  document.addEventListener('pointerup', function () {
-    cancelLongPress();
-  });
-  document.addEventListener('pointercancel', function () {
-    cancelLongPress();
-  });
-
-  document.addEventListener('focusin', function (e) {
-    if (e.target.id === 'jobName') {
-      var jobEl = e.target;
-      requestAnimationFrame(function () {
-        try { jobEl.select(); } catch (err) {}
-        try {
-          jobEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        } catch (err2) {
-          try { jobEl.scrollIntoView(true); } catch (err3) {}
-        }
-      });
-      return;
-    }
-    if (!isMeasureInput(e.target)) return;
-    if (useKeypad()) {
-      e.target.blur();
-      var key = e.target.id === 'qtyInput' ? 'qty' : e.target.getAttribute('data-key');
-      if (key) startEdit(key);
-      return;
-    }
-    var el = e.target;
-    requestAnimationFrame(function () {
-      el.select();
-    });
-  });
-
-  // Click would otherwise collapse the selection after focus.
-  document.addEventListener('mouseup', function (e) {
-    if (!isMeasureInput(e.target)) return;
-    if (useKeypad()) return;
-    e.preventDefault();
-  });
-
-  document.addEventListener('input', function (e) {
-    if (e.target.id === 'jobName') {
-      saveJobName(e.target.value, { keepRaw: true, skipSync: true });
-      var clearBtn = document.getElementById('btnJobClear');
-      if (clearBtn) clearBtn.hidden = !String(e.target.value || '').trim();
-      return;
-    }
-    if (useKeypad()) return;
-    if (e.target.id === 'qtyInput') {
-      var raw = e.target.value.replace(/[^\d]/g, '');
-      e.target.value = raw;
-      if (raw === '') return;
-      st.qty = clampQty(parseInt(raw, 10));
-      saveDraft();
-      syncQtyUi();
-      bumpLive();
-      return;
-    }
-    var input = e.target.closest('.field__input');
-    if (!input) return;
-    var key = input.getAttribute('data-key');
-    var raw = input.value;
-    if (fieldIsInt(key)) {
-      raw = raw.replace(/[^\d]/g, '');
-      input.value = raw;
-    }
-    st.vals[key] = raw;
-    var wrap = input.closest('.field');
-    if (wrap) wrap.classList.toggle('is-default', defaultValueShown(key));
-    saveDraft();
-    bumpLive();
-  });
-
-  document.addEventListener('change', function (e) {
-    if (e.target.id === 'jobName') {
-      saveJobName(e.target.value);
-      return;
-    }
-    if (useKeypad()) return;
-    if (e.target.id !== 'qtyInput') return;
-    st.qty = clampQty(parseInt(e.target.value, 10) || QTY_MIN);
-    saveDraft();
-    syncQtyUi();
-    bumpLive();
-  });
-
-  document.addEventListener('blur', function (e) {
-    if (e.target && e.target.id === 'jobName') {
-      saveJobName(e.target.value);
-    }
-  }, true);
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      if (shapeMenuOpen()) {
-        closeShapeMenu();
-        e.preventDefault();
-        return;
-      }
-      if (wasteMenuOpen()) {
-        closeWasteMenu();
-        e.preventDefault();
-        return;
-      }
-      var sheet = document.getElementById('diagramSheet');
-      if (sheet && !sheet.hidden) {
-        closeDiagram();
-        e.preventDefault();
-        return;
-      }
-      var summary = document.getElementById('summarySheet');
-      if (summary && !summary.hidden && !isDesktop()) {
-        setStep('measure');
-        e.preventDefault();
-        return;
-      }
-    }
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.target && (e.target.id === 'jobName' || (e.target.tagName === 'INPUT' && !useKeypad()))) return;
-    if (!useKeypad()) return;
-    if (!editing) {
-      if (/^[0-9.]$/.test(e.key)) {
-        var first = dimFieldKeys()[0];
-        if (first) {
-          startEdit(first);
-          handleKey(e.key);
-          e.preventDefault();
-        }
-      }
-      return;
-    }
-    if (/^[0-9.]$/.test(e.key)) { handleKey(e.key); e.preventDefault(); }
-    else if (e.key === 'Backspace') { handleKey('del'); e.preventDefault(); }
-    else if (e.key === 'Enter') { handleKey('done'); e.preventDefault(); }
-    else if (e.key === 'Escape') { discardEdit(); renderFields(); syncQtyUi(); e.preventDefault(); }
-    else if (e.key === 'Tab') {
-      e.preventDefault();
-      var targets = editTargets();
-      var i = targets.indexOf(editing);
-      var next = targets[(i + (e.shiftKey ? targets.length - 1 : 1)) % targets.length];
-      commitEdit({ keepPad: true });
-      renderFields();
-      syncQtyUi();
-      startEdit(next);
-    }
-  });
-
-  window.addEventListener('resize', function () {
-    layoutDiagramPanel();
-    if (st.step === 'results') syncSummarySheet();
-  });
-
-  (function bindEditScrollClamp() {
-    var scroll = document.querySelector('.scroll');
-    if (!scroll) return;
-    var lastTop = scroll.scrollTop;
-    scroll.addEventListener('scroll', function () {
-      if (!padOpen) {
-        lastTop = scroll.scrollTop;
-        return;
-      }
-      // Only clamp when scrolling up (stack rising) - don't undo Dimensions-under-steps pin
-      if (scroll.scrollTop > lastTop) clampWasteScroll();
-      lastTop = scroll.scrollTop;
-    }, { passive: true });
-  })();
-
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault();
-    deferredInstall = e;
-    try {
-      if (sessionStorage.getItem('slabset-v13-install-dismiss')) return;
-    } catch (err) {}
-    var ban = document.getElementById('installBanner');
-    if (ban) ban.hidden = false;
-  });
+  renderKeypad();
+  renderAll();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(function () {});
-  }
-
-  function applyShapeFromUrl() {
-    try {
-      var params = new URLSearchParams(window.location.search);
-      var shape = params.get('shape');
-      if (shape && SHAPES[shape] && shape !== st.shape) {
-        parkShapeVals(st.shape);
-        st.shape = shape;
-        adoptShapeVals(shape);
-        st.step = 'measure';
-        saveDraft();
-      }
-    } catch (e) {}
-  }
-
-  loadDraft();
-  applyShapeFromUrl();
-  loadJobName();
-  syncThemeBtn();
-  render();
-  if (st.step === 'results' && !isDesktop()) {
-    var bootBody = document.querySelector('.summary-sheet__body');
-    if (bootBody) bootBody.scrollTop = 0;
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
   }
 })();

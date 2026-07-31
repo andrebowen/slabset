@@ -5,24 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SlabSet - Concrete calculator</title>
 <meta name="description" content="Work out concrete volume and what to order - bags or truck. AU metric.">
-<meta name="theme-color" content="#121212">
+<meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SlabSet">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="canonical" href="https://slabset.online/">
 <script>
+// Theme before first paint, or the light shell flashes over a dark preference.
 (function () {
   try {
     var t = localStorage.getItem('slabset-theme');
     if (t !== 'light' && t !== 'dark') {
-      t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     document.documentElement.setAttribute('data-theme', t);
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'light' ? '#f4f4f5' : '#121212');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#1c1c1e' : '#f2f2f7');
   } catch (e) {
-    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('data-theme', 'light');
   }
 })();
 </script>
@@ -44,253 +45,81 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PPKFHXV1DS');</script>
 </head>
 <body>
-<div class="stage">
-  <div class="phone" id="app">
-    <div class="phone__notch" aria-hidden="true"></div>
-    <div class="phone__status" aria-hidden="true">
-      <span>9:41</span>
-      <span class="phone__status-icons">●●●</span>
+
+<!-- Tabler outline icons, inlined: the app must work offline from the home screen. -->
+<svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol></svg>
+
+<div class="shell">
+
+  <header class="header">
+    <h1 class="title">
+      <img class="title-logo" src="shared/logo.svg" alt="" width="20" height="20">
+      <b>SlabSet</b> Concrete Pro
+    </h1>
+    <button type="button" class="theme-toggle" id="btnTheme" aria-label="Switch to dark theme" aria-pressed="false">
+      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+      </svg>
+      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
+        <path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Shape and volume merged into one pinned bar (wireframe variant 3a). Never scrolls -
+       you are typing with the keypad over the bottom third of the screen, and the number
+       this app exists to produce must not be in the scrolling middle. -->
+  <div class="vbar">
+    <div class="shape-pulldown-inline">
+      <svg class="ti vbar-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      <span id="shape-current">Slab</span>
+      <select id="shape-select" aria-label="Shape"></select>
     </div>
-
-    <header class="mast">
-      <div class="mast__brand">
-        <svg class="slogo" width="34" height="34" viewBox="0 0 88 88" aria-hidden="true">
-          <rect class="slogo-bg" x="0" y="0" width="88" height="88" rx="14"/>
-          <polygon class="slogo-s" points="12,26 64,26 76,14 24,14"/>
-          <polygon class="slogo-s" points="12,50 64,50 76,38 24,38"/>
-          <polygon class="slogo-s" points="12,74 64,74 76,62 24,62"/>
-          <polygon class="slogo-s" points="12,26 24,14 24,38 12,50"/>
-          <polygon class="slogo-s" points="64,50 76,38 76,62 64,74"/>
-        </svg>
-        <div class="mast__text">
-          <div class="mast__name">SlabSet</div>
-        </div>
-      </div>
-      <button type="button" class="theme-toggle" id="btnTheme" aria-label="Switch to light theme" aria-pressed="false">
-        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
-        </svg>
-        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
-          <path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-        </svg>
-      </button>
-    </header>
-
-    <div class="install" id="installBanner" hidden>
-      <p>Install SlabSet for quick access on site.</p>
-      <button type="button" class="install__go" id="btnInstall">Install</button>
-      <button type="button" class="install__dismiss" id="btnInstallDismiss" aria-label="Dismiss">×</button>
-    </div>
-
-    <div class="vol-head" id="volHead">
-      <div class="card card--vol" id="dockLive" aria-live="polite">
-        <div class="dock-live__stack" data-dock-stack></div>
-      </div>
-      <div class="vol-waste" id="dockWaste" hidden>
-        <div class="waste-dd is-open" id="wasteDd">
-          <div class="waste-dd__menu" id="wasteMenu" aria-hidden="false">
-            <div class="waste waste--menu" role="listbox" aria-label="Waste factor">
-              <button type="button" class="waste__btn" data-waste="0" aria-pressed="false">0%</button>
-              <button type="button" class="waste__btn" data-waste="5" aria-pressed="false">5%</button>
-              <button type="button" class="waste__btn is-on" data-waste="10" aria-pressed="true">10%</button>
-              <button type="button" class="waste__btn" data-waste="15" aria-pressed="false">15%</button>
-              <button type="button" class="waste__btn" data-waste="20" aria-pressed="false">20%</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <button type="button" class="btn-calc" id="btnCalc" hidden>See summary →</button>
-    </div>
-
-    <div class="measure-stage">
-      <div class="vol-shape" id="dockShape" hidden>
-        <div class="shape-dd is-open" id="shapeDd">
-          <div class="shape-dd__menu" id="shapeMenu" aria-hidden="false">
-            <div class="shape-more-list" role="listbox" aria-label="Shapes" id="shapeMoreList">
-              <button type="button" class="shape shape--row" role="option" data-shape="slab">
-                <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
-                <span>Slab / Pad</span>
-              </button>
-              <button type="button" class="shape shape--row" role="option" data-shape="footing">
-                <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18v14H3V5zm4 4h10v6H7V9z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
-                <span>Strip footing</span>
-              </button>
-              <button type="button" class="shape shape--row" role="option" data-shape="pierfooting">
-                <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="7" y="4" width="10" height="16" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
-                <span>Pier footing</span>
-              </button>
-              <button type="button" class="shape shape--row" role="option" data-shape="column">
-                <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="18" rx="1" stroke="currentColor" stroke-width="1.75"/></svg>
-                <span>Column</span>
-              </button>
-              <button type="button" class="shape shape--row" role="option" data-shape="stairs">
-                <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20v-4h6v-4h6v-4h6" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M4 20h18M22 20V8" stroke="currentColor" stroke-width="1.75" stroke-linecap="square"/></svg>
-                <span>Stairs</span>
-              </button>
-              <button type="button" class="shape shape--row" role="option" data-shape="gutter">
-                <svg class="shape__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h6v8h12v4H3z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
-                <span>Gutter / Kerb</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    <main class="scroll scroll--minimal">
-      <section class="panel panel--measure" id="panelMeasure">
-        <div id="fields" hidden></div>
-        <label class="field" for="qtyInput" id="qtyField" data-key="qty" hidden>
-          <span class="field__lab">Quantity</span>
-          <input class="field__input" id="qtyInput" type="text" inputmode="numeric" enterkeyhint="done" autocomplete="off" spellcheck="false" value="1" aria-label="Quantity">
-          <span class="field__unit">×</span>
-        </label>
-      </section>
-    </main>
-
-    <div class="diagram-sheet" id="diagramSheet" hidden>
-      <button type="button" class="diagram-sheet__scrim" id="diagramScrim" aria-label="Close diagram"></button>
-      <section class="diagram-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="diagramTitle">
-        <div class="diagram-sheet__grab" aria-hidden="true"></div>
-        <header class="diagram-sheet__head">
-          <h2 class="diagram-sheet__title" id="diagramTitle">Dimensions</h2>
-          <button type="button" class="diagram-sheet__x" id="diagramClose" aria-label="Close diagram">×</button>
-        </header>
-        <div class="diagram-sheet__body">
-          <div class="diagram-sheet__art">
-            <img class="diagram-sheet__img" id="diagramImg" alt="" width="320" height="240">
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <footer class="dock dock--context" id="dockMeasure" data-dock-mode="pad">
-      <div class="dock-pane dock-pane--pad" id="dockPad">
-        <div class="keypad keypad--4" id="keypad" role="group" aria-label="Number pad">
-          <button type="button" data-k="1">1</button>
-          <button type="button" data-k="2">2</button>
-          <button type="button" data-k="3">3</button>
-          <button type="button" class="keypad__del" data-k="del" aria-label="Delete">⌫</button>
-          <button type="button" data-k="4">4</button>
-          <button type="button" data-k="5">5</button>
-          <button type="button" data-k="6">6</button>
-          <button type="button" class="keypad__next" data-k="done">Next</button>
-          <button type="button" data-k="7">7</button>
-          <button type="button" data-k="8">8</button>
-          <button type="button" data-k="9">9</button>
-          <button type="button" data-k=".">.</button>
-          <button type="button" data-k="0">0</button>
-        </div>
-      </div>
-
-    </footer>
-    </div>
-    <div class="summary-sheet" id="summarySheet" hidden>
-      <button type="button" class="summary-sheet__scrim" id="summaryScrim" aria-label="Close summary"></button>
-      <section class="summary-sheet__panel panel" id="panelResults" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
-        <div class="summary-sheet__grab" aria-hidden="true"></div>
-        <header class="summary-sheet__head">
-          <button type="button" class="summary-sheet__back" id="btnEdit" aria-label="Back to measurements">
-            <span aria-hidden="true">‹</span>
-            <span class="summary-sheet__back-lab">Edit</span>
-          </button>
-          <h2 class="summary-sheet__title" id="summaryTitle">Summary</h2>
-        </header>
-
-        <div class="summary-sheet__body">
-          <div class="block block--order">
-            <div class="card card--rec" id="recCard" data-tone="bags" aria-label="Order options">
-              <div class="rec__choices" id="recBody"></div>
-              <p class="rec__why" data-rec-why></p>
-            </div>
-          </div>
-
-          <div class="block block--job">
-            <div class="card card--spec" aria-label="Job summary">
-              <label class="job job--lead" for="jobName">
-                <span class="job__lab">Job name</span>
-                <span class="job__field">
-                  <input class="job__input" id="jobName" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Optional">
-                  <button type="button" class="job__clear" id="btnJobClear" aria-label="Clear job name" hidden>×</button>
-                </span>
-              </label>
-              <div class="spec" id="specSheet"></div>
-            </div>
-          </div>
-
-          <div class="spec-actions spec-actions--checkout" role="group" aria-label="Share job summary">
-            <button type="button" class="btn-copy" id="btnCopy">
-              <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.75"/></svg>
-              Copy
-            </button>
-            <button type="button" class="btn-share" id="btnShare">
-              <svg class="btn__ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
-              Share
-            </button>
-          </div>
-
-          <section class="help help--checkout" aria-label="Help and links">
-            <p class="help__fine">Estimates only. Not a supplier quote. Confirm with your supplier.</p>
-
-            <details class="help__more">
-              <summary class="help__lab">Help &amp; links</summary>
-
-              <section class="help__sec" aria-label="Frequently asked questions">
-                <h3 class="help__h">FAQ</h3>
-                <div class="faq-list">
-                  <article class="faq-item">
-                    <h4>How do I work out how much concrete I need?</h4>
-                    <p>Pick your shape, then measure it in metres (millimetres for thickness, depth or diameter) and SlabSet multiplies it out to cubic metres, wastage included.</p>
-                  </article>
-                  <article class="faq-item">
-                    <h4>How much wastage should I add?</h4>
-                    <p>10% is a normal starting point. Use less for tidy formwork and more for rough ground, uneven excavation or over-dig.</p>
-                  </article>
-                  <article class="faq-item">
-                    <h4>Should I order bags or ready-mix?</h4>
-                    <p>Use bags for fence posts, small footings, letterbox bases, and repairs under 0.5&nbsp;m³. Use ready-mix for slabs, driveways, footpaths, and any pour over 0.5&nbsp;m³. Ready-mix is typically 3–4× cheaper per cubic metre, so the crossover is around 0.5&nbsp;m³. Most ready-mix suppliers have a minimum of 0.2–0.5&nbsp;m³, with a small-load surcharge under 1&nbsp;m³.</p>
-                  </article>
-                  <article class="faq-item">
-                    <h4>Does this replace a builder or engineer?</h4>
-                    <p>No. Use SlabSet for estimating, then confirm quantities, grade and reinforcement before ordering.</p>
-                  </article>
-                </div>
-              </section>
-
-              <section class="help__sec" aria-label="About">
-                <h3 class="help__h">About</h3>
-                <p>SlabSet is a metric concrete calculator built for Australian sites. Pick a shape (slab, strip footing, pier footing, column, stairs or gutter/kerb), enter your measurements, and get volume in m³, bag counts and a ready-mix order size - ready to copy to your supplier.</p>
-                <p>Everything runs in your browser. No sign-up, no ads between you and the number. Install it to your phone home screen and it works offline on site.</p>
-              </section>
-
-              <section class="help__sec" aria-label="Other calculators">
-                <h3 class="help__h">Other calculators</h3>
-                <nav class="help__links">
-                  <a href="?shape=slab">Concrete slab calculator</a>
-                  <a href="?shape=footing">Strip footing calculator</a>
-                  <a href="?shape=pierfooting">Pier footing calculator</a>
-                  <a href="?shape=column">Concrete column and pier calculator</a>
-                  <a href="?shape=stairs">Concrete stairs calculator</a>
-                  <a href="concrete-gutter-calculator.html">Gutter and kerb calculator</a>
-                </nav>
-              </section>
-            </details>
-
-            <p class="help__foot">
-              SlabSet Metric Concrete Calculator · Made for Australia ·
-              <a href="terms.html">Terms</a> ·
-              <a href="privacy.html">Privacy</a> ·
-              <a href="mailto:slabset@icloud.com">Contact</a>
-            </p>
-          </section>
-        </div>
-      </section>
-    </div>
-
-    <div class="phone__home" aria-hidden="true"></div>
+    <span class="vbar-value" id="volume-val">0.000 m³</span>
   </div>
+
+  <div id="scroll-area">
+
+    <!-- Diagram is inlined SVG, not an <img>, so the focused dimension can light up -
+         carried over from v17. Only the surrounding chrome (plain white face, no card)
+         matches the new wireframe. -->
+    <div class="diagram-area">
+      <div id="diagram" role="img" aria-label="Slab / Pad dimension diagram"></div>
+    </div>
+
+    <!-- Dimension fields plus wastage, rendered from the active shape. Wastage is now a
+         typed field like the others - the wireframe shows it as a plain value + "%" row,
+         not a preset pull-down. -->
+    <div id="fields"></div>
+
+    <div class="order-block" aria-label="Order">
+      <div class="section-label">What to order</div>
+      <div id="options" aria-live="polite"></div>
+    </div>
+
+    <p class="check-strip" id="check-strip" hidden></p>
+    <p class="toast" id="toast" hidden></p>
+
+    <div class="share-actions">
+      <button type="button" class="spec-btn" id="btnCopy"><span id="copyLabel">Copy</span></button>
+      <button type="button" class="spec-btn spec-btn--primary" id="btnShare"><span id="shareLabel">Share</span></button>
+    </div>
+
+    <footer class="foot">
+      <p class="foot-links">
+        <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+      </p>
+    </footer>
+
+  </div>
+
+  <div class="keypad-wrap" id="keypad-wrap">
+    <div id="keypad"></div>
+  </div>
+
 </div>
 
-<p class="toast" id="toast" hidden role="status"></p>
 <script src="shared/app.js"></script>
 </body>
 </html>

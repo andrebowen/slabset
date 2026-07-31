@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-129.14 -82.46 376.60 161.96" aria-hidden="true">
+  <title>Slab / Pad - oblique dimensions</title>
+<path d="M 0.00 0.00 L 200.00 0.00 L 225.46 -25.46 L 25.46 -25.46 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 200.00 0.00 L 200.00 22.50 L 225.46 -2.96 L 225.46 -25.46 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 0.00 0.00 L 200.00 0.00 L 200.00 22.50 L 0.00 22.50 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="dim">
+<line x1="25.46" y1="-31.31" x2="25.46" y2="-38.46" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="225.46" y1="-31.31" x2="225.46" y2="-38.46" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="25.46" y1="-38.46" x2="225.46" y2="-38.46" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="25.46" y1="-41.96" x2="25.46" y2="-34.96" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="225.46" y1="-41.96" x2="225.46" y2="-34.96" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="125.46" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-50.46">Length</text>
+</g>
+<g class="dim">
+<line x1="-6.75" y1="0.00" x2="-15.00" y2="0.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-6.75" y1="22.50" x2="-15.00" y2="22.50" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-15.00" y1="0.00" x2="-15.00" y2="22.50" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-18.50" y1="0.00" x2="-11.50" y2="0.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="-18.50" y1="22.50" x2="-11.50" y2="22.50" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-58.00" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="11.25">Thickness</text>
+</g>
+<g class="dim">
+<line x1="-6.75" y1="0.00" x2="-15.00" y2="0.00" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="18.71" y1="-25.46" x2="10.46" y2="-25.46" stroke="#18181b" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+<line x1="-15.00" y1="0.00" x2="10.46" y2="-25.46" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="-18.50" y1="0.00" x2="-11.50" y2="0.00" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="6.96" y1="-25.46" x2="13.96" y2="-25.46" stroke="#18181b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="-34.27" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#18181b" y="-12.73">Width</text>
+</g>
+</svg>
