@@ -126,6 +126,12 @@
     try { if (navigator.vibrate) navigator.vibrate(ms || 8); } catch (e) {}
   }
 
+  // GA4 only loads on index.html (see EVENTS.md) - guarded so this silently no-ops
+  // anywhere else app.js runs, same pattern as tick() above.
+  function track(name, params) {
+    try { if (typeof gtag === 'function') gtag('event', name, params || {}); } catch (e) {}
+  }
+
   function todayISO() {
     var d = new Date();
     // Local date, not toISOString - that shifts to UTC and can land yesterday in AEST.
@@ -428,10 +434,18 @@
 
   function renderResults() {
     var complete = isComplete();
-    if (complete && !didCompletePulse) { tick(12); didCompletePulse = true; }
-    else if (!complete) { didCompletePulse = false; }
     var withWaste = complete ? orderVolume() : 0;
     var rec = complete ? getRec(withWaste) : null;
+    if (complete && !didCompletePulse) {
+      tick(12);
+      didCompletePulse = true;
+      track('calc_complete', {
+        shape: state.shape,
+        volume_m3: Math.round(withWaste * 1000) / 1000,
+        waste_pct: parseFloat(vals.wastage) || 0,
+        recommended: rec === 'ready' ? 'ready-mix' : (rec === 'bags' ? 'bags' : 'undecided')
+      });
+    } else if (!complete) { didCompletePulse = false; }
 
     var volEl = document.getElementById('volume-val');
     volEl.textContent = withCommas((complete ? withWaste : 0).toFixed(2)) + ' m³';
@@ -741,6 +755,16 @@
     return lines.join('\n');
   }
 
+  function specTrackParams() {
+    var withWaste = orderVolume();
+    var rec = orderPrimary(withWaste);
+    return {
+      shape: state.shape,
+      volume_m3: Math.round(withWaste * 1000) / 1000,
+      recommended: rec === 'ready' ? 'ready-mix' : 'bags'
+    };
+  }
+
   function flashLabel(id, word) {
     var el = document.getElementById(id);
     if (el.dataset.was === undefined) { el.dataset.was = el.textContent; }
@@ -773,6 +797,7 @@
     didCompletePulse = false;           // a fresh shape has its own "first complete" moment
     showKeypad(true);
     renderAll(); saveDraft();
+    track('shape_select', { shape: state.shape });
   });
 
   // Sending is the moment everything gets judged - otherwise a bad value in the field you
@@ -793,6 +818,7 @@
         btn.classList.add('is-confirmed');
         clearTimeout(btn._t);
         btn._t = setTimeout(function () { btn.classList.remove('is-confirmed'); }, 1600);
+        track('spec_copy', specTrackParams());
       }, function () {});
     }
   });
@@ -801,13 +827,18 @@
     if (this.disabled) return;
     settleAndRender();
     var text = specText();
+    var params = specTrackParams();
     if (navigator.share) {
-      navigator.share({ title: 'SlabSet spec sheet', text: text }).catch(function () {});
+      navigator.share({ title: 'SlabSet spec sheet', text: text }).then(function () {
+        track('spec_share', params);
+      }).catch(function () {});
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
       // no share target on desktop - copying is the honest fallback
       navigator.clipboard.writeText(text).then(function () {
         flashLabel('shareLabel', 'Copied');
         showToast('Spec copied to clipboard');
+        params.method = 'copy_fallback';
+        track('spec_share', params);
       }, function () {});
     }
   });

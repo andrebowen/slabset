@@ -7,4 +7,8 @@ which matches `app-v18/sw.js`. Promoted from v15 (`v15-preview-33`) on Andre's s
 bumped to `-preview-2` on this deploy to bust caches for the session's fixes (Quantity
 field, diagram centring/sizing, warning copy, badge colour, scroll-area overflow-x).
 
+Bumped to `-preview-3` on 2026-08-01: GA4 event instrumentation added (`shape_select`,
+`calc_complete`, `spec_copy`, `spec_share` in `shared/app.js`, per `EVENTS.md`'s
+analytics notes) - previously only the default `page_view` fired. No UI change.
+
 **This is the live tree.** Edit here only for hotfixes, and bump `sw.js` VERSION when you do.
