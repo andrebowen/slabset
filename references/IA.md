@@ -91,16 +91,15 @@ and the screen is not a taxonomy. What matters is that it changes the volume exa
 the rows above it.
 
 It is a **preset pull-down**, not a typed keypad field — that was tried first and dropped.
-Five presets, each option's label naming its own site condition inline instead of a
+Four presets, each option's label naming its own site condition inline instead of a
 separate note underneath:
 
 | value | option label |
 |-------|------|
-| 0% | 0% — No wastage |
-| 5% | 5% — Smooth, flat site |
-| 10% | 10% — Recommended |
-| 15% | 15% — Uneven ground |
-| 20% | 20% — Rough ground |
+| 0% | 0% — No allowance for wastage |
+| 5% | 5% — Smooth site and formwork |
+| 10% | 10% — Recommended for standard site |
+| 15% | 15% — Rough ground |
 
 10% is the trade default, so it is the one told it is fine; everything else is placed
 relative to it. A pull-down can't be mistyped into an implausible value the way a keypad

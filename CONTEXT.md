@@ -86,10 +86,11 @@ draft/persistence model changed - this is a container-styling pass, not a new IA
    nothing goes out unflagged.
 10. **Wastage is the last row of the Dimensions card, and it is a preset pull-down, not a
    keypad field.** It is not in the pinned bar — that is the answer, not a control surface
-   — but it does belong with the fields: it changes the volume like they do. Five presets
-   (0/5/10/15/20%), each option's label naming its own site condition inline
-   (`10% — Recommended`, `20% — Rough ground`), so the number means something without a
-   separate note line. It was briefly a typed keypad field with a note underneath; a fixed
+   — but it does belong with the fields: it changes the volume like they do. Four presets
+   (0/5/10/15%), each option's label naming its own site condition inline
+   (`10% — Recommended for standard site`, `15% — Rough ground`), so the
+   number means something without a separate note line. It was briefly a typed keypad
+   field with a note underneath; a fixed
    preset list reads faster and can't be mistyped into something implausible.
    `Next` does not reach it — a pull-down isn't keypad-editable, so the advance key stops
    at the shape's last dimension.
@@ -163,8 +164,8 @@ Measured on a 390×844 viewport, cold `localStorage`:
 - Order headlines stay one line at 390px with the badge beside them, up to `or 132.0 m³ of
   Ready-mix`. They are 20px, not 22px: at 22px, two-digit volumes wrapped.
 - Wastage sits as row 4 of the Dimensions card, divided from Thickness by the same
-  hairline as every other row: a preset pull-down (0/5/10/15/20%), each option labelled
-  with its site condition inline (`10% — Recommended`).
+  hairline as every other row: a preset pull-down (0/5/10/15%), each option labelled
+  with its site condition inline (`10% — Recommended for standard site`).
 - Stairs 3 / 180 / 280 / 1000, base slab empty → `0.302 m³` at 0% wastage; Share enabled.
 - Unit toggle m ⇄ mm round-trips with the volume unmoved (one click = one toggle).
 - Keypad is a 4-col layout: a 3-col digit grid plus a full-height `Next` in the 4th

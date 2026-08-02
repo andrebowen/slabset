@@ -106,9 +106,14 @@
   // rather than another keypad-editable field - carried over from v17. Each preset
   // carries a two-to-three word site condition so the number means something without a
   // trade background to read it.
-  var WASTE_OPTS = [0, 5, 10, 15, 20];
+  var WASTE_OPTS = [0, 5, 10, 15];
   var WASTE_DEFAULT = 10;
-  var WASTE_NOTES = { 0: 'No wastage', 5: 'Smooth, flat site', 10: 'Recommended', 15: 'Uneven ground', 20: 'Rough ground' };
+  var WASTE_NOTES = {
+    0: 'No allowance for wastage',
+    5: 'Smooth site and formwork',
+    10: 'Recommended for standard site',
+    15: 'Rough ground'
+  };
 
   var state = {
     shape: 'slab',
@@ -345,15 +350,16 @@
   // Last row of the same list: it changes the volume like the rows above it. A fixed
   // preset list, not a typed value, so it is a pull-down like Shape rather than another
   // keypad-editable field - carried over from v17.
-  // Two boxes, same width/gap as field-val + unit-badge above, so "10%" and the chevron
-  // land on the exact same verticals as the dimension value and its unit badge.
+  // One button, same total width as field-val + gap + unit-badge above, so it lands on
+  // the exact same verticals as the dimension value and its unit badge - merged from two
+  // separate boxes into one 2026-08-02.
   function wastageRow() {
     return '<div class="field-row" data-row="wastage">' +
       '<div class="field-line">' +
         '<span class="field-label">Wastage</span>' +
         '<div class="wastage-pulldown">' +
-          '<div class="wastage-value-box"><span id="wastage-current"></span></div>' +
-          '<div class="wastage-chevron-box"><svg class="ti" aria-hidden="true"><use href="#i-chevron-down"/></svg></div>' +
+          '<span id="wastage-current"></span>' +
+          '<svg class="ti wastage-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
           '<select id="wastage-select" aria-label="Wastage"></select>' +
         '</div>' +
       '</div>' +
@@ -366,10 +372,10 @@
       var label = p + '% — ' + WASTE_NOTES[p];
       return '<option value="' + p + '"' + (String(p) === vals.wastage ? ' selected' : '') + '>' + label + '</option>';
     }).join('');
-    document.getElementById('wastage-current').textContent = vals.wastage + '%';
+    document.getElementById('wastage-current').textContent = '+' + vals.wastage + '%';
     sel.onchange = function () {
       vals.wastage = sel.value;
-      document.getElementById('wastage-current').textContent = vals.wastage + '%';
+      document.getElementById('wastage-current').textContent = '+' + vals.wastage + '%';
       renderResults(); saveDraft();
     };
   }
@@ -742,9 +748,9 @@
       if (!v) return;
       lines.push(f.label + ': ' + v + (f.count ? '' : ' ' + units[f.id]));
     });
-    lines.push('Wastage: +' + (parseFloat(vals.wastage) || 0) + '%');
     lines.push('');
-    lines.push('Order volume: ' + withCommas(withWaste.toFixed(3)) + ' m³');
+    lines.push('Net Volume: ' + withCommas(computeVolume().toFixed(3)) + ' m³');
+    lines.push('Total Volume (incl. +' + (parseFloat(vals.wastage) || 0) + '% Wastage): ' + withCommas(withWaste.toFixed(3)) + ' m³');
     lines.push('');
     lines.push('Order quantity:');
     lines.push(primary);

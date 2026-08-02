@@ -67,23 +67,28 @@
     </button>
   </header>
 
-  <!-- Shape and volume merged into one pinned bar (wireframe variant 3a). Never scrolls -
-       you are typing with the keypad over the bottom third of the screen, and the number
-       this app exists to produce must not be in the scrolling middle. -->
+  <!-- Shape and volume merged into one pinned row - the answer this app exists to
+       produce, plus what it's answering for, in one glance. Never scrolls - you are
+       typing with the keypad over the bottom third of the screen, and the number this
+       app exists to produce must not be in the scrolling middle. -->
   <div class="vbar">
     <div class="shape-pulldown-inline">
       <svg class="ti vbar-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
       <span id="shape-current">Slab</span>
       <select id="shape-select" aria-label="Shape"></select>
     </div>
-    <span class="vbar-value" id="volume-val">0.000 m³</span>
+    <div class="vbar-value-group">
+      <span class="vbar-eyebrow">Total Volume</span>
+      <span class="vbar-value" id="volume-val">0.000 m³</span>
+    </div>
   </div>
 
   <div id="scroll-area">
 
     <!-- Diagram is inlined SVG, not an <img>, so the focused dimension can light up -
          carried over from v17. Only the surrounding chrome (plain white face, no card)
-         matches the new wireframe. -->
+         matches the new wireframe. Unpinned again 2026-08-01 - back to scrolling with
+         the rest of the stack, see LIVE.md. -->
     <div class="diagram-area">
       <div id="diagram" role="img" aria-label="Slab / Pad dimension diagram"></div>
     </div>
