@@ -126,4 +126,14 @@ chevron right via `justify-content: space-between`). Same total width, so it sti
 lines up with `field-val` + `unit-badge` above - just one border instead of two boxes
 sitting side by side.
 
+Bumped to `-preview-22` on 2026-08-03: SEO copy rewritten. `<meta name="description">`,
+`og:description`, `twitter:description` and `manifest.webmanifest`'s `description` all
+changed from "Work out concrete volume and what to order - bags or truck. AU metric." to
+"Concrete calculator made for Australia. Professional-grade, metric only field tool for
+working out bags or ready-mix on site." - works in five target phrases (concrete
+calculator, made for Australia, professional-grade, metric only, field tool). `<title>`,
+`og:title` and `twitter:title` left unchanged. No visible on-page copy added - kept to
+`<head>`/manifest metadata only, since this app's whole design history has been about
+protecting screen space, not spending it on a tagline.
+
 **This is the live tree.** Edit here only for hotfixes, and bump `sw.js` VERSION when you do.
