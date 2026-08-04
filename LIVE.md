@@ -1,16 +1,20 @@
 # Live version
 
-**Not live.** Live on slabset.online is still **V18** (`v18-preview-21`) - see
-`app-v18/LIVE.md` for that history. This copy is a fork of `app-v19`, forked 2026-08-05
-at Andre's request for an unconstrained "make it a 10/10" pass (ten self-directed rounds
-of critique-and-fix - see `CONTEXT.md`'s "Delta from v19").
+**This is the live tree.** Promoted to slabset.online 2026-08-05, confirmed via
+`curl -s https://slabset.online/sw.js` serving `v20-preview-1`. Forked from `app-v19`
+the same day for an unconstrained "make it a 10/10" pass (ten self-directed rounds of
+critique-and-fix, Andre's explicit license to override prior decisions - see
+`CONTEXT.md`'s "Delta from v19"), verified with a full Playwright regression (all 6
+shapes × both themes, zero errors/overflow/overlap), then promoted on Andre's go-ahead
+without a prior real-device check - flagged explicitly before promoting, he chose to
+push anyway.
 
-Preview: `python3 dev-server.py` -> `http://127.0.0.1:8833/` (next free port after v19's
-8832).
+Preview: `python3 dev-server.py` -> `http://127.0.0.1:8833/`.
 
-Promote steps when Andre signs off: bump `sw.js` VERSION off `v20-preview-1`, refresh
-`sitemap.xml` lastmod, sync to the deploy repo, update `LIVE.md` here and at the
-deploy-repo root, update `app-v18/LIVE.md` and `app-v19/LIVE.md` to point at v20 as the
-new live tree. Recommend a real-device check first - this round's verification was all
-headless-Chromium (thorough, but not a substitute for actual touch/glare/screen-reader
-testing).
+Promote steps executed: bumped `sitemap.xml` lastmod, rsync-mirrored `app-v20/` into
+`/Users/andrebowen/Documents/GitHub/slabset` (excluding `.git`/`.gitignore`/`.nojekyll`,
+`--delete` so the mirror is exact - this also cleaned out a stray `Design/app-v18/`
+folder that had been sitting in the deploy repo unrelated to any deploy), committed,
+pushed to `origin/main`, verified live `sw.js` serves `v20-preview-1`.
+
+**Edit here only for hotfixes, and bump `sw.js` VERSION when you do.**
