@@ -1,8 +1,11 @@
-/* SlabSet v18 - HIG style: SF Pro, a 5-size type scale, subtle hairlines in place of
-   the bold-ink wireframe pass. No card containers - fields, diagram and order sit
-   directly on the page background, divided only by hairlines; interactive chips
-   (field values, unit badges, wastage pull-down, bag-size toggle, keys, buttons) keep
-   their soft recessed/filled treatment since those are controls, not content cards. */
+/* SlabSet v19 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
+   site legibility sizing. No card containers - fields, diagram and order sit directly
+   on the page background. Hairlines now bracket groups only (top/bottom of #fields,
+   the pinned bar's lower edge, the keypad's upper edge) rather than sitting between
+   every row - row-to-row separation comes from bold labels, whitespace and (in Order)
+   the colour stripe/badge instead. Interactive chips (field values, unit badges,
+   wastage pull-down, bag-size toggle, keys, buttons) keep their soft recessed/filled
+   treatment since those are controls, not content cards. */
 
 :root {
   --bg: #f2f2f7;
@@ -13,8 +16,12 @@
   --border-strong: #c7c7cc;
   --border-accent: #8e8e93;
   --text-primary: #1c1c1e;
-  --text-secondary: #8e8e93;
-  --text-muted: #aeaeb2;
+  --text-secondary: #636366;
+  /* v20: darkened from #79797d - measured 3.89:1/4.34:1 (bg/card), which fails WCAG AA
+     (4.5:1) at every size this token is actually used at (11-17px, none large/bold
+     enough to qualify for the reduced 3:1 threshold). #6c6c70 clears 4.5:1 against
+     both --bg and --surface-1. */
+  --text-muted: #6c6c70;
   --text-accent: #3a3a3c;
   --bg-accent: #e8e8ed;
   --caution: #8a6100;
@@ -22,29 +29,42 @@
   --radius: 10px;
   --radius-sm: 8px;
   /* The one deliberate colour in an otherwise greyscale app - iOS system blue, used only
-     to mark which dimension in the diagram is currently being edited. */
+     for the diagram highlight and the focused-field ring (the same "you're editing
+     this" signal, fired at the same moment). Both are graphical, not text, so WCAG's
+     3:1 non-text threshold applies and #007aff clears it (4.02:1). v20 tried reusing it
+     for the "Recommended" label too (as a text colour, needing a separate darker
+     --diagram-accent-text variant to clear 4.5:1) - reverted; see .order-row-recommended
+     for why sharing this colour with an unrelated meaning was the wrong call. */
   --diagram-accent: #007aff;
 
-  /* HIG type scale - exactly 5 sizes, SF Pro's own steps (Caption 1 / Footnote / Body /
-     Title 3 / Title 1). 17px Body, not 16px, is the deliberate HIG tell. */
-  --text-xs: 0.6875rem;  /* 11px - Caption 1: unit badges, captions, tiny row labels */
-  --text-s:  0.875rem;   /* 14px - Footnote: section labels, row names, why-lines */
-  --text-m:  1.0625rem;  /* 17px - Body: field values, buttons, keypad */
-  --text-l:  1.25rem;    /* 20px - Title 3: shape name */
-  --text-xl: 1.75rem;    /* 28px - Title 1: the volume hero */
+  /* Job-site type scale - v18's HIG steps carried over, each bumped ~35-45% for
+     outdoor legibility (direct sun, arm's-length, one glance while holding a tape).
+     Same 5 roles as v18, just no longer tuned for a handheld indoor screen.
+     --text-xxs is v19-only, added for the caption-weight labels (Recommended badge,
+     Total Volume eyebrow, section labels) that read better small even at job-site
+     scale - everything else on the page grew, these didn't need to. */
+  --text-xxs: 0.6875rem; /* 11px - the smallest step, caption/badge only */
+  --text-xs: 0.875rem;   /* 14px - Caption 1: unit badges, tiny row labels */
+  --text-s:  1.0625rem;  /* 17px - Footnote: section labels, row names, why-lines */
+  --text-m:  1.25rem;    /* 20px - Body: field values, buttons, keypad */
+  --text-l:  1.625rem;   /* 26px - Title 3: shape name, volume hero (Andre downsized the
+                             hero from --text-xl to this step) */
 }
 
 [data-theme="dark"] {
-  --bg: #1c1c1e;
+  --bg: #000000;
   --surface-1: #2c2c2e;
-  --surface-2: #1c1c1e;
+  --surface-2: #000000;   /* matches --bg, same relationship as light mode - keeps the
+                              header/page seamless rather than reading as a grey bar
+                              floating on a black page */
   --surface-3: #3a3a3c;
   --border: #38383a;
   --border-strong: #48484a;
   --border-accent: #8e8e93;
   --text-primary: #f2f2f7;
   --text-secondary: #98989f;
-  --text-muted: #7c7c80;
+  /* v20: lightened from #7c7c80 - same AA-contrast fix as light mode, see :root. */
+  --text-muted: #939396;
   --text-accent: #e5e5ea;
   --bg-accent: #000000;
   --caution: #f5c451;
@@ -71,6 +91,20 @@
 }
 
 html { height: 100%; }
+
+/* v20: smooths the light/dark switch, which previously flipped every colour on the
+   page instantly (background, text, borders, focus rings all snapped at once - the
+   most jarring single interaction in the app). 0.15s is short enough to still feel
+   immediate on tap, not laggy. Elements with their own more specific transition
+   (.key, .diagram-svg's highlight, .keypad-wrap's slide) override this per-property,
+   not fight it - a later, more specific rule replaces the whole `transition` list for
+   that element rather than merging with it. */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none; }
+}
 
 body {
   /* -apple-system / BlinkMacSystemFont resolve to SF Pro on every Apple platform - the
@@ -120,14 +154,15 @@ body {
   }
 }
 
-/* Header - a plain nav bar: mark + wordmark leading, theme toggle trailing. No chrome
-   on the trailing icon beyond a soft fill, matching how iOS nav bars actually render. */
+/* Header - a plain nav bar: wordmark leading, theme toggle trailing. No chrome
+   on the trailing icon beyond a soft fill, matching how iOS nav bars actually render.
+   Logo mark removed, title back to plain left-aligned flow (was briefly centred via
+   absolute positioning while the logo sat separately at the leading edge). */
 .header {
   flex-shrink: 0;
   padding: 10px 14px;
   padding-top: calc(10px + env(safe-area-inset-top));
   background: var(--surface-2);
-  border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -135,24 +170,25 @@ body {
 }
 
 .title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-m);
+  font-size: 1.0625rem;   /* 17px - literal, deliberately off scale (v18's old --text-m) */
   font-weight: 400;
   color: var(--text-secondary);
   letter-spacing: -0.01em;
 }
 .title b { font-weight: 700; color: var(--text-primary); }
-.title-logo { width: 20px; height: 20px; flex: none; display: block; }
 
+/* Back to a single icon that swaps per theme (moon shown in light mode, sun in dark -
+   i.e. it shows what tapping it switches TO), not the dual-icon diagonal-split design.
+   Square now, not circular - was 36px + border-radius:50%; kept the 44px HIG tap-target
+   size from the diagonal-split version, just dropped the circle for the app's usual
+   squircle radius. */
 .theme-toggle {
   appearance: none;
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   background: var(--surface-3);
   color: var(--text-primary);
   display: inline-flex;
@@ -162,37 +198,49 @@ body {
   padding: 0;
 }
 .theme-toggle:focus-visible { outline: 2px solid var(--border-accent); outline-offset: 1px; }
-.theme-toggle svg { width: 16px; height: 16px; display: block; }
+.theme-toggle svg { width: 18px; height: 18px; display: block; }
 .theme-toggle .ico-sun { display: none; }
 .theme-toggle .ico-moon { display: block; }
 [data-theme="dark"] .theme-toggle .ico-sun { display: block; }
 [data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 
-/* ── Pinned shape + volume bar ────────────────────────────────────────────────
-   Never scrolls. Shape and volume merged into one row - the answer this app exists to
-   produce, plus what it's answering for, in one glance. */
-.vbar {
-  flex-shrink: 0;
-  padding: 12px 16px;
-  background: var(--surface-2);
-  border-bottom: 0.5px solid var(--border);
+/* ── Inputs card ──────────────────────────────────────────────────────────────
+   Shape, Diagram and Dimensions/Wastage grouped into one card (2026-08-04) - the
+   second card in the app alongside .volume-card and .order-block, closing the gap
+   where Volume and Order had a container but the actual input work didn't. Same
+   language as .order-block (--surface-1, --radius, 12px padding); internal gap
+   matches the same 12px used for card-to-card spacing in #scroll-area and before
+   .inputs-card itself (see .volume-card) - one consistent unit throughout. Trimmed
+   from 16px (2026-08-05, vertical-space pass) - the keypad covers roughly a third of
+   the screen while typing, so reclaiming space from padding/gaps directly grows how
+   much of the stack stays visible above it. */
+.inputs-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface-1);
+  border-radius: var(--radius);
+  padding: 12px;
 }
-.shape-pulldown-inline {
+
+/* ── Shape heading ────────────────────────────────────────────────────────────
+   v19, Andre's explicit sketch: was the pinned bar's left half (shape-pulldown-inline);
+   now a plain heading, first thing in the inputs card. Still the real shape switcher -
+   the invisible <select> overlay technique carries over unchanged, only the container
+   and its position moved. */
+.shape-heading {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: var(--text-m);
-  font-weight: 600;
+  font-size: var(--text-m);   /* matches .field-label/.field-val below it, not
+                                 --text-l - Andre's explicit ask */
+  font-weight: 600;   /* matches .field-label's weight too, not just its size */
   color: var(--text-primary);
   cursor: pointer;
 }
-.vbar-chevron { font-size: var(--text-l); line-height: 1; color: var(--text-secondary); }
-.shape-pulldown-inline select {
+.shape-heading-chevron { font-size: var(--text-m); line-height: 1; color: var(--text-secondary); }
+.shape-heading select {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -204,33 +252,77 @@ body {
   cursor: pointer;
   font-size: var(--text-m);   /* 16px+, or iOS zooms the page when the menu opens */
 }
-.vbar-value-group {
+
+/* ── Total Volume card ────────────────────────────────────────────────────────
+   Pinned again - round 2. Went from the pinned chrome bar (v17/v18) to a scrolling
+   row (v19 round 1, Andre's first sketch) to this: pinned, but as a card, matching
+   the language ".order-block" introduced rather than reverting to the old bar look.
+   flex-shrink: 0 keeps it outside #scroll-area's scrolling flex child, same mechanism
+   the old .vbar used. Margin on all sides (not edge-to-edge like the old bar) so the
+   card reads as a floating card against the page background, not another full-width
+   strip - the rounded corners need visible page background around them to register as
+   a card rather than a second header bar. Label reuses .field-label so "Total Volume"
+   matches the weight/size of Length/Width/Thickness/Wastage below it; the value keeps
+   its own oversized treatment. */
+.volume-card {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  /* No bottom margin: #scroll-area's own top padding (12px) alone matches its 12px gap
+     between .inputs-card and .order-block below - one consistent 12px card-to-card
+     rhythm throughout, even though volume-card sits outside #scroll-area (pinned) and
+     can't share its flex `gap` directly. Trimmed from 16px - see .inputs-card's
+     comment for why (reclaiming space from the keypad's ~third-of-screen footprint). */
+  margin: 4px 16px 0;
+  padding: 12px;
+  background: var(--surface-1);
+  border-radius: var(--radius);
 }
-/* Same caption language as .section-label (Shape/Dimensions/etc captions further down
-   the stack), so the eyebrow reads as this app's one recurring label style. */
-.vbar-eyebrow {
-  font-size: var(--text-xs);
+/* "Total Volume" as an eyebrow caption above the figure, not a label beside it -
+   matches the .section-label/order-row-recommended caption language elsewhere in the
+   app (uppercase, letter-spaced, secondary colour) rather than reusing .field-label's
+   row-label treatment, since this isn't a row with a value opposite it anymore. */
+.volume-eyebrow {
+  display: block;
+  font-size: var(--text-xxs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-secondary);
-  line-height: 1.3;
+  margin-bottom: 4px;
 }
-.vbar-value {
-  font-size: var(--text-xl);
+/* Faint, small - a footnote on the headline number, not competing with it. Invisible
+   (not display:none) whenever wastage is 0% or the volume isn't complete yet - the
+   line-height is reserved via min-height at all times, specifically so .volume-card's
+   overall height never changes as this toggles. It's pinned above the scroll area, so
+   a size change here would shift/shake the whole stack below it on every keystroke
+   that crosses the wastage-note's on/off threshold. */
+.volume-waste-note {
+  font-size: var(--text-xxs);
+  line-height: 1.3;
+  min-height: calc(var(--text-xxs) * 1.3);
+  color: var(--text-muted);
+  margin-top: 0;
+}
+.volume-value {
+  font-size: 1.875rem;   /* 30px - deliberately off the shared scale: bigger than
+                             --text-l (26px) so the answer stays visually distinct
+                             from the shape name and the field values above it */
   font-weight: 700;
   letter-spacing: -0.02em;
-  text-align: right;
+  text-align: left;   /* was right, for the old side-by-side row; now stacked under
+                          the eyebrow above, so it matches that alignment instead */
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
 }
 /* Nothing measured yet: placeholder, not a reading. Greyed so it can't be mistaken for an
    answer - v12 shipped a live-looking "0.99 example only" in this slot. */
-.vbar-value.is-empty { color: var(--text-muted); font-weight: 500; }
+.volume-value.is-empty { color: var(--text-muted); font-weight: 500; }
+
+/* "m³" sized down from the number it follows, in the volume hero only (not Order's
+   Ready-mix line, which stays one uniform size). Inherits weight/colour from its
+   parent so it still reads as part of the same number, just at a calmer size. */
+.unit-suffix { font-size: var(--text-s); }
 
 /* Scroll area */
 #scroll-area {
@@ -241,10 +333,10 @@ body {
                                too (per spec), so any touch drag not perfectly vertical
                                could rubber-band the section sideways */
   overscroll-behavior: contain;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -252,7 +344,7 @@ body {
 #scroll-area > * { flex-shrink: 0; }
 
 .section-label {
-  font-size: var(--text-xs);
+  font-size: var(--text-xxs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -261,12 +353,20 @@ body {
 }
 
 /* Diagram - no card, sits directly on the page background. Holds v17's inlined,
-   highlighting SVG, whose own shapes carry their fill (see [fill="#ffffff"] below). */
+   highlighting SVG, whose own shapes carry their fill (see [fill="#ffffff"] below).
+   No fixed height (was 100px, then 76px in the vertical-space pass) - app.js's
+   sizeDiagram() renders shapes up to 120px tall, scaled up further still for
+   pierfooting/column (150px) and stairs (132px), so any fixed box shorter than that
+   let the SVG visually overflow into the field rows below it. min-height only, so the
+   box doesn't collapse to 0 during the brief async gap before a shape's SVG first
+   loads - actual height now always matches whatever the diagram really needs, which
+   also means most shapes (anything wider/flatter than pierfooting/column) take less
+   room than the old fixed box did, not more. */
 .diagram-area {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100px;
+  min-height: 60px;
 }
 .diagram-svg { display: block; }
 .diagram-svg [stroke] { stroke: var(--text-primary); }
@@ -287,83 +387,126 @@ body {
 }
 
 /* Fields - no card, a plain list on the page background. Wastage is the last row.
-   Hairlines bracket the whole list (above Length, below Wastage) as well as sitting
-   between each row. */
-#fields { border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+   No hairlines at all now - not bracketing the group, not between rows. The bold
+   label/value and generous whitespace carry the separating job entirely. */
 .field-row { display: flex; flex-direction: column; }
-.field-row + .field-row { border-top: 0.5px solid var(--border); }
 .field-line {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding: 10px 0;
+  padding: 6px 0;   /* was 8px, vertical-space pass */
+}
+/* Optional-field note ("Base slab" / "Optional") uses the same position: absolute
+   pattern as .order-row-recommended and for the same reason - keeps
+   .field-label-group exactly 1 line tall so .field-line's align-items: center centres
+   it against .field-controls identically whether or not the row is optional, instead
+   of a taller 2-line group on the optional row alone pushing its label up relative to
+   every other row's label. */
+.field-label-group {
+  position: relative;
+  min-width: 0;
 }
 .field-label {
   font-size: var(--text-m);
+  font-weight: 600;
   color: var(--text-primary);
+  display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.field-optional-note {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 2px;
+  white-space: nowrap;
+  font-size: var(--text-xxs);
+  color: var(--text-muted);
+}
 .field-controls { display: flex; gap: 6px; align-items: center; flex: none; }
 
 .field-val {
-  width: 72px;
-  min-height: 34px;
+  width: 96px;
+  min-height: 44px;   /* HIG's stated tap-target minimum - was 42px */
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding: 0 10px;
   font-size: var(--text-m);
-  background: var(--surface-2);
+  font-weight: 600;
+  background: var(--surface-3);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   user-select: none;
 }
 /* Same blue as the diagram's highlighted line, so the focused box and the edge it
-   measures read as one connected thing rather than two separate signals. */
+   measures read as one connected thing rather than two separate signals. Ring, not a
+   solid fill (tried solid+white-text first, but that's HIG's language for a *selected
+   choice* - a picked chip, an active segment - not an *active text input*; a ring lets
+   the value keep its own normal text colour while only the border signals focus). */
 .field-val.focused {
   box-shadow: 0 0 0 2px var(--diagram-accent);
   background: var(--surface-1);
 }
 .field-val.is-empty { color: var(--text-muted); }
 
-/* m ⇄ mm toggle, carried over from v17 - a soft recessed chip, matching the value box
-   beside it. Border restored 2026-08-01, back to something closer to the wireframe's
-   bordered box, on top of the recessed fill rather than instead of it. */
-.unit-badge {
-  width: 34px;
-  min-height: 34px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  display: flex;
+/* m ⇄ mm toggle - native picker, matching .shape-heading/.wastage-pulldown's existing
+   pattern elsewhere in this app: current value + chevron, invisible <select> overlay
+   opens the OS's native picker wheel. Picked 2026-08-03 over a segmented control and a
+   contextual-menu popover (both tried and shown side by side) for consistency - one
+   control language for every "pick one of a few options" row in the app, not three
+   different idioms across Shape/Wastage/Unit. Fixed 76px width (not content-sized) so
+   every unit control lines up on the same right edge regardless of which unit is
+   active. */
+.unit-picker {
+  position: relative;
+  width: 60px;
+  min-height: 44px;   /* HIG's stated tap-target minimum - was 42px */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  background: var(--surface-2);
-  padding: 0;
-  font-family: inherit;
+  gap: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  cursor: pointer;
 }
-.unit-badge.switchable { cursor: pointer; color: var(--text-accent); font-weight: 600; }
-.unit-badge.switchable:active { transform: scale(0.94); background: var(--surface-3); }
+/* Content-sized variant for pickers outside the Dimensions list, which don't need to
+   line up on that list's fixed 76px right edge - the bag-size picker in Order ("20kg"
+   etc, 4 characters) would be cramped in the same fixed width tuned for "m"/"mm". */
+.unit-picker.unit-picker--auto { width: auto; padding: 0 10px; margin-left: 6px; }
+.unit-picker-current { font-size: var(--text-xs); font-weight: 600; color: var(--text-accent); }
+.unit-picker-chevron { font-size: var(--text-m); line-height: 1; color: var(--text-secondary); }
+.unit-picker-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  cursor: pointer;
+  font-size: var(--text-m);   /* 16px+, or iOS zooms the page when the menu opens */
+}
 
 /* Wastage is a fixed set of presets, not a typed value, carried over from v17. One
-   button, 112px wide - the exact combined width of field-val (72px) + gap (6px) +
-   unit-badge (34px) above, so it lands on the same right edge as the dimension rows.
-   Was two separate boxes (value, chevron); merged into one 2026-08-02. */
+   button, 162px wide - the exact combined width of field-val (96px) + gap (6px) +
+   unit-picker (60px) above, so it lands on the same right edge as the dimension
+   rows. Was two separate boxes (value, chevron); merged into one 2026-08-02. Borderless
+   (v19, same reasoning as .field-val/.unit-picker above) - fill on --surface-3, not
+   --surface-2, since a border no longer does the job of making the chip visible
+   against the page background. */
 .wastage-pulldown {
   position: relative;
-  width: 112px;
-  min-height: 34px;
+  width: 162px;
+  min-height: 44px;   /* HIG's stated tap-target minimum - was 42px */
   padding: 0 10px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-2);
+  background: var(--surface-3);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -372,6 +515,7 @@ body {
 }
 #wastage-current {
   font-size: var(--text-m);
+  font-weight: 600;   /* matches .field-val's weight, not just its size */
   font-variant-numeric: tabular-nums;
 }
 .wastage-chevron {
@@ -399,7 +543,7 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  font-size: var(--text-s);
+  font-size: var(--text-xxs);
   line-height: 1.35;
   color: var(--caution);
   background: var(--caution-bg);
@@ -411,7 +555,7 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  font-size: var(--text-s);
+  font-size: var(--text-xxs);
   line-height: 1.4;
   color: var(--caution);
   background: var(--caution-bg);
@@ -423,64 +567,83 @@ body {
    this the strip shows as an empty amber capsule whenever there is nothing to warn about. */
 .check-strip[hidden] { display: none; }
 
-/* Order - two rows, Bags and Ready-mix, no card - a plain list on the page background,
-   one hairline between them. No recommendation badge or description text on screen -
-   Copy/Share still write the full docket underneath (see specText()). */
-.order-block { display: flex; flex-direction: column; }
+/* Order - two rows, Bags and Ready-mix. One of three cards in the app now, alongside
+   .volume-card and .inputs-card - a two-item decision list (Bags vs Ready-mix) is
+   exactly the content HIG wraps in an inset grouped card. "What to order" sits inside
+   the card, top-left, as its header - not a caption floating above it. No line between
+   the two rows: the bold name and (on the recommended row) the subtitle already
+   distinguish them, so a hairline stayed redundant even inside the card. No extra
+   margin-top - #scroll-area's own gap (20px) is enough separation now that this card's
+   neighbour above it (.inputs-card) is also a card; the extra margin was only needed
+   when Order sat next to bare, containerless content. */
+.order-block {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border-radius: var(--radius);
+  padding: 12px;
+}
 .order-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  min-height: 44px;
+  align-items: center;   /* back to centring both sides as whole blocks - see
+                             .order-row-recommended below for how the subtitle avoids
+                             disturbing this */
+  padding: 6px 0;   /* was 8px, vertical-space pass */
+  min-height: 48px;   /* was 52px - still comfortably above the 44px unit-picker/
+                          order-unit-box it needs to fit */
 }
-.order-row + .order-row { border-top: 0.5px solid var(--border); }
+/* Title + subtitle, the standard table-cell pattern - not a coloured badge glued onto
+   the name. No fill/border/pill, so it reads as an annotation rather than a tag
+   competing with the name for space; Andre asked for it in the app's one accent colour
+   (--diagram-accent, otherwise reserved for the live diagram highlight) rather than
+   plain secondary grey, so it still stands out at a glance despite the lighter
+   treatment. Also sidesteps the v18 bug where the badge's own margin stacked on top of
+   .order-row-name's flex gap for an inconsistent double space.
+   .order-row-recommended is absolutely positioned under the name rather than stacked
+   in normal flow - first tried flex-column-stacked, but that made the name-group
+   2 lines tall on the recommended row only, and .order-row's centring then centred
+   that taller block against the value, pushing the name up off the value's line (and,
+   worse, off the Bags row's un-recommended baseline too, since Bags stayed 1 line and
+   sat noticeably higher by comparison). Taking the subtitle out of flow keeps
+   name-group exactly 1 line tall on every row, so centring behaves identically whether
+   or not a row is recommended - the subtitle hangs below without ever being part of
+   the height that centring measures. */
+.order-row-name-group {
+  position: relative;
+}
 .order-row-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--text-m);
+  font-size: var(--text-s);
   font-weight: 600;
   color: var(--text-primary);
 }
-/* HIG places badges at the trailing edge - here right after the name, beside the option
-   it advises, so it reads as a label on that option rather than its own column. */
-.badge-recommended {
-  flex-shrink: 0;
+.order-row-recommended {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 2px;
   white-space: nowrap;
-  font-size: 0.5625rem;   /* 9px - smaller than the type scale's xs step, badge-only */
-  font-weight: 700;
+  font-size: var(--text-xxs);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  background: var(--diagram-accent);
-  color: #ffffff;
-  padding: 1px 6px;
-  border-radius: 3px;    /* square-ish tag, not pill: reads as a label, not a button */
-  margin-left: 6px;
+  letter-spacing: 0.04em;
+  /* v20: back to neutral, not blue. The app's own doctrine calls diagram-accent "the
+     one deliberate colour... used only to mark which dimension is currently being
+     edited" - that stopped being literally true once "Recommended" reused it for an
+     unrelated meaning (a suggestion, not an active-editing state). The diagram
+     highlight and the focus ring are legitimately the same signal fired at the same
+     moment (focusing a field lights up both simultaneously), so sharing blue between
+     those two is correct; "Recommended" doesn't belong grouped with them. The word
+     itself already carries the meaning - text-secondary plus the existing
+     bold/uppercase/letter-spacing treatment is enough without borrowing a colour that
+     means something else everywhere else in the app. */
+  color: var(--text-secondary);
 }
 .order-row-value {
   font-size: var(--text-m);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-/* Cycles 20/25/30kg on tap - same recessed-chip language as the field unit badges. */
-.order-unit-box {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  padding: 0 6px;
-  margin-left: 6px;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text-accent);
-  background: var(--surface-2);
-  cursor: pointer;
-}
-.order-unit-box:active { transform: scale(0.94); background: var(--surface-3); }
 .order-empty { font-size: var(--text-s); color: var(--text-muted); padding: 14px; }
 
 /* Toast, replacing the visible spec sheet: confirms the copy/share instead of showing
@@ -505,9 +668,9 @@ body {
   appearance: none;
   flex: 1;
   font-family: inherit;
-  font-size: var(--text-m);
+  font-size: var(--text-s);
   font-weight: 600;
-  height: 48px;
+  height: 56px;
   border: 0;
   border-radius: var(--radius);
   background: var(--surface-3);
@@ -534,33 +697,63 @@ body {
 .foot-links a:active { text-decoration: underline; }
 
 /* Keypad - pinned, always in reach. Plain 3-col, 12-key grid, no advance/Next key. */
+/* v20: slides in/out instead of snapping via display:none - closer to how a real
+   keyboard raises. max-height is the animatable stand-in (display and height: auto
+   can't transition); 300px comfortably exceeds the keypad's actual rendered height
+   (3 rows × 52px + 2×6px gaps + padding, well under 300 including safe-area), so the
+   transition timing reads as governed by duration, not by hitting the cap mid-animation.
+   Still fully removed from flex flow at 0 - #scroll-area's flex:1 reclaims the space
+   exactly as it did with display:none, just smoothly instead of instantly. */
 .keypad-wrap {
   flex-shrink: 0;
-  border-top: 0.5px solid var(--border-strong);
   background: var(--surface-1);
-  padding: 10px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  padding: 8px;   /* was 10px, vertical-space pass - the keypad is the single largest
+                      fixed consumer of screen height (~200px), so trimming it directly
+                      grows the scroll window above it */
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  max-height: 300px;
+  overflow: hidden;
+  transition: max-height 0.25s ease, padding-top 0.25s ease, padding-bottom 0.25s ease;
 }
-.keypad-wrap.is-hidden { display: none; }
+.keypad-wrap.is-hidden {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .keypad-wrap { transition: none; }
+}
 
 #keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;   /* was 8px, vertical-space pass */
 }
 .key {
-  height: 44px;
+  appearance: none;
+  border: 0;
+  width: 100%;
+  min-height: 52px;   /* was 56px - still well above HIG's 44px tap-target minimum */
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
   font-size: var(--text-l);
   font-weight: 400;
+  color: inherit;
   background: var(--surface-2);
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  /* v20: press feedback (.key:active below) previously had no transition at all -
+     scale and colour both snapped with zero animation, despite a reduced-motion
+     override already existing for the transform (written for a transition that wasn't
+     actually wired). Fast/punchy on purpose - press feedback should read quicker than
+     the ambient 0.15s theme-fade, not as slow as it. */
+  transition: transform 0.1s ease, background-color 0.1s ease;
 }
+.key:focus-visible { outline: 2px solid var(--border-accent); outline-offset: 1px; }
 .key:active { transform: scale(0.96); background: var(--surface-3); }
 
 @media (prefers-reduced-motion: reduce) {

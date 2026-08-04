@@ -1,5 +1,5 @@
-/* SlabSet v18 - flat stack, no card containers, iPhone first.
-   Engine and shape maths carried from v15/v16/v17 unchanged. */
+/* SlabSet v20 - the "make it a 10/10" pass off v19. Engine and shape maths carried
+   from v15/v16/v17 unchanged; everything else is fair game this round. */
 (function () {
   'use strict';
 
@@ -209,11 +209,16 @@
     return parts.join('.');
   }
 
-  // m ⇄ mm, carried over from v17. Wastage's unit ('%') has nothing to swap to, so its
-  // badge is never wired to this.
-  function toggleUnit(id, evt) {
+  // m ⇄ mm. v19: a real segmented control (both units visible, active one solid) since
+  // it's a strictly binary choice - HIG's own convention for a small fixed set of
+  // options is to show all of them, not hide the alternative behind a cycling tap
+  // (that pattern's kept for the 3-way bag-size toggle elsewhere, where a segmented
+  // control would be too wide). Sets the tapped unit directly rather than advancing to
+  // the next one, since both segments are already visible and tappable individually.
+  // Wastage's unit ('%') has nothing to swap to, so its badge is never wired to this.
+  function setUnit(id, next, evt) {
     evt.stopPropagation();
-    var next = UNIT_OPTS[(UNIT_OPTS.indexOf(units[id]) + 1) % UNIT_OPTS.length];
+    if (units[id] === next) return;
     // Convert through metres so the measurement survives the unit change.
     if (vals[id]) { vals[id] = formatNum(baseValueMetres(id) / UNIT_FACTOR[next]); }
     units[id] = next;
@@ -320,23 +325,42 @@
            '</div>';
   }
 
-  // m ⇄ mm toggles per field, like v17.
+  // m ⇄ mm toggle per field - native picker, identical interaction to
+  // .shape-heading/.wastage-pulldown elsewhere in this app: current value + chevron,
+  // invisible <select> covers the whole control, tapping opens the OS's native picker
+  // wheel. Picked 2026-08-03 over a segmented control and a contextual-menu popover
+  // (both tried and shown side by side) specifically for this consistency - it's the
+  // one control language for every "pick one of a few options" row in the app now.
+  function unitPickerEl(f) {
+    return '<div class="unit-picker">' +
+      '<span class="unit-picker-current">' + units[f.id] + '</span>' +
+      '<svg class="ti unit-picker-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
+      '<select class="unit-picker-select" data-unit-for="' + f.id + '" aria-label="' + f.label + ' unit">' +
+        UNIT_OPTS.map(function (u) {
+          return '<option value="' + u + '"' + (units[f.id] === u ? ' selected' : '') + '>' + u + '</option>';
+        }).join('') +
+      '</select>' +
+    '</div>';
+  }
+
   function renderFields() {
     var el = document.getElementById('fields');
     el.innerHTML = currentShape().fields.map(function (f) {
       var unitEl;
       if (f.count) {
-        unitEl = '<div class="unit-badge" aria-hidden="true" style="visibility:hidden;">-</div>';
+        unitEl = '<div class="unit-picker" aria-hidden="true" style="visibility:hidden;">' +
+                   '<span class="unit-picker-current">-</span>' +
+                 '</div>';
       } else {
-        unitEl = '<button type="button" class="unit-badge switchable" data-unit-for="' + f.id + '"' +
-                   ' aria-label="' + f.label + ' unit, ' + units[f.id] + ', tap to switch">' +
-                   units[f.id] +
-                 '</button>';
+        unitEl = unitPickerEl(f);
       }
       var warn = warnFor(f);
       return '<div class="field-row" data-row="' + f.id + '">' +
         '<div class="field-line">' +
-          '<span class="field-label">' + f.label + (f.optional ? ' (optional)' : '') + '</span>' +
+          '<div class="field-label-group">' +
+            '<span class="field-label">' + f.label + '</span>' +
+            (f.optional ? '<span class="field-optional-note">Optional</span>' : '') +
+          '</div>' +
           '<div class="field-controls">' + valueBox(f) + unitEl + '</div>' +
         '</div>' +
         (warn ? '<div class="field-warn"><svg class="ti" aria-hidden="true"><use href="#i-alert"/></svg><span>' + warn + '</span></div>' : '') +
@@ -350,9 +374,9 @@
   // Last row of the same list: it changes the volume like the rows above it. A fixed
   // preset list, not a typed value, so it is a pull-down like Shape rather than another
   // keypad-editable field - carried over from v17.
-  // One button, same total width as field-val + gap + unit-badge above, so it lands on
-  // the exact same verticals as the dimension value and its unit badge - merged from two
-  // separate boxes into one 2026-08-02.
+  // One button, same total width as field-val + gap + unit-picker above, so it lands
+  // on the exact same verticals as the dimension value and its unit control - merged
+  // from two separate boxes into one 2026-08-02.
   function wastageRow() {
     return '<div class="field-row" data-row="wastage">' +
       '<div class="field-line">' +
@@ -384,15 +408,23 @@
     Array.prototype.forEach.call(root.querySelectorAll('[data-field]'), function (box) {
       box.addEventListener('click', function () { focusField(box.getAttribute('data-field')); });
       box.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusField(box.getAttribute('data-field')); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusField(box.getAttribute('data-field'), true); }
       });
     });
-    Array.prototype.forEach.call(root.querySelectorAll('[data-unit-for]'), function (u) {
-      u.addEventListener('click', function (e) { toggleUnit(u.getAttribute('data-unit-for'), e); });
+    Array.prototype.forEach.call(root.querySelectorAll('select.unit-picker-select'), function (sel) {
+      sel.addEventListener('change', function (e) { setUnit(sel.getAttribute('data-unit-for'), sel.value, e); });
     });
   }
 
-  function focusField(id) {
+  // moveFocusToKeypad: true only when a field is activated via keyboard (Enter/Space),
+  // not touch/click. v20 fix - the keypad sits last in the DOM (it's pinned outside
+  // #scroll-area), so a keyboard user tabbing forward from a field used to have to walk
+  // through every remaining field, Wastage, Order, Copy/Share and the footer links
+  // before ever reaching a key to actually type with. Shifting focus straight into the
+  // keypad on activation mirrors how a real text input immediately raises a keyboard
+  // ready to type into, and needs no change for touch users since it only fires on the
+  // keyboard path.
+  function focusField(id, moveFocusToKeypad) {
     if (state.focus !== id) { settle(state.focus); }  // done with the one you are leaving
     delete settled[id];                               // re-editing this one: verdict off
     state.focus = id;
@@ -405,6 +437,10 @@
     renderResults();
     var box = document.querySelector('[data-field="' + id + '"]');
     if (box) { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    if (moveFocusToKeypad) {
+      var firstKey = document.querySelector('#keypad .key');
+      if (firstKey) { firstKey.focus(); }
+    }
     saveDraft();
   }
 
@@ -454,8 +490,19 @@
     } else if (!complete) { didCompletePulse = false; }
 
     var volEl = document.getElementById('volume-val');
-    volEl.textContent = withCommas((complete ? withWaste : 0).toFixed(2)) + ' m³';
+    volEl.innerHTML = withCommas((complete ? withWaste : 0).toFixed(2)) + ' <span class="unit-suffix">m³</span>';
     volEl.classList.toggle('is-empty', !complete);
+
+    // Never `hidden` (display:none) - that would change .volume-card's height between
+    // states and shake the pinned card's size (and everything below it) every time
+    // wastage crosses 0% or the fields go complete/incomplete. `.volume-waste-note`
+    // reserves its line height at all times (see min-height in styles.css); only its
+    // visibility toggles, so the card's box never changes size.
+    var wasteNoteEl = document.getElementById('volume-waste-note');
+    var wastePct = parseFloat(vals.wastage) || 0;
+    var showWasteNote = complete && wastePct > 0;
+    wasteNoteEl.textContent = showWasteNote ? 'Incl. +' + wastePct + '% wastage' : '';
+    wasteNoteEl.style.visibility = showWasteNote ? 'visible' : 'hidden';
 
     var el = document.getElementById('options');
 
@@ -466,28 +513,47 @@
       var ready = readyOrder(withWaste);
 
       // Per the v18 wireframe: name, quantity on the right, reason text off-screen
-      // (Copy/Share still write the full docket, see specText()). Recommended badge sits
-      // beside the option name it advises - doctrine 7, restored 2026-07-31. Icons dropped
-      // 2026-07-31: nowhere else in the flat stack uses one, and with the badge back the
-      // row's leading edge was crowded. Bag size still cycles 20/25/30kg on tap, same as
-      // v17, styled like the field unit badges.
+      // (Copy/Share still write the full docket, see specText()). v19: "Recommended"
+      // moved from an inline coloured badge glued onto the name (v18) to a plain
+      // secondary-colour subtitle line underneath it - HIG's own convention for a
+      // "this one's the default" annotation (Settings' trailing-value grey text, table
+      // cell title+subtitle) doesn't use filled tags, and inline the badge collided
+      // with the row's own flex gap (double spacing bug). Bag size (2026-08-03) moved
+      // off the old cycling chip onto the same .unit-picker native-picker pattern as
+      // Shape/Wastage/Unit, for the same "one control language" reasoning that picked
+      // it for m/mm - just the content-sized .unit-picker--auto variant, since "20kg"
+      // is wider than the fixed 76px tuned for "m"/"mm" and this sits inline with the
+      // "×" text rather than in a right-aligned column.
+      var BAG_SIZES = [20, 25, 30];
+      var bagSizePicker =
+        '<span class="unit-picker unit-picker--auto">' +
+          '<span class="unit-picker-current">' + state.bagSize + 'kg</span>' +
+          '<svg class="ti unit-picker-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
+          '<select class="unit-picker-select" id="bagSizeSelect" aria-label="Bag size">' +
+            BAG_SIZES.map(function (s) {
+              return '<option value="' + s + '"' + (s === state.bagSize ? ' selected' : '') + '>' + s + 'kg</option>';
+            }).join('') +
+          '</select>' +
+        '</span>';
+
       el.innerHTML =
         '<div class="order-row">' +
-          '<span class="order-row-name">Bags' +
-            (rec === 'bags' ? ' <span class="badge-recommended">Recommended</span>' : '') +
-          '</span>' +
-          '<span class="order-row-value">' + withCommas(bags) + ' × <button type="button" class="order-unit-box" id="bagSizeBtn" aria-label="Bag size, ' + state.bagSize + ' kg, tap to change">' + state.bagSize + 'kg</button></span>' +
+          '<div class="order-row-name-group">' +
+            '<span class="order-row-name">Bags</span>' +
+            (rec === 'bags' ? '<span class="order-row-recommended">Recommended</span>' : '') +
+          '</div>' +
+          '<span class="order-row-value">' + withCommas(bags) + ' × ' + bagSizePicker + '</span>' +
         '</div>' +
         '<div class="order-row">' +
-          '<span class="order-row-name">Ready-mix' +
-            (rec === 'ready' ? ' <span class="badge-recommended">Recommended</span>' : '') +
-          '</span>' +
+          '<div class="order-row-name-group">' +
+            '<span class="order-row-name">Ready-mix</span>' +
+            (rec === 'ready' ? '<span class="order-row-recommended">Recommended</span>' : '') +
+          '</div>' +
           '<span class="order-row-value">' + withCommas(ready.toFixed(1)) + ' m³</span>' +
         '</div>';
 
-      var BAG_SIZES = [20, 25, 30];
-      document.getElementById('bagSizeBtn').addEventListener('click', function () {
-        state.bagSize = BAG_SIZES[(BAG_SIZES.indexOf(state.bagSize) + 1) % BAG_SIZES.length];
+      document.getElementById('bagSizeSelect').addEventListener('change', function (e) {
+        state.bagSize = parseInt(e.target.value, 10);
         renderResults(); saveDraft();
       });
     }
@@ -704,12 +770,16 @@
   // literal '⌫' glyph the wireframe uses, not an icon.
   var KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
 
+  // Real <button> elements, not tabindex="-1" divs (v19 fix) - the old markup meant a
+  // keyboard-only or screen-reader user could never reach, let alone activate, a
+  // single digit key. A native button is focusable in normal tab order for free, and
+  // Enter/Space already fire 'click' without any extra keydown wiring.
   function renderKeypad() {
     var el = document.getElementById('keypad');
     el.innerHTML = KEYS.map(function (k) {
       var key = k === '⌫' ? 'back' : k;
       var label = k === '⌫' ? 'Backspace' : k;
-      return '<div class="key" role="button" tabindex="-1" aria-label="' + label + '" data-key="' + key + '">' + k + '</div>';
+      return '<button type="button" class="key" aria-label="' + label + '" data-key="' + key + '">' + k + '</button>';
     }).join('');
     Array.prototype.forEach.call(el.querySelectorAll('.key'), function (c) {
       c.addEventListener('click', function () { appendKey(c.getAttribute('data-key')); });
@@ -883,6 +953,18 @@
   // moved-on and is judged straight away - except whatever the cursor is sitting in.
   settleAll();
   delete settled[state.focus];
+
+  // v20: boot neutral - no field pre-focused, keypad hidden until the user actually
+  // taps one. state.focus previously defaulted to the shape's first field (or the
+  // draft's last-edited one) and stayed that way through the very first render, so
+  // every fresh load showed a field pre-selected with a blue ring and the keypad
+  // already covering a third of the screen before any interaction at all - a known
+  // mobile anti-pattern (auto-focus + auto-keyboard on load), and it hid the very
+  // overview (diagram, other fields, Order, Copy/Share) a first-time user most needs
+  // to see. highlightDim() already had a dedicated "nothing focused" branch for this
+  // exact state (dims the whole diagram rather than defaulting a dimension to full
+  // ink) - it just was never reachable at boot before now.
+  state.focus = null;
 
   renderKeypad();
   renderAll();

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SlabSet - Concrete calculator</title>
-<meta name="description" content="Concrete calculator made for Australia. Professional-grade, metric only field tool for working out bags or ready-mix on site.">
+<meta name="description" content="Work out concrete volume and what to order - bags or truck. AU metric.">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -21,7 +21,7 @@
     }
     document.documentElement.setAttribute('data-theme', t);
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#1c1c1e' : '#f2f2f7');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#f2f2f7');
   } catch (e) {
     document.documentElement.setAttribute('data-theme', 'light');
   }
@@ -29,74 +29,95 @@
 </script>
 <meta property="og:site_name" content="SlabSet">
 <meta property="og:title" content="SlabSet - Order the right amount">
-<meta property="og:description" content="Concrete calculator made for Australia. Professional-grade, metric only field tool for working out bags or ready-mix on site.">
+<meta property="og:description" content="Work out concrete volume and what to order - bags or truck. AU metric.">
 <meta property="og:url" content="https://slabset.online/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://slabset.online/shared/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SlabSet - Order the right amount">
-<meta name="twitter:description" content="Concrete calculator made for Australia. Professional-grade, metric only field tool for working out bags or ready-mix on site.">
+<meta name="twitter:description" content="Work out concrete volume and what to order - bags or truck. AU metric.">
 <meta name="twitter:image" content="https://slabset.online/shared/og-image.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="shared/icons/favicon-48.png" sizes="48x48">
 <link rel="apple-touch-icon" href="shared/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="shared/styles.css">
+<link rel="preconnect" href="https://www.googletagmanager.com">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-PPKFHXV1DS"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PPKFHXV1DS');</script>
 </head>
 <body>
 
 <!-- Tabler outline icons, inlined: the app must work offline from the home screen. -->
-<svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol></svg>
+<svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10"/></symbol></svg>
 
 <div class="shell">
 
   <header class="header">
     <h1 class="title">
-      <img class="title-logo" src="shared/logo.svg" alt="" width="20" height="20">
       <b>SlabSet</b> Concrete Pro
     </h1>
     <button type="button" class="theme-toggle" id="btnTheme" aria-label="Switch to dark theme" aria-pressed="false">
       <svg class="ico-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
       </svg>
       <svg class="ico-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
+        <circle cx="12" cy="12" r="4" fill="currentColor" stroke="currentColor" stroke-width="1.75"/>
         <path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
       </svg>
     </button>
   </header>
 
-  <!-- Shape and volume merged into one pinned row - the answer this app exists to
-       produce, plus what it's answering for, in one glance. Never scrolls - you are
-       typing with the keypad over the bottom third of the screen, and the number this
-       app exists to produce must not be in the scrolling middle. -->
-  <div class="vbar">
-    <div class="shape-pulldown-inline">
-      <svg class="ti vbar-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
-      <span id="shape-current">Slab</span>
-      <select id="shape-select" aria-label="Shape"></select>
-    </div>
-    <div class="vbar-value-group">
-      <span class="vbar-eyebrow">Total Volume</span>
-      <span class="vbar-value" id="volume-val">0.000 m³</span>
-    </div>
+  <!-- Total Volume - pinned again, v19 round 2: Andre tried it unpinned (previous
+       comment history below/in CONTEXT.md), then asked for it back at the top - this
+       time as a card (--surface-1, --radius, margin on all sides so it floats free of
+       the header above it) rather than the old v17/v18 chrome-bar treatment. Restores
+       doctrine 1b's guarantee (answer never off-screen) with v19's card language
+       instead of reverting to the bar look it originally had. -->
+  <div class="volume-card">
+    <span class="volume-eyebrow">Total Volume</span>
+    <span class="volume-value" id="volume-val" role="status" aria-atomic="true">0.000 m³</span>
+    <p class="volume-waste-note" id="volume-waste-note" style="visibility: hidden;"></p>
   </div>
 
   <div id="scroll-area">
 
-    <!-- Diagram is inlined SVG, not an <img>, so the focused dimension can light up -
-         carried over from v17. Only the surrounding chrome (plain white face, no card)
-         matches the new wireframe. Unpinned again 2026-08-01 - back to scrolling with
-         the rest of the stack, see LIVE.md. -->
-    <div class="diagram-area">
-      <div id="diagram" role="img" aria-label="Slab / Pad dimension diagram"></div>
-    </div>
+    <!-- Inputs card - Shape, Diagram and Dimensions/Wastage grouped into one card
+         (2026-08-04, Andre's call): resolves the earlier asymmetry where Volume and
+         Order were cards but the actual input work sat bare on the page background.
+         The Diagram lives here rather than staying its own bare element because it's a
+         live description of the Shape selection, not decoration - it belongs with the
+         inputs it's illustrating, same reasoning that put Wastage inside #fields as a
+         field rather than off in Order. This is a deliberate partial walk-back toward
+         v17's card-stack look, which v18 explicitly flattened away from - not a full
+         reversal (still just 3 cards, not everything), but worth knowing that's the
+         direction this moves in. -->
+    <div class="inputs-card">
 
-    <!-- Dimension fields plus wastage, rendered from the active shape. Wastage is now a
-         typed field like the others - the wireframe shows it as a plain value + "%" row,
-         not a preset pull-down. -->
-    <div id="fields"></div>
+      <!-- Shape name, a plain heading. Still the real shape switcher: the <select>
+           overlays the whole heading, same invisible-overlay technique as before.
+           Above the diagram (round 4 of the ordering - Diagram-then-Shape in round 1,
+           Shape-then-Diagram in round 2, Diagram-then-Shape again in round 3, settled
+           here). If this keeps flip-flopping, it's probably not a strong preference
+           either way - worth asking Andre to just pick one for good next time it comes
+           up rather than toggling again. -->
+      <div class="shape-heading">
+        <span id="shape-current">Slab</span>
+        <svg class="ti shape-heading-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        <select id="shape-select" aria-label="Shape"></select>
+      </div>
+
+      <!-- Diagram is inlined SVG, not an <img>, so the focused dimension can light up -
+           carried over from v17. -->
+      <div class="diagram-area">
+        <div id="diagram" role="img" aria-label="Slab / Pad dimension diagram"></div>
+      </div>
+
+      <!-- Dimension fields plus wastage, rendered from the active shape. Wastage is now
+           a typed field like the others - the wireframe shows it as a plain value + "%"
+           row, not a preset pull-down. -->
+      <div id="fields"></div>
+
+    </div>
 
     <div class="order-block" aria-label="Order">
       <div class="section-label">What to order</div>
@@ -104,7 +125,7 @@
     </div>
 
     <p class="check-strip" id="check-strip" hidden></p>
-    <p class="toast" id="toast" hidden></p>
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
 
     <div class="share-actions">
       <button type="button" class="spec-btn" id="btnCopy"><span id="copyLabel">Copy</span></button>
@@ -119,7 +140,7 @@
 
   </div>
 
-  <div class="keypad-wrap" id="keypad-wrap">
+  <div class="keypad-wrap is-hidden" id="keypad-wrap">
     <div id="keypad"></div>
   </div>
 
