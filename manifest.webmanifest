@@ -1,7 +1,7 @@
 {
   "name": "SlabSet",
   "short_name": "SlabSet",
-  "description": "Work out concrete volume and what to order - bags or truck. AU metric.",
+  "description": "Concrete calculator made for Australia. Professional-grade, metric only field tool for working out bags or ready-mix on site.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
