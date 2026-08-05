@@ -849,17 +849,6 @@
     el._t = setTimeout(function () { el.textContent = el.dataset.was; }, 1600);
   }
 
-  // Per the wireframe: a toast above the CTAs instead of a persistent visible spec
-  // sheet. Copy/Share still write the full docket to the clipboard (see specText()) -
-  // this just confirms it happened.
-  function showToast(msg) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.hidden = false;
-    clearTimeout(t._t);
-    t._t = setTimeout(function () { t.hidden = true; }, 1600);
-  }
-
   // ── Wiring ───────────────────────────────────────────────────────────────────
   function renderAll() {
     renderShapeRow(); renderFields(); drawDiagram(); renderResults();
@@ -890,7 +879,6 @@
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(specText()).then(function () {
         flashLabel('copyLabel', '✓ Copied');
-        showToast('Spec copied to clipboard');
         btn.classList.add('is-confirmed');
         clearTimeout(btn._t);
         btn._t = setTimeout(function () { btn.classList.remove('is-confirmed'); }, 1600);
@@ -912,7 +900,6 @@
       // no share target on desktop - copying is the honest fallback
       navigator.clipboard.writeText(text).then(function () {
         flashLabel('shareLabel', 'Copied');
-        showToast('Spec copied to clipboard');
         params.method = 'copy_fallback';
         track('spec_share', params);
       }, function () {});

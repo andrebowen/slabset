@@ -646,19 +646,6 @@ body {
 }
 .order-empty { font-size: var(--text-s); color: var(--text-muted); padding: 14px; }
 
-/* Toast, replacing the visible spec sheet: confirms the copy/share instead of showing
-   the docket text inline. Floats above the CTAs with a soft shadow, like a native
-   snackbar. */
-.toast {
-  background: var(--text-primary);
-  color: var(--surface-1);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  font-size: var(--text-s);
-  text-align: center;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
-}
-.toast[hidden] { display: none; }
 
 /* Copy / Share, closing out the stack. Filled buttons, no border - Copy is the
    secondary (tinted) action, Share the primary (filled dark), same greyscale system
