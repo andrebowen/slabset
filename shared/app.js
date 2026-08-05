@@ -875,13 +875,9 @@
   document.getElementById('btnCopy').addEventListener('click', function () {
     if (this.disabled) return;
     settleAndRender();
-    var btn = this;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(specText()).then(function () {
         flashLabel('copyLabel', '✓ Copied');
-        btn.classList.add('is-confirmed');
-        clearTimeout(btn._t);
-        btn._t = setTimeout(function () { btn.classList.remove('is-confirmed'); }, 1600);
         track('spec_copy', specTrackParams());
       }, function () {});
     }

@@ -370,7 +370,12 @@ body {
 }
 .diagram-svg { display: block; }
 .diagram-svg [stroke] { stroke: var(--text-primary); }
-.diagram-svg [fill="#ffffff"] { fill: var(--surface-1); }
+/* Filled with the same recessed-chip grey as the dimension value boxes (--surface-3),
+   not the card's own background (--surface-1, which made the shape's solid faces
+   invisible - just an outline blending into the card behind it). Andre's call - reads
+   as a filled solid now, in the same visual language as the field boxes it's
+   illustrating, rather than a blank line drawing. */
+.diagram-svg [fill="#ffffff"] { fill: var(--surface-3); }
 
 /* No more "Length"/"Width" words drawn on the drawing - which dimension you're on is
    now signalled purely by colour on its line, not a label. */
@@ -647,9 +652,10 @@ body {
 .order-empty { font-size: var(--text-s); color: var(--text-muted); padding: 14px; }
 
 
-/* Copy / Share, closing out the stack. Filled buttons, no border - Copy is the
-   secondary (tinted) action, Share the primary (filled dark), same greyscale system
-   the rest of the app uses - no accent colour. */
+/* Copy / Share, closing out the stack. Filled black, both the same weight - Andre's
+   call: they're not clearly unequal in how often either gets used, so a primary/
+   secondary hierarchy (one filled, one tinted) was implying a recommendation that
+   wasn't real. No accent colour, matching the rest of the app's greyscale system. */
 .share-actions { display: flex; gap: 10px; }
 .spec-btn {
   appearance: none;
@@ -660,21 +666,14 @@ body {
   height: 56px;
   border: 0;
   border-radius: var(--radius);
-  background: var(--surface-3);
-  color: var(--text-primary);
+  background: var(--text-primary);
+  color: var(--surface-1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
-.spec-btn:active { background: var(--border-strong); }
-.spec-btn--primary,
-.spec-btn.is-confirmed {
-  background: var(--text-primary);
-  color: var(--surface-1);
-}
-.spec-btn--primary:active,
-.spec-btn.is-confirmed:active { opacity: 0.85; }
+.spec-btn:active { opacity: 0.85; }
 .spec-btn[disabled] { opacity: 0.4; cursor: default; }
 
 /* Footer */
