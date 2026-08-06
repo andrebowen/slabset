@@ -28,14 +28,15 @@
   --caution-bg: #fdf3dd;
   --radius: 10px;
   --radius-sm: 8px;
-  /* The one deliberate colour in an otherwise greyscale app - iOS system blue, used only
-     for the diagram highlight and the focused-field ring (the same "you're editing
-     this" signal, fired at the same moment). Both are graphical, not text, so WCAG's
-     3:1 non-text threshold applies and #007aff clears it (4.02:1). v20 tried reusing it
-     for the "Recommended" label too (as a text colour, needing a separate darker
-     --diagram-accent-text variant to clear 4.5:1) - reverted; see .order-row-recommended
-     for why sharing this colour with an unrelated meaning was the wrong call. */
-  --diagram-accent: #007aff;
+  /* The one deliberate colour in an otherwise greyscale app - used only for the diagram
+     highlight and the focused-field ring (the same "you're editing this" signal, fired
+     at the same moment). Was iOS system blue (#007aff); switched to the palette's
+     mid-blue. Both are graphical, not text, so WCAG's 3:1 non-text threshold applies -
+     #3568DD clears it against light surfaces (5.03:1 on white, 4.51:1 on --bg) but only
+     hits 2.77:1 against the dark theme's card surface (#2c2c2e), under 3:1 - the old
+     blue was brighter specifically to stay visible on dark cards (3.82:1). Flagged, not
+     fixed - same value used in both themes for now. */
+  --diagram-accent: #3568DD;
 
   /* Job-site type scale - v18's HIG steps carried over, each bumped ~35-45% for
      outdoor legibility (direct sun, arm's-length, one glance while holding a tape).
@@ -69,7 +70,12 @@
   --bg-accent: #000000;
   --caution: #f5c451;
   --caution-bg: #2e2510;
-  --diagram-accent: #0a84ff;
+  /* Same mid-blue as light mode (#3568DD, see :root's comment) - kept identical rather
+     than brightened for dark-mode contrast, so it's a genuinely unified accent, not two
+     different blues. Contrast against the dark card surface is 2.77:1, under the 3:1
+     non-text minimum - worth a brighter dark-mode-only variant if this reads too dim
+     in practice. */
+  --diagram-accent: #3568DD;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
