@@ -275,7 +275,11 @@ body {
      comment for why (reclaiming space from the keypad's ~third-of-screen footprint). */
   margin: 4px 16px 0;
   padding: 12px;
-  background: var(--surface-1);
+  /* Trying a literal navy instead of --surface-1 (Andre's ask) - not theme-tokenised,
+     since it's a fixed dark colour regardless of light/dark mode. Text inside this
+     card is overridden to fixed light tones below for the same reason - the usual
+     --text-* tokens assume a light card in light mode and would be unreadable here. */
+  background: #020B4D;
   border-radius: var(--radius);
 }
 /* "Total Volume" as an eyebrow caption above the figure, not a label beside it -
@@ -288,7 +292,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: #9aa5e0;   /* fixed light periwinkle - see .volume-card's navy-bg comment */
   margin-bottom: 4px;
 }
 /* Faint, small - a footnote on the headline number, not competing with it. Invisible
@@ -301,7 +305,7 @@ body {
   font-size: var(--text-xxs);
   line-height: 1.3;
   min-height: calc(var(--text-xxs) * 1.3);
-  color: var(--text-muted);
+  color: #7986c9;   /* fixed, dimmer than the eyebrow - see .volume-card's navy-bg comment */
   margin-top: 0;
 }
 .volume-value {
@@ -314,10 +318,14 @@ body {
                           the eyebrow above, so it matches that alignment instead */
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
+  color: #ffffff;   /* fixed white - see .volume-card's navy-bg comment. Was inherited
+                        from body's --text-primary, which is dark in light mode and
+                        would be unreadable against the navy fill. */
 }
 /* Nothing measured yet: placeholder, not a reading. Greyed so it can't be mistaken for an
    answer - v12 shipped a live-looking "0.99 example only" in this slot. */
-.volume-value.is-empty { color: var(--text-muted); font-weight: 500; }
+.volume-value.is-empty { color: #5c68a8; font-weight: 500; }   /* fixed, dimmest of the
+                            three navy-card text tones - see .volume-card's comment */
 
 /* "m³" sized down from the number it follows, in the volume hero only (not Order's
    Ready-mix line, which stays one uniform size). Inherits weight/colour from its
