@@ -298,7 +298,10 @@ body {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #9aa5e0;   /* fixed light periwinkle - see .volume-card's navy-bg comment */
+  color: #aeb7e6;   /* fixed light periwinkle - see .volume-card's navy-bg comment.
+                        9.26:1 against #020B4D (was #9aa5e0, 7.63:1 - technically
+                        already AA, but blue-on-navy reads muddier to the eye than the
+                        number alone suggests; widened the margin) */
   margin-bottom: 4px;
 }
 /* Faint, small - a footnote on the headline number, not competing with it. Invisible
@@ -311,7 +314,8 @@ body {
   font-size: var(--text-xxs);
   line-height: 1.3;
   min-height: calc(var(--text-xxs) * 1.3);
-  color: #7986c9;   /* fixed, dimmer than the eyebrow - see .volume-card's navy-bg comment */
+  color: #939ed3;   /* fixed, dimmer than the eyebrow - see .volume-card's navy-bg
+                        comment. 6.97:1 against #020B4D (was #7986c9, 5.24:1) */
   margin-top: 0;
 }
 .volume-value {
@@ -330,8 +334,11 @@ body {
 }
 /* Nothing measured yet: placeholder, not a reading. Greyed so it can't be mistaken for an
    answer - v12 shipped a live-looking "0.99 example only" in this slot. */
-.volume-value.is-empty { color: #5c68a8; font-weight: 500; }   /* fixed, dimmest of the
-                            three navy-card text tones - see .volume-card's comment */
+.volume-value.is-empty { color: #8c95c2; font-weight: 500; }   /* fixed, dimmest of the
+                            three navy-card text tones - see .volume-card's comment.
+                            6.21:1 against #020B4D (was #5c68a8, only 3.46:1 - the
+                            weakest margin of the four, right against the 3:1 minimum
+                            for large text, genuinely too tight) */
 
 /* "m³" sized down from the number it follows, in the volume hero only (not Order's
    Ready-mix line, which stays one uniform size). Inherits weight/colour from its
