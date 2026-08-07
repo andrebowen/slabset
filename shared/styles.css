@@ -32,10 +32,9 @@
      highlight and the focused-field ring (the same "you're editing this" signal, fired
      at the same moment). Was iOS system blue (#007aff); switched to the palette's
      mid-blue. Both are graphical, not text, so WCAG's 3:1 non-text threshold applies -
-     #3568DD clears it against light surfaces (5.03:1 on white, 4.51:1 on --bg) but only
-     hits 2.77:1 against the dark theme's card surface (#2c2c2e), under 3:1 - the old
-     blue was brighter specifically to stay visible on dark cards (3.82:1). Flagged, not
-     fixed - same value used in both themes for now. */
+     #3568DD clears it against light surfaces (5.03:1 on white, 4.51:1 on --bg). Dark
+     mode no longer reuses this literal value - see [data-theme="dark"] below, which
+     lightens the same hue for its own card surface instead. */
   --diagram-accent: #3568DD;
 
   /* Job-site type scale - v18's HIG steps carried over, each bumped ~35-45% for
@@ -70,12 +69,13 @@
   --bg-accent: #000000;
   --caution: #f5c451;
   --caution-bg: #2e2510;
-  /* Same mid-blue as light mode (#3568DD, see :root's comment) - kept identical rather
-     than brightened for dark-mode contrast, so it's a genuinely unified accent, not two
-     different blues. Contrast against the dark card surface is 2.77:1, under the 3:1
-     non-text minimum - worth a brighter dark-mode-only variant if this reads too dim
-     in practice. */
-  --diagram-accent: #3568DD;
+  /* Dark-mode tint of light mode's #3568DD (:root), not the same literal value -
+     the flat reuse was 2.77:1 against the dark card surface (#2c2c2e), under the 3:1
+     non-text minimum. Same hue/saturation (222°, 71%), lightness raised 54% -> 62% -
+     the same light/dark-tint pattern iOS system colours use, not a different blue.
+     5.78:1 against pure black, 3.84:1 against the card - clears 3:1 with margin,
+     matching v19's old dark-mode blue's 3.82:1 almost exactly. */
+  --diagram-accent: #5983E3;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -123,6 +123,12 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  /* Stops Mobile Safari's double-tap-to-zoom (a double-tap anywhere - the volume card,
+     the shape card, a field row - zoomed the whole page in). `manipulation` only drops
+     double-tap-zoom and the ~300ms tap delay; pinch-zoom still works, so this doesn't
+     touch the earlier accessibility call to leave user-scalable alone (see the viewport
+     meta tag - no maximum-scale/user-scalable=no there, deliberately). */
+  touch-action: manipulation;
 }
 
 /* On a phone the app IS the viewport. dvh so the iOS URL bar collapsing doesn't strand
@@ -176,7 +182,7 @@ body {
 }
 
 .title {
-  font-size: 1.0625rem;   /* 17px - literal, deliberately off scale (v18's old --text-m) */
+  font-size: var(--text-m);   /* matches .field-label ("Diameter" etc.) exactly */
   font-weight: 400;
   color: var(--text-secondary);
   letter-spacing: -0.01em;

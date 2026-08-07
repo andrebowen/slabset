@@ -17,4 +17,12 @@ Promote steps executed: bumped `sitemap.xml` lastmod, rsync-mirrored `app-v20/` 
 folder that had been sitting in the deploy repo unrelated to any deploy), committed,
 pushed to `origin/main`, verified live `sw.js` serves `v20-preview-1`.
 
+**Hotfix 2026-08-07 (`v20-preview-7`):** header `.title` sized to match `.field-label`
+("Diameter" etc.) instead of a leftover literal 17px; `--diagram-accent` split into a
+dark-mode-only tint (`#5983E3`, same hue as light mode's `#3568DD`, lightness raised
+54%→62%) so it clears WCAG's 3:1 non-text minimum against the dark card surface (was
+2.77:1, now 3.84:1); `touch-action: manipulation` added on `body` to stop double-tap-
+to-zoom on cards while leaving pinch-zoom untouched. Same promote steps as above
+(bump `sw.js`, bump `sitemap.xml` lastmod, rsync, commit, push).
+
 **Edit here only for hotfixes, and bump `sw.js` VERSION when you do.**
