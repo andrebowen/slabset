@@ -1,15 +1,28 @@
-# SlabSet v20 - the 10/10 pass
+# SlabSet v21 - Total Volume card unpinned into the scroll flow
 
 ## Status
 
 | Field | Value |
 |-------|-------|
 | status | preview |
-| role | **v19, deliberately pushed further.** Andre asked for a fork with explicit license to override prior decisions ("break my rules if you need to") and ten self-directed rounds of critique-and-fix. Ten rounds ran: accessibility, colour-signal cleanup, motion, performance/assets, copy, edge-case testing, boot-state UX, code-quality sweep, full regression, and this doc rewrite. See "Delta from v19" below for what actually changed. |
+| role | **v20, with the Total Volume card moved out of its pinned position.** One change: `.volume-card` now sits in `#scroll-area`'s normal flow, between `.inputs-card` and `.order-block`, instead of pinned above the scroll area with its own margin. Andre's explicit call - see "Delta from v20" below. Everything else (engine, doctrine, styling) is `app-v20` verbatim. Replaces an earlier, unrelated `app-v21` (a from-scratch IA/visual reset, never promoted) - deleted at Andre's request 2026-08-10 rather than merged into this one. |
 | parent | `Calculator-Studio/slab-set/` |
-| base | `app-v19/` at the point Andre requested the v20 fork (2026-08-05) |
-| preview | `python3 dev-server.py` → `http://127.0.0.1:8833/` |
-| live | not promoted - **live is v18** (`v18-preview-21`) |
+| base | `app-v20/` at `v20-preview-8` (2026-08-10) |
+| preview | `python3 dev-server.py` → `http://127.0.0.1:8834/` |
+| live | not promoted - **live is v20** (`v20-preview-8`) |
+| risk | **Not yet re-verified.** v20's own doctrine (point 2 below) documents that this exact layout was tried mid-v19 and reverted, because the keypad covers roughly a third of the screen while typing - an unpinned answer routinely sat below the visible viewport on the shapes with the most fields (stairs, gutter). Worth checking that specifically, on a real device, before promoting. |
+
+## Delta from v20
+
+Only `.volume-card`'s position changed. In `index.html` it moved from immediately after
+the `<header>` (before `#scroll-area`) to inside `#scroll-area`, between `.inputs-card`
+and `.order-block`. In `shared/styles.css`, `.volume-card` lost the `flex-shrink: 0` and
+`margin: 4px 16px 0` it needed to float outside the scrolling area - it now behaves like
+any other card in the stack, spaced by `#scroll-area`'s own 12px flex `gap`. No changes
+to the engine, the other two cards, or any doctrine point below except point 2, which
+still describes the old pinned behaviour and is now stale - kept as-is rather than
+rewritten, since it's the documented reason this was tried before and reverted, not
+just background colour.
 | verified | Full Playwright regression: all 6 shapes × both themes, zero console errors, zero horizontal overflow, zero diagram/field overlap. Keyboard-only entry path (Tab → Enter → type via keypad → Tab away) verified end to end. Contrast-checked against WCAG AA numerically, not by eye. **Not yet checked on a real physical device.** |
 
 ## Doctrine

@@ -67,18 +67,6 @@
     </button>
   </header>
 
-  <!-- Total Volume - pinned again, v19 round 2: Andre tried it unpinned (previous
-       comment history below/in CONTEXT.md), then asked for it back at the top - this
-       time as a card (--surface-1, --radius, margin on all sides so it floats free of
-       the header above it) rather than the old v17/v18 chrome-bar treatment. Restores
-       doctrine 1b's guarantee (answer never off-screen) with v19's card language
-       instead of reverting to the bar look it originally had. -->
-  <div class="volume-card">
-    <span class="volume-eyebrow">Total Volume</span>
-    <span class="volume-value" id="volume-val" role="status" aria-atomic="true">0.000 m³</span>
-    <p class="volume-waste-note" id="volume-waste-note" style="visibility: hidden;"></p>
-  </div>
-
   <div id="scroll-area">
 
     <!-- Inputs card - Shape, Diagram and Dimensions/Wastage grouped into one card
@@ -117,6 +105,22 @@
            row, not a preset pull-down. -->
       <div id="fields"></div>
 
+    </div>
+
+    <!-- v21: moved out of the pinned header position into the scroll flow, between
+         Inputs and Order - Andre's call. Reads as the last step of "what you typed"
+         before "what to order" (dimensions -> total -> order), rather than living
+         above everything as a permanently-visible answer. Doctrine 1b's "answer never
+         off-screen" guarantee no longer holds now that this scrolls with the rest of
+         the stack - a deliberate trade this round, not an oversight. -->
+    <div class="volume-card">
+      <div class="volume-row">
+        <div class="volume-label-col">
+          <span class="volume-eyebrow">Total Volume</span>
+          <p class="volume-waste-note" id="volume-waste-note" style="visibility: hidden;"></p>
+        </div>
+        <span class="volume-value" id="volume-val" role="status" aria-atomic="true">0.000 m³</span>
+      </div>
     </div>
 
     <div class="order-block" aria-label="Order">

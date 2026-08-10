@@ -289,50 +289,55 @@ body {
 }
 
 /* ── Total Volume card ────────────────────────────────────────────────────────
-   Pinned again - round 2. Went from the pinned chrome bar (v17/v18) to a scrolling
-   row (v19 round 1, Andre's first sketch) to this: pinned, but as a card, matching
-   the language ".order-block" introduced rather than reverting to the old bar look.
-   flex-shrink: 0 keeps it outside #scroll-area's scrolling flex child, same mechanism
-   the old .vbar used. Margin on all sides (not edge-to-edge like the old bar) so the
-   card reads as a floating card against the page background, not another full-width
-   strip - the rounded corners need visible page background around them to register as
-   a card rather than a second header bar. Label reuses .field-label so "Total Volume"
-   matches the weight/size of Length/Width/Thickness/Wastage below it; the value keeps
-   its own oversized treatment. */
+   v21: moved into the scroll flow, between .inputs-card and .order-block - Andre's
+   call (see index.html's comment above the markup). No longer pinned, so no more
+   flex-shrink/margin gymnastics to sit it outside #scroll-area: it's a plain flex
+   child now, spaced by #scroll-area's own 12px gap exactly like .inputs-card and
+   .order-block either side of it, same as the old chrome-bar-to-card journey settled
+   for those two. Label reuses .field-label so "Total Volume" matches the weight/size
+   of Length/Width/Thickness/Wastage above it; the value keeps its own oversized
+   treatment. */
 .volume-card {
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  /* No bottom margin: #scroll-area's own top padding (12px) alone matches its 12px gap
-     between .inputs-card and .order-block below - one consistent 12px card-to-card
-     rhythm throughout, even though volume-card sits outside #scroll-area (pinned) and
-     can't share its flex `gap` directly. Trimmed from 16px - see .inputs-card's
-     comment for why (reclaiming space from the keypad's ~third-of-screen footprint). */
-  margin: 4px 16px 0;
   padding: 12px;
-  /* Trying a literal navy instead of --surface-1 (Andre's ask) - not theme-tokenised,
-     since it's a fixed dark colour regardless of light/dark mode. Text inside this
-     card is overridden to fixed light tones below for the same reason - the usual
-     --text-* tokens assume a light-in-light/dark-in-dark card and would be unreadable
-     against the navy fill. (Tried the mark's own yellow here too - reverted: this app's
-     dark-mode caution colour, #f5c451, is close enough to the brand yellow #F2CD52 that
-     the hero card risked reading as a warning instead of the answer.) */
-  background: #020B4D;
+  /* Back to the app's own adaptive surface (Andre's call, after weighing the LCD-yellow
+     and navy fills that lived here before) - HIG treats colour as vocabulary, and this
+     app's yellow is already spoken for by --caution, so a saturated fill on the answer
+     risked reading as a warning rather than a result. Matches .inputs-card/.order-block:
+     the answer's hierarchy comes from the oversized bold figure below, not from a
+     one-off card colour, and the one deliberate accent in the app stays reserved for
+     the interactive Copy/Share buttons (--diagram-accent). */
+  background: var(--surface-1);
   border-radius: var(--radius);
 }
-/* "Total Volume" as an eyebrow caption above the figure, not a label beside it -
-   matches the .section-label/order-row-recommended caption language elsewhere in the
-   app (uppercase, letter-spaced, secondary colour) rather than reusing .field-label's
-   row-label treatment, since this isn't a row with a value opposite it anymore. */
+/* Eyebrow+waste-note column on the left, figure on the right (Andre's call) -
+   top-aligned (not baseline) so "Total Volume" sits at the card's top-left corner
+   instead of dragging down to the big figure's baseline. */
+.volume-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* Groups the eyebrow and its wastage footnote into one left-hand column, stacked
+   tight (small gap, not the old block-level default spacing) so the footnote reads
+   as sitting right under "Total Volume" instead of drifting down to the bottom of
+   the card - which is where it landed once the big figure on the right made the
+   card taller than this column's own content. */
+.volume-label-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* "Total Volume" now sized/weighted to match .field-label ("Wastage" etc. above it)
+   exactly (Andre's call) - same size, weight and colour as every other row label in
+   the app, not a smaller secondary caption. */
 .volume-eyebrow {
   display: block;
-  font-size: var(--text-xxs);
+  font-size: var(--text-m);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #aeb7e6;   /* fixed light periwinkle - see .volume-card's navy-bg comment.
-                        9.26:1 against #020B4D */
-  margin-bottom: 4px;
+  color: var(--text-primary);
 }
 /* Faint, small - a footnote on the headline number, not competing with it. Invisible
    (not display:none) whenever wastage is 0% or the volume isn't complete yet - the
@@ -340,17 +345,15 @@ body {
    overall height never changes as this toggles. It's pinned above the scroll area, so
    a size change here would shift/shake the whole stack below it on every keystroke
    that crosses the wastage-note's on/off threshold.
-   font-size and colour deliberately match .volume-eyebrow exactly (down to the weight)
-   so the two read as the same visual size - uppercase+letter-spacing alone was making
-   the eyebrow look bigger/bolder than this line even though the font-size token was
-   already identical. */
+   Stays at --text-xxs even though .volume-eyebrow grew past it - this is a footnote on
+   the figure, not part of the label, so it keeps reading as secondary next to the now
+   larger "Total Volume". */
 .volume-waste-note {
   font-size: var(--text-xxs);
   font-weight: 600;
   line-height: 1.3;
   min-height: calc(var(--text-xxs) * 1.3);
-  color: #aeb7e6;   /* fixed, same tone as the eyebrow (.volume-eyebrow) - see
-                        .volume-card's navy-bg comment. 9.26:1 against #020B4D */
+  color: var(--text-secondary);
   margin-top: 0;
 }
 .volume-value {
@@ -359,21 +362,16 @@ body {
                              from the shape name and the field values above it */
   font-weight: 700;
   letter-spacing: -0.02em;
-  text-align: left;   /* was right, for the old side-by-side row; now stacked under
-                          the eyebrow above, so it matches that alignment instead */
+  text-align: right;   /* back to the side-by-side row's alignment (Andre's call) -
+                           label left in .volume-row, number right */
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
-  color: #ffffff;   /* fixed white - see .volume-card's navy-bg comment. Was inherited
-                        from body's --text-primary, which is dark in light mode and
-                        would be unreadable against the navy fill. */
+  color: var(--text-primary);   /* back to the theme token now the card is adaptive
+                                     again, same as every other card's content colour */
 }
 /* Nothing measured yet: placeholder, not a reading. Greyed so it can't be mistaken for an
    answer - v12 shipped a live-looking "0.99 example only" in this slot. */
-.volume-value.is-empty { color: #8c95c2; font-weight: 500; }   /* fixed, dimmest of the
-                            three navy-card text tones - see .volume-card's comment.
-                            6.21:1 against #020B4D (was #5c68a8, only 3.46:1 - the
-                            weakest margin of the four, right against the 3:1 minimum
-                            for large text, genuinely too tight) */
+.volume-value.is-empty { color: var(--text-muted); font-weight: 500; }
 
 /* "m³" sized down from the number it follows, in the volume hero only (not Order's
    Ready-mix line, which stays one uniform size). Inherits weight/colour from its
@@ -688,17 +686,15 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  /* v20: back to neutral, not blue. The app's own doctrine calls diagram-accent "the
-     one deliberate colour... used only to mark which dimension is currently being
-     edited" - that stopped being literally true once "Recommended" reused it for an
-     unrelated meaning (a suggestion, not an active-editing state). The diagram
-     highlight and the focus ring are legitimately the same signal fired at the same
-     moment (focusing a field lights up both simultaneously), so sharing blue between
-     those two is correct; "Recommended" doesn't belong grouped with them. The word
-     itself already carries the meaning - text-secondary plus the existing
-     bold/uppercase/letter-spacing treatment is enough without borrowing a colour that
-     means something else everywhere else in the app. */
-  color: var(--text-secondary);
+  /* v21: back to blue (Andre's call, reversing v20's walk-back - see git history for
+     that reasoning if this flip-flops again). At text-secondary weight "Recommended"
+     was easy to scroll past - the one moment the app tells you which option to pick
+     was reading at the same visual priority as everything around it. Diagram-accent is
+     spatially and temporally separate from its other meaning (the focused-field
+     highlight lives up in the Inputs card, this lives down in Order, and the two never
+     light up together), so the collision risk flagged in v20 is more theoretical than
+     practical here. */
+  color: var(--diagram-accent);
 }
 .order-row-value {
   font-size: var(--text-m);
