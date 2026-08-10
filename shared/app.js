@@ -501,7 +501,7 @@
     var wasteNoteEl = document.getElementById('volume-waste-note');
     var wastePct = parseFloat(vals.wastage) || 0;
     var showWasteNote = complete && wastePct > 0;
-    wasteNoteEl.textContent = showWasteNote ? 'Incl. +' + wastePct + '% wastage' : '';
+    wasteNoteEl.textContent = showWasteNote ? 'Includes +' + wastePct + '% wastage' : '';
     wasteNoteEl.style.visibility = showWasteNote ? 'visible' : 'hidden';
 
     var el = document.getElementById('options');
