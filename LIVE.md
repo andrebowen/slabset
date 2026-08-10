@@ -25,4 +25,16 @@ dark-mode-only tint (`#5983E3`, same hue as light mode's `#3568DD`, lightness ra
 to-zoom on cards while leaving pinch-zoom untouched. Same promote steps as above
 (bump `sw.js`, bump `sitemap.xml` lastmod, rsync, commit, push).
 
+**Hotfix 2026-08-10 (`v20-preview-8`):** header wordmark reads "SlabSet Concrete
+Calculator" (was "...Concrete Pro" - now matches the page `<title>`/manifest
+description, which always said "calculator"), with "Set" sitting in a flush yellow
+chip (sharp corners, ~2px gap) echoing the app icon's mark; fixed a missing polygon in
+the stairs oblique diagram (base slab's right-side depth face had outline strokes but
+no fill, showing the page background through as a dark gap); tried the brand yellow on
+the Total Volume card, reverted to navy (too close to the app's own caution colour,
+`#f5c451`, to use on the hero number); waste-note now matches the eyebrow's weight, not
+just its font-size; Copy/Share buttons switched from flat black/white to the app's
+accent colour (`--diagram-accent`), with a new `--accent-text` token for on-accent ink
+that flips white/near-black per theme. Same promote steps as above.
+
 **Edit here only for hotfixes, and bump `sw.js` VERSION when you do.**
