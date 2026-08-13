@@ -966,13 +966,13 @@
       lines.push(f.label + ': ' + v + (f.count ? '' : ' ' + units[f.id]));
     });
     lines.push('');
-    // Three decimals so small pads stay honest (0.240 / 0.024 / 0.264) — ledger
-    // on screen stays at two for scan; the sheet gets the fuller figure.
-    lines.push('Base quantity: ' + withCommas(baseVol.toFixed(3)) + ' m³');
-    // Always show the wastage row, including +0% → 0.000 m³ when dialled to zero
+    // Two decimals, same as the Order ledger (Base / Wastage / Order). Ready-mix
+    // stays 1dp via readyLine() (0.1 m³ truck step).
+    lines.push('Base quantity: ' + withCommas(baseVol.toFixed(2)) + ' m³');
+    // Always show the wastage row, including +0% → 0.00 m³ when dialled to zero
     // (same honesty as the on-screen Order ledger keeping the control at 0%).
-    lines.push('+' + wastePct + '% Wastage: ' + withCommas(wasteAmt.toFixed(3)) + ' m³');
-    lines.push('Order quantity: ' + withCommas(withWaste.toFixed(3)) + ' m³');
+    lines.push('+' + wastePct + '% Wastage: ' + withCommas(wasteAmt.toFixed(2)) + ' m³');
+    lines.push('Order quantity: ' + withCommas(withWaste.toFixed(2)) + ' m³');
     lines.push('');
     lines.push('Supply options:');
     lines.push(readyLine(withWaste));
