@@ -552,15 +552,10 @@ select { font-family: inherit; }
   flex-shrink: 0;
 }
 .field-label {
-  /* 2026-08-12 (Andre's ask, "same as the lower card i.e. type small"): was --text-m
-     (20px), the same step .shape-heading above it uses - dropped to --text-s (17px)
-     to match the Outputs card's ledger rows (.ledger-row is --text-s throughout) so
-     the two cards read at one consistent body size instead of the Inputs card's rows
-     being a visible step larger than the Outputs card's. Weight (600) untouched -
-     only asked about size ("text and numbers"), and label/value staying bolder than
-     the Outputs ledger's plain 400 still marks these as the editable fields they are. */
+  /* 17px to match Order ledger rows. Weight 400 to match those labels too
+     (2026-08-14): numbers stay 600, labels don't. */
   font-size: var(--text-s);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
   display: block;
   min-width: 0;
@@ -1035,7 +1030,7 @@ select { font-family: inherit; }
   font-family: inherit;
   font-size: var(--text-s);
   font-weight: 600;
-  height: 44px; /* keep 44 */
+  height: 54px;
   border: 0;
   border-radius: var(--radius);
   /* Was var(--text-primary) - flat black/white, no different from any other filled
