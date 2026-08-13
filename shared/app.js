@@ -335,11 +335,9 @@
   function valueBox(f) {
     var raw = vals[f.id] || '';
     var focused = state.focus === f.id;
-    // Count fields (Steps, Piers, Columns) show as "× 3", not a bare "3" - 2026-08-12
-    // (Andre's ask), so the figure reads as the multiplier it actually is (this
-    // pier's volume × N piers) rather than looking like a typed measurement. Visual
-    // only - aria-label keeps the plain number, no "times"/"×" added, same as before.
-    var display = (raw && f.count) ? '× ' + raw : (raw || '—');
+    // Piers / Columns show as "× 3" so the figure reads as a multiplier, not a
+    // measurement. Steps is a count of treads, so it stays a bare number.
+    var display = (raw && f.count && f.id !== 'stN') ? '× ' + raw : (raw || '—');
     return '<div class="field-val' + (focused ? ' focused' : '') + (raw ? '' : ' is-empty') + '"' +
              ' role="button" tabindex="0" data-field="' + f.id + '"' +
              ' aria-label="' + f.label + (raw ? ', ' + raw : ', not set') + '">' +
@@ -523,16 +521,22 @@
     renderFields();
     renderResults();
   }
+  // Opening a native picker must not rebuild the DOM (innerHTML flashes the rows
+  // and can destroy the <select> mid-open). Drop keypad + focus chrome in place.
+  function dismissKeypadQuiet() {
+    if (state.focus == null) { showKeypad(false); return; }
+    settle(state.focus);
+    state.focus = null;
+    showKeypad(false);
+    var focused = document.querySelectorAll('.field-val.focused');
+    for (var i = 0; i < focused.length; i++) focused[i].classList.remove('focused');
+    highlightDim();
+  }
   document.addEventListener('click', function (e) {
     if (e.target.closest('.field-row') || e.target.closest('#keypad-wrap')) return;
-    // Opening Wastage's native picker must not rebuild Order (that destroys the
-    // <select> mid-open) or the whole lower stack flashes. Dismiss the keypad only.
-    if (e.target.closest('[data-row="wastage"]') || e.target.closest('#wastage-select')) {
-      if (state.focus == null) return;
-      settle(state.focus);
-      state.focus = null;
-      showKeypad(false);
-      renderFields();
+    if (e.target.closest('.shape-heading') || e.target.closest('#shape-select') ||
+        e.target.closest('[data-row="wastage"]') || e.target.closest('#wastage-select')) {
+      dismissKeypadQuiet();
       return;
     }
     blurField();
