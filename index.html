@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SlabSet - Concrete calculator</title>
 <meta name="description" content="Concrete calculator made for Australia. Professional-grade, metric only field tool for working out bags or ready-mix on site.">
-<meta name="theme-color" content="#f2f2f7">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SlabSet">
@@ -21,7 +21,7 @@
     }
     document.documentElement.setAttribute('data-theme', t);
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#f2f2f7');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
   } catch (e) {
     document.documentElement.setAttribute('data-theme', 'light');
   }
@@ -48,14 +48,19 @@
 <body>
 
 <!-- Tabler outline icons, inlined: the app must work offline from the home screen. -->
-<svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10"/></symbol></svg>
+<svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol><symbol id="i-backspace" viewBox="0 0 24 24"><path d="M20 7v10a2 2 0 0 1 -2 2h-8.5l-5 -5a1.5 1.5 0 0 1 0 -2l5 -5h8.5a2 2 0 0 1 2 2z"/><path d="M12 10l4 4m0 -4l-4 4"/></symbol></svg>
 
 <div class="shell">
 
   <header class="header">
-    <h1 class="title">
-      <b>Slab<span class="title-set">Set</span></b> Concrete Calculator
-    </h1>
+    <div class="header-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="shared/logo.svg" width="36" height="36" alt="" />
+      </span>
+      <h1 class="title">
+        <span class="title-brand">SlabSet</span><span class="title-sub">Concrete</span>
+      </h1>
+    </div>
     <button type="button" class="theme-toggle" id="btnTheme" aria-label="Switch to dark theme" aria-pressed="false">
       <svg class="ico-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
@@ -69,17 +74,16 @@
 
   <div id="scroll-area">
 
-    <!-- Inputs card - Shape, Diagram and Dimensions/Wastage grouped into one card
-         (2026-08-04, Andre's call): resolves the earlier asymmetry where Volume and
-         Order were cards but the actual input work sat bare on the page background.
-         The Diagram lives here rather than staying its own bare element because it's a
-         live description of the Shape selection, not decoration - it belongs with the
-         inputs it's illustrating, same reasoning that put Wastage inside #fields as a
-         field rather than off in Order. This is a deliberate partial walk-back toward
-         v17's card-stack look, which v18 explicitly flattened away from - not a full
-         reversal (still just 3 cards, not everything), but worth knowing that's the
-         direction this moves in. -->
+    <!-- Inputs card - Shape, Diagram and Job dimensions grouped into one card
+         (2026-08-04, Andre's call; eyebrow renamed Job in v22.26). Diagram lives here
+         as a live description of the Shape selection. Wastage lives in the scroll
+         Order ledger (#volume-breakdown), not in #fields. Three cards in scroll:
+         Job / Order / Supply (top Order pin removed in v22.30). -->
     <div class="inputs-card">
+
+      <!-- "Job" eyebrow (v22.26 IA rename; was "Dimensions"). Card-level .tv-label,
+           top-left, above Shape - same caption language as Order / Supply below. -->
+      <div class="tv-label">Job</div>
 
       <!-- Shape name, a plain heading. Still the real shape switcher: the <select>
            overlays the whole heading, same invisible-overlay technique as before.
@@ -89,7 +93,9 @@
            either way - worth asking Andre to just pick one for good next time it comes
            up rather than toggling again. -->
       <div class="shape-heading">
-        <span id="shape-current">Slab</span>
+        <!-- aria-hidden - same decorative-echo pattern as .unit-picker-current:
+             #shape-select already carries the accessible name/value. -->
+        <span id="shape-current" aria-hidden="true">Slab</span>
         <svg class="ti shape-heading-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
         <select id="shape-select" aria-label="Shape"></select>
       </div>
@@ -100,32 +106,28 @@
         <div id="diagram" role="img" aria-label="Slab / Pad dimension diagram"></div>
       </div>
 
-      <!-- Dimension fields plus wastage, rendered from the active shape. Wastage is now
-           a typed field like the others - the wireframe shows it as a plain value + "%"
-           row, not a preset pull-down. -->
+      <!-- Dimension fields, rendered from the active shape (Wastage moved out to the
+           Outputs ledger, see app.js's wastageLedgerRow comment). -->
       <div id="fields"></div>
 
     </div>
 
-    <!-- v21: moved out of the pinned header position into the scroll flow, between
-         Inputs and Order - Andre's call. Reads as the last step of "what you typed"
-         before "what to order" (dimensions -> total -> order), rather than living
-         above everything as a permanently-visible answer. Doctrine 1b's "answer never
-         off-screen" guarantee no longer holds now that this scrolls with the rest of
-         the stack - a deliberate trade this round, not an oversight. -->
-    <div class="volume-card">
-      <div class="volume-row">
-        <div class="volume-label-col">
-          <span class="volume-eyebrow">Total Volume</span>
-          <p class="volume-waste-note" id="volume-waste-note" style="visibility: hidden;"></p>
-        </div>
-        <span class="volume-value" id="volume-val" role="status" aria-atomic="true">0.000 m³</span>
+    <!-- Order card (v22.26 rename; was "Volume"). Full ledger + wastage control.
+         Between Job and Supply; sole order readout (top pin removed in v22.30). -->
+    <div class="output-card" aria-label="Order">
+      <div class="tv-section">
+        <div class="tv-label">Order</div>
+        <div id="volume-breakdown"></div>
       </div>
     </div>
 
-    <div class="order-block" aria-label="Order">
-      <div class="section-label">What to order</div>
-      <div id="options" aria-live="polite"></div>
+    <!-- Supply card (v22.32 rename; was Buy / Buying options). Own .output-card after Order,
+         spaced by #scroll-area's 12px gap. -->
+    <div class="output-card" aria-label="Supply">
+      <div class="output-order">
+        <div class="tv-label">Supply</div>
+        <div id="options" aria-live="polite" aria-label="Supply"></div>
+      </div>
     </div>
 
     <p class="check-strip" id="check-strip" hidden></p>

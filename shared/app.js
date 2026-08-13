@@ -31,20 +31,27 @@
     {id:'pierfooting', label:'Pier footing', diagram:'pierfooting',
      // Domestic pier/pad footings run roughly 300-600mm square; depth follows AS 2870 -
      // deeper in reactive clay, but a bored pier past ~4m is unusual for this class of pour.
-     // Quantity carried over from v15/live - a job pours a set of identical piers, not one.
+     // Count field carried over from v15/live - a job pours a set of identical piers, not
+     // one. Labeled 'Piers' (2026-08-12, was 'Quantity') to match Steps' own pattern
+     // (the item name itself, not a generic count noun) and to stop colliding with the
+     // Outputs ledger's "Base quantity"/"Order quantity" rows added later in v22.1 -
+     // same word, unrelated meaning (a count here, a volume there), easy to misread as
+     // one deriving from the other when they sit on the same screen.
      fields:[{id:'pierL',label:'Length',lo:0.2,hi:3},
              {id:'pierW',label:'Width',lo:0.2,hi:3},
              {id:'pierD',label:'Depth',lo:0.2,hi:4},
-             {id:'pierQty',label:'Quantity',count:true,lo:1,hi:60}],
+             {id:'pierQty',label:'Piers',count:true,lo:1,hi:60}],
      vol:function(v){ return v.pierL * v.pierW * v.pierD * v.pierQty; }},
 
     {id:'column', label:'Column', diagram:'column',
      // Verandah posts start around 75-90mm; structural columns for a two-storey pour rarely
-     // exceed ~1.2m diameter or 8m height in residential/light-commercial work. Quantity
-     // carried over from v15/live, same reasoning as pier footing.
+     // exceed ~1.2m diameter or 8m height in residential/light-commercial work. Count
+     // field carried over from v15/live, same reasoning as pier footing - labeled
+     // 'Columns' (2026-08-12, was 'Quantity'), same fix and same reasoning as pierQty
+     // above.
      fields:[{id:'colDia',label:'Diameter',lo:0.075,hi:1.2},
              {id:'colH',label:'Height',lo:0.3,hi:8},
-             {id:'colQty',label:'Quantity',count:true,lo:1,hi:40}],
+             {id:'colQty',label:'Columns',count:true,lo:1,hi:40}],
      vol:function(v){ return Math.PI * Math.pow(v.colDia/2, 2) * v.colH * v.colQty; }},
 
     {id:'footing', label:'Strip footing', diagram:'footing',
@@ -102,10 +109,9 @@
   var UNIT_OPTS = ['m', 'mm'];
   var UNIT_FACTOR = { m: 1, mm: 0.001 };
 
-  // Wastage is a fixed preset list, not a typed value, so it is a pull-down like Shape
-  // rather than another keypad-editable field - carried over from v17. Each preset
-  // carries a two-to-three word site condition so the number means something without a
-  // trade background to read it.
+  // Wastage is a fixed preset list via native <select> popup - carried over from v17.
+  // Notes live in option labels (e.g. "10% — Recommended for standard site").
+  // v22.48–50 HIG segments reverted (v22.51 Andre): back to Order-ledger pulldown.
   var WASTE_OPTS = [0, 5, 10, 15];
   var WASTE_DEFAULT = 10;
   var WASTE_NOTES = {
@@ -296,14 +302,24 @@
     if (withWaste < threshold - buffer) return 'bags';
     return null;   // too close to call - don't pretend
   }
-  function bagCount(withWaste) {
-    var bagVol = state.bagSize * 0.0005;
+  // Kept for analytics only (calc_complete / specTrackParams); not rendered on
+  // Supply tiles (v22.44) and not used to rank the Copy/Share docket (v22.47).
+  // v22.25/v22.37/v22.39 copy history: ready "Less mixing. One pour."; bags "Easy on a small job."
+  var REC_REASON = {
+    ready: 'Less mixing. One pour.',
+    bags: 'Easy on a small job.'
+  };
+  // size is optional (defaults to state.bagSize) - the Order list now shows all three
+  // pack sizes at once (v21, no more picker), so this needs to compute a count for an
+  // arbitrary size, not just whichever one used to be selected.
+  function bagCount(withWaste, size) {
+    var bagVol = (size || state.bagSize) * 0.0005;
     // epsilon absorbs float drift (3*2*0.1 = 0.6000000000000001) that would bill a phantom bag
     return bagVol > 0 ? Math.ceil(withWaste / bagVol - 1e-9) : 0;
   }
+  // Ceil to nearest 0.1 m³ delivery increment. No 1.0 m³ floor (v22.38).
   function readyOrder(withWaste) {
-    var order = Math.ceil(withWaste / 0.1) * 0.1;
-    return order < 1.0 ? 1.0 : order;
+    return Math.ceil(withWaste / 0.1) * 0.1;
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -318,10 +334,15 @@
   function valueBox(f) {
     var raw = vals[f.id] || '';
     var focused = state.focus === f.id;
+    // Count fields (Steps, Piers, Columns) show as "× 3", not a bare "3" - 2026-08-12
+    // (Andre's ask), so the figure reads as the multiplier it actually is (this
+    // pier's volume × N piers) rather than looking like a typed measurement. Visual
+    // only - aria-label keeps the plain number, no "times"/"×" added, same as before.
+    var display = (raw && f.count) ? '× ' + raw : (raw || '—');
     return '<div class="field-val' + (focused ? ' focused' : '') + (raw ? '' : ' is-empty') + '"' +
              ' role="button" tabindex="0" data-field="' + f.id + '"' +
              ' aria-label="' + f.label + (raw ? ', ' + raw : ', not set') + '">' +
-             (raw || '—') +
+             display +
            '</div>';
   }
 
@@ -333,7 +354,12 @@
   // one control language for every "pick one of a few options" row in the app now.
   function unitPickerEl(f) {
     return '<div class="unit-picker">' +
-      '<span class="unit-picker-current">' + units[f.id] + '</span>' +
+      // aria-hidden: this span is a decorative echo of the <select> below it (see the
+      // comment above this function) - the select already has the accessible name
+      // (aria-label) and value (the selected option), so without this a screen reader
+      // announces the unit twice, once from this span's text and again from the
+      // select itself.
+      '<span class="unit-picker-current" aria-hidden="true">' + units[f.id] + '</span>' +
       '<svg class="ti unit-picker-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
       '<select class="unit-picker-select" data-unit-for="' + f.id + '" aria-label="' + f.label + ' unit">' +
         UNIT_OPTS.map(function (u) {
@@ -345,15 +371,33 @@
 
   function renderFields() {
     var el = document.getElementById('fields');
+    // Wastage used to close out this list as its own row (wastageRow(), see git
+    // history) - moved into the Order ledger 2026-08-11 (Andre's call): it's an
+    // order adjustment, not a physical dimension of the shape like the rows below, so
+    // it now lives next to the number it actually changes (#volume-breakdown's
+    // Wastage row, see renderResults()) instead of being typed here and then
+    // echoed there. #fields is Length/Width/Thickness (or the equivalent for whatever
+    // shape) only now.
     el.innerHTML = currentShape().fields.map(function (f) {
-      var unitEl;
-      if (f.count) {
-        unitEl = '<div class="unit-picker" aria-hidden="true" style="visibility:hidden;">' +
-                   '<span class="unit-picker-current">-</span>' +
-                 '</div>';
-      } else {
-        unitEl = unitPickerEl(f);
-      }
+      // 2026-08-11: a count field (Quantity) used to keep an invisible
+      // visibility:hidden unit-picker placeholder here, so its value box lined up on
+      // the same left edge as a real dimension's number even without a unit to show.
+      // That left the row's right edge ragged instead - Diameter/Height's "600 mm ⌄"
+      // reaches the row's true right edge, Quantity's "17" stopped 66px short of it
+      // (Andre flagged the resulting unevenness scanning down the card). Dropped
+      // entirely for count fields, in favour of a flush right edge on every row.
+      // 2026-08-12 (Andre's ask): reinstated. Flush edges came at the cost of the
+      // digit itself no longer lining up between rows - Quantity/Piers/Columns' value
+      // sat 66px further right than Length/Width/Depth's above it, and now that count
+      // fields read "× 5" instead of a bare "5" (see valueBox), that offset draws the
+      // eye even more. Same invisible-placeholder trick as before: an empty
+      // visibility:hidden .unit-picker box, same 60px width, so field-controls has
+      // the same footprint whether or not there's a real unit to show, and the number
+      // lands on the same right edge as every dimension row above it. Row edges go
+      // ragged again for count rows - accepted trade, column alignment wins this time.
+      var unitEl = f.count
+        ? '<div class="unit-picker" style="visibility:hidden" aria-hidden="true"></div>'
+        : unitPickerEl(f);
       var warn = warnFor(f);
       return '<div class="field-row" data-row="' + f.id + '">' +
         '<div class="field-line">' +
@@ -365,28 +409,26 @@
         '</div>' +
         (warn ? '<div class="field-warn"><svg class="ti" aria-hidden="true"><use href="#i-alert"/></svg><span>' + warn + '</span></div>' : '') +
       '</div>';
-    }).join('') + wastageRow();
+    }).join('');
     wireFieldBoxes(el);
-    renderWastagePulldown();
     highlightDim();
   }
 
-  // Last row of the same list: it changes the volume like the rows above it. A fixed
-  // preset list, not a typed value, so it is a pull-down like Shape rather than another
-  // keypad-editable field - carried over from v17.
-  // One button, same total width as field-val + gap + unit-picker above, so it lands
-  // on the exact same verticals as the dimension value and its unit control - merged
-  // from two separate boxes into one 2026-08-02.
-  function wastageRow() {
-    return '<div class="field-row" data-row="wastage">' +
-      '<div class="field-line">' +
-        '<span class="field-label">Wastage</span>' +
-        '<div class="wastage-pulldown">' +
-          '<span id="wastage-current"></span>' +
-          '<svg class="ti wastage-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
-          '<select id="wastage-select" aria-label="Wastage"></select>' +
-        '</div>' +
-      '</div>' +
+  // Wastage's control - a fixed preset list, not a typed value, so it is a pull-down
+  // like Shape rather than another keypad-editable field, carried over from v17.
+  // Relocated into the Order ledger (label-first: "Wastage" plain, then "+10% ▾").
+  // v22.48–50 HIG segments reverted (v22.51 Andre): back to native popup select.
+  // Called from renderResults() every render since #wastage-select is rebuilt fresh.
+  function wastageLedgerRow(amountStr) {
+    return '<div class="ledger-row" data-row="wastage">' +
+      '<span class="ledger-label">Wastage <span class="wastage-pulldown">' +
+        // aria-hidden - same decorative-echo pattern as unitPickerEl: #wastage-select
+        // already carries the accessible name/value.
+        '<span id="wastage-current" aria-hidden="true"></span>' +
+        '<svg class="ti wastage-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
+        '<select id="wastage-select" aria-label="Wastage"></select>' +
+      '</span></span>' +
+      '<span class="ledger-val' + (amountStr ? '' : ' is-empty') + '">' + (amountStr || '—') + '</span>' +
     '</div>';
   }
 
@@ -396,12 +438,11 @@
       var label = p + '% — ' + WASTE_NOTES[p];
       return '<option value="' + p + '"' + (String(p) === vals.wastage ? ' selected' : '') + '>' + label + '</option>';
     }).join('');
-    document.getElementById('wastage-current').textContent = '+' + vals.wastage + '%';
-    sel.onchange = function () {
+    document.getElementById('wastage-current').textContent = vals.wastage + '%';
+    sel.addEventListener('change', function () {
       vals.wastage = sel.value;
-      document.getElementById('wastage-current').textContent = '+' + vals.wastage + '%';
       renderResults(); saveDraft();
-    };
+    });
   }
 
   function wireFieldBoxes(root) {
@@ -424,6 +465,25 @@
   // keypad on activation mirrors how a real text input immediately raises a keyboard
   // ready to type into, and needs no change for touch users since it only fires on the
   // keyboard path.
+  // v22.46: Order auto-scroll above keypad removed — was hiding the Job axon
+  // diagram while editing Length/Width/Thickness (Andre). Order is reached by
+  // user scroll; diagram stays put while typing. Keypad unchanged; no top pin.
+  // ensureOrderVisibleAboveKeypad / scrollOrderIntoViewIfComplete left unused.
+  function scrollBehavior() {
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return 'auto';
+      }
+    } catch (e) {}
+    return 'smooth';
+  }
+
+  // Unused since v22.46 (was: keep Order peeking above .keypad-wrap).
+  function ensureOrderVisibleAboveKeypad() {}
+
+  // Unused since v22.46 (was: scroll Order into view on first complete).
+  function scrollOrderIntoViewIfComplete() {}
+
   function focusField(id, moveFocusToKeypad) {
     if (state.focus !== id) { settle(state.focus); }  // done with the one you are leaving
     delete settled[id];                               // re-editing this one: verdict off
@@ -435,8 +495,7 @@
     // Copy/Share needs to catch that the moment you leave the field, not wait for the
     // next keystroke, or a caution earned by tapping away goes unseen until send.
     renderResults();
-    var box = document.querySelector('[data-field="' + id + '"]');
-    if (box) { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    // v22.46/follow-up — no scrollIntoView on field focus; keeps Job diagram stable (Andre).
     if (moveFocusToKeypad) {
       var firstKey = document.querySelector('#keypad .key');
       if (firstKey) { firstKey.focus(); }
@@ -462,9 +521,10 @@
     blurField();
   });
 
-  // Volume alone decides which option is advised; nothing is ever "chosen" from a click.
-  // Falls back to bags in the dead-band around the 0.5 m³ threshold, where getRec()
-  // declines to call it - the docket still has to say something.
+  // Analytics helper only (specTrackParams / calc_complete). Volume alone decides
+  // which option is "recommended" for tracking; nothing is chosen from a click, and
+  // the Copy/Share docket (v22.47) lists both supply options neutrally. Falls back
+  // to bags in the dead-band around the 0.5 m³ threshold where getRec() declines.
   function orderPrimary(withWaste) {
     return getRec(withWaste) || 'bags';
   }
@@ -489,72 +549,125 @@
       });
     } else if (!complete) { didCompletePulse = false; }
 
-    var volEl = document.getElementById('volume-val');
-    volEl.innerHTML = withCommas((complete ? withWaste : 0).toFixed(2)) + ' <span class="unit-suffix">m³</span>';
-    volEl.classList.toggle('is-empty', !complete);
-
-    // Never `hidden` (display:none) - that would change .volume-card's height between
-    // states and shake the pinned card's size (and everything below it) every time
-    // wastage crosses 0% or the fields go complete/incomplete. `.volume-waste-note`
-    // reserves its line height at all times (see min-height in styles.css); only its
-    // visibility toggles, so the card's box never changes size.
-    var wasteNoteEl = document.getElementById('volume-waste-note');
-    var wastePct = parseFloat(vals.wastage) || 0;
-    var showWasteNote = complete && wastePct > 0;
-    wasteNoteEl.textContent = showWasteNote ? 'Includes +' + wastePct + '% wastage' : '';
-    wasteNoteEl.style.visibility = showWasteNote ? 'visible' : 'hidden';
+    // v22.1 (Andre's explicit ask, written out line by line): the volume is no longer
+    // one sentence ("2.20 m³ (incl. +10% wastage)") - it's the arithmetic itself, as a
+    // ledger. Base quantity, then + N% Wastage as its own row with the actual m³ it
+    // adds (not just the percentage), then Order quantity as the total - each row
+    // built fresh every render, same as everything else in this function.
+    // The Wastage block carries its own control (relocated from Inputs earlier) - it
+    // can't collapse away, or there'd be no way to dial wastage back up once it's at
+    // 0%. It always renders, in both the complete and incomplete states below, just
+    // with an empty "—" amount pre-completion (nothing computed to show yet, but the
+    // control itself doesn't need a finished shape to be usable).
+    // v22.60: incomplete shows Base — so the ledger reads as not-ready, not missing a
+    // row. Full three-row skeleton (Base / Wastage / Order) with calm "—" placeholders.
+    // Two decimals throughout (toFixed(2)) for the ledger's own three rows (Andre's
+    // ask, 2026-08-12) - was toFixed(1), which read fine at typical volumes but
+    // collapsed small ones: a 0.05 m³ wastage allowance and a 0.14 m³ one both
+    // rounded to the same "0.1 m³", so two figures that were genuinely different
+    // looked identical. Ready-mix/bags in Supply are untouched - Andre named
+    // these three rows specifically, and readyOrder() already rounds up to its own
+    // 0.1 m³ delivery increment, so a second decimal there wouldn't reflect anything
+    // real about what a truck can actually deliver.
+    // v22.28: full Order ledger in #volume-breakdown (scroll Order card).
+    // v22.30: top pinned Order strip removed — Order card under Job is the sole order readout.
+    var volEl = document.getElementById('volume-breakdown');
+    function ledgerRow(label, value, isTotal, isEmpty) {
+      return '<div class="ledger-row' + (isTotal ? ' ledger-total' : '') + '">' +
+        '<span class="ledger-label">' + label + '</span>' +
+        '<span class="ledger-val' + (isTotal ? ' qty-figure' : '') + (isEmpty ? ' is-empty' : '') + '">' + value + '</span>' +
+      '</div>';
+    }
+    if (!complete) {
+      volEl.innerHTML =
+        ledgerRow('Base quantity', '—', false, true) +
+        wastageLedgerRow(null) +
+        ledgerRow('Order quantity', '—', true, true);
+    } else {
+      var baseVol = computeVolume();
+      volEl.innerHTML =
+        ledgerRow('Base quantity', withCommas(baseVol.toFixed(2)) + ' m³', false, false) +
+        wastageLedgerRow(withCommas((withWaste - baseVol).toFixed(2)) + ' m³') +
+        ledgerRow('Order quantity', withCommas(withWaste.toFixed(2)) + ' m³', true, false);
+    }
+    renderWastagePulldown();
 
     var el = document.getElementById('options');
 
     if (!complete) {
-      el.innerHTML = '<p class="order-empty">Enter every dimension to see the order.</p>';
+      var missingLabel = null;
+      var shapeFields = currentShape().fields;
+      for (var mi = 0; mi < shapeFields.length; mi++) {
+        if (shapeFields[mi].optional) continue;
+        if (!vals[shapeFields[mi].id] || parseFloat(vals[shapeFields[mi].id]) <= 0) {
+          missingLabel = shapeFields[mi].label;
+          break;
+        }
+      }
+      // v22.60: calmer empty Supply copy; names first missing field (lowercase).
+      var emptyHint = missingLabel
+        ? ('Add ' + missingLabel.toLowerCase() + ' to see supply.')
+        : 'Add dimensions to see supply.';
+      el.innerHTML = '<p class="order-empty">' + emptyHint + '</p>';
     } else {
-      var bags = bagCount(withWaste);
       var ready = readyOrder(withWaste);
+      var bags = bagCount(withWaste);
 
-      // Per the v18 wireframe: name, quantity on the right, reason text off-screen
-      // (Copy/Share still write the full docket, see specText()). v19: "Recommended"
-      // moved from an inline coloured badge glued onto the name (v18) to a plain
-      // secondary-colour subtitle line underneath it - HIG's own convention for a
-      // "this one's the default" annotation (Settings' trailing-value grey text, table
-      // cell title+subtitle) doesn't use filled tags, and inline the badge collided
-      // with the row's own flex gap (double spacing bug). Bag size (2026-08-03) moved
-      // off the old cycling chip onto the same .unit-picker native-picker pattern as
-      // Shape/Wastage/Unit, for the same "one control language" reasoning that picked
-      // it for m/mm - just the content-sized .unit-picker--auto variant, since "20kg"
-      // is wider than the fixed 76px tuned for "m"/"mm" and this sits inline with the
-      // "×" text rather than in a right-aligned column.
+      // Number leads each tile (v22.14). v22.44/v22.45 (Andre): equal Supply
+      // tiles — no REC_REASON / "Recommended." / badge / is-recommended /
+      // is-demoted in the UI; getRec()/orderPrimary feed analytics only.
+      // Docket also neutral since v22.47. User decides.
+      // v22.15 (Andre's ask, written out - "75 bags / 20kg 25kg 30kg - these are
+      // buttons (20 default)"): bag size stops being a native-select pill
+      // (.unit-picker--inline, "[20kg ▾]") and becomes three real buttons, one per
+      // size, sitting under the bag count instead of inline within its label. This
+      // is the segmented-control approach specifically - "all three pack sizes list
+      // as their own row" was tried and reverted for v21's one-pill version (see
+      // .bag-size-buttons' CSS comment for that history); noting the reversal of a
+      // reversal rather than dropping the earlier reasoning silently. The count and
+      // "bags" now read as one phrase ("220 bags") instead of the count alone with
+      // the word trailing on its own label line below.
+      // toggle-button semantics (aria-pressed), not role="radio"/radiogroup - a
+      // simpler, still-correct pattern for "N mutually exclusive buttons" that
+      // doesn't also imply arrow-key navigation between them the way a true ARIA
+      // radiogroup would; each button stays its own Tab stop, activated with
+      // Enter/Space like any other button, no extra keyboard wiring needed.
       var BAG_SIZES = [20, 25, 30];
-      var bagSizePicker =
-        '<span class="unit-picker unit-picker--auto">' +
-          '<span class="unit-picker-current">' + state.bagSize + 'kg</span>' +
-          '<svg class="ti unit-picker-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
-          '<select class="unit-picker-select" id="bagSizeSelect" aria-label="Bag size">' +
-            BAG_SIZES.map(function (s) {
-              return '<option value="' + s + '"' + (s === state.bagSize ? ' selected' : '') + '>' + s + 'kg</option>';
-            }).join('') +
-          '</select>' +
-        '</span>';
+      // v22.31: visible "Bag size" caption + extra top margin so chips read as a
+      // sub-control under Bags.
+      var bagSizeButtons =
+        BAG_SIZES.map(function (s) {
+          var isSel = s === state.bagSize;
+          return '<button type="button" class="bag-size-btn' + (isSel ? ' is-selected' : '') +
+            '" data-size="' + s + '" aria-pressed="' + isSel + '">' + s + ' kg</button>';
+        }).join('');
 
+      // HIG grouped lists on the grey Supply card (the card is the "page"):
+      // white inset group for Ready-mix / Bags rows. v22.74 segment sits on the
+      // grey Supply card (no second white .hig-group).
       el.innerHTML =
-        '<div class="order-row">' +
-          '<div class="order-row-name-group">' +
-            '<span class="order-row-name">Bags</span>' +
-            (rec === 'bags' ? '<span class="order-row-recommended">Recommended</span>' : '') +
+        '<div class="hig-stack">' +
+          '<div class="hig-group" role="list">' +
+            '<div class="hig-row" data-row="ready" role="listitem">' +
+              '<span class="hig-row-label">Ready-mix</span>' +
+              '<span class="hig-row-val"><strong>' + withCommas(ready.toFixed(1)) + ' m³</strong></span>' +
+            '</div>' +
+            '<div class="hig-row" data-row="bags" role="listitem">' +
+              '<span class="hig-row-label">' + state.bagSize + ' kg Bags</span>' +
+              '<span class="hig-row-val"><strong>' + withCommas(bags) + '</strong></span>' +
+            '</div>' +
           '</div>' +
-          '<span class="order-row-value">' + withCommas(bags) + ' × ' + bagSizePicker + '</span>' +
-        '</div>' +
-        '<div class="order-row">' +
-          '<div class="order-row-name-group">' +
-            '<span class="order-row-name">Ready-mix</span>' +
-            (rec === 'ready' ? '<span class="order-row-recommended">Recommended</span>' : '') +
+          '<div class="hig-caption" id="bag-size-label">Bag size</div>' +
+          '<div class="bag-size-buttons" role="group" aria-labelledby="bag-size-label">' +
+            bagSizeButtons +
           '</div>' +
-          '<span class="order-row-value">' + withCommas(ready.toFixed(1)) + ' m³</span>' +
         '</div>';
 
-      document.getElementById('bagSizeSelect').addEventListener('change', function (e) {
-        state.bagSize = parseInt(e.target.value, 10);
-        renderResults(); saveDraft();
+      Array.prototype.forEach.call(document.querySelectorAll('.bag-size-btn'), function (btn) {
+        btn.addEventListener('click', function () {
+          state.bagSize = parseInt(btn.getAttribute('data-size'), 10);
+          renderResults(); saveDraft();
+        });
       });
     }
 
@@ -575,6 +688,9 @@
     // An empty docket is not worth sending.
     document.getElementById('btnCopy').disabled = !complete;
     document.getElementById('btnShare').disabled = !complete;
+
+    // v22.46: no ensureOrderVisibleAboveKeypad / complete-time Order scroll —
+    // those moved #scroll-area and hid the Job diagram while editing dims.
   }
 
   // ── Diagram ──────────────────────────────────────────────────────────────────
@@ -766,9 +882,12 @@
     renderFields(); renderResults(); saveDraft();
   }
 
-  // Plain 3-col, 12-key grid per the wireframe - no Next/advance key. Backspace is the
-  // literal '⌫' glyph the wireframe uses, not an icon.
+  // Plain 3-col, 12-key grid per the wireframe - no Next/advance key.
+  // v22.31: backspace uses a light Tabler-style SVG (sprite #i-backspace), not the
+  // system '⌫' glyph which renders as a heavy outlined rectangle on many fonts.
   var KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
+  var BACKSPACE_ICO =
+    '<svg class="ti key-back-ico" aria-hidden="true"><use href="#i-backspace"/></svg>';
 
   // Real <button> elements, not tabindex="-1" divs (v19 fix) - the old markup meant a
   // keyboard-only or screen-reader user could never reach, let alone activate, a
@@ -779,7 +898,8 @@
     el.innerHTML = KEYS.map(function (k) {
       var key = k === '⌫' ? 'back' : k;
       var label = k === '⌫' ? 'Backspace' : k;
-      return '<button type="button" class="key" aria-label="' + label + '" data-key="' + key + '">' + k + '</button>';
+      var face = k === '⌫' ? BACKSPACE_ICO : k;
+      return '<button type="button" class="key" aria-label="' + label + '" data-key="' + key + '">' + face + '</button>';
     }).join('');
     Array.prototype.forEach.call(el.querySelectorAll('.key'), function (c) {
       c.addEventListener('click', function () { appendKey(c.getAttribute('data-key')); });
@@ -787,6 +907,7 @@
   }
 
   function showKeypad(on) {
+    // v22.46: keypad show/hide only — no Order auto-scroll (keeps Job diagram put).
     document.getElementById('keypad-wrap').classList.toggle('is-hidden', !on);
   }
 
@@ -799,17 +920,24 @@
     return String(Number(p[3])) + ' ' + m[Number(p[2]) - 1] + ' ' + p[1];
   }
 
-  function bagsLine(withWaste) { return withCommas(bagCount(withWaste)) + ' x ' + state.bagSize + ' kg bags'; }
-  function readyLine(withWaste) { return withCommas(readyOrder(withWaste).toFixed(1)) + ' m³ ready-mix'; }
+  // Copy/Share Supply line: Ready-mix (matches UI tile).
+  function readyLine(withWaste) {
+    return withCommas(readyOrder(withWaste).toFixed(1)) + ' m³ Ready-mix';
+  }
 
+  // v22.47: clean Copy/Share docket (Andre sketch, Designer polish). Mirrors the
+  // on-screen Order ledger (Base / +N% Wastage / Order), then neutral Supply —
+  // ready-mix plus all three bag sizes under Bags: (× matching the Bags tile).
+  // No primary/or/recommended ranking. Brand line only at the end. getRec /
+  // orderPrimary remain for analytics (specTrackParams / calc_complete) only.
   function specText() {
     var s = currentShape();
+    var baseVol = computeVolume();
     var withWaste = orderVolume();
-    var rec = orderPrimary(withWaste);
-    var primary = rec === 'bags' ? bagsLine(withWaste) : readyLine(withWaste);
-    var alt     = rec === 'bags' ? readyLine(withWaste) : bagsLine(withWaste);
+    var wastePct = parseFloat(vals.wastage) || 0;
+    var wasteAmt = withWaste - baseVol;
 
-    var lines = ['SPEC SHEET', 'by SlabSet.online', ''];
+    var lines = ['SPEC SHEET', ''];
     lines.push('Date: ' + prettyDate(todayISO()));
     lines.push('');
     lines.push('Shape: ' + s.label);
@@ -819,15 +947,23 @@
       lines.push(f.label + ': ' + v + (f.count ? '' : ' ' + units[f.id]));
     });
     lines.push('');
-    lines.push('Net Volume: ' + withCommas(computeVolume().toFixed(3)) + ' m³');
-    lines.push('Total Volume (incl. +' + (parseFloat(vals.wastage) || 0) + '% Wastage): ' + withCommas(withWaste.toFixed(3)) + ' m³');
+    // Three decimals so small pads stay honest (0.240 / 0.024 / 0.264) — ledger
+    // on screen stays at two for scan; the sheet gets the fuller figure.
+    lines.push('Base quantity: ' + withCommas(baseVol.toFixed(3)) + ' m³');
+    // Always show the wastage row, including +0% → 0.000 m³ when dialled to zero
+    // (same honesty as the on-screen Order ledger keeping the control at 0%).
+    lines.push('+' + wastePct + '% Wastage: ' + withCommas(wasteAmt.toFixed(3)) + ' m³');
+    lines.push('Order quantity: ' + withCommas(withWaste.toFixed(3)) + ' m³');
     lines.push('');
-    lines.push('Order quantity:');
-    lines.push(primary);
-    lines.push('or');
-    lines.push(alt);
+    lines.push('Supply options:');
+    lines.push(readyLine(withWaste));
+    lines.push('Bags:');
+    [20, 25, 30].forEach(function (kg) {
+      lines.push(withCommas(bagCount(withWaste, kg)) + ' × ' + kg + ' kg');
+    });
     lines.push('');
     lines.push('Estimate only. Confirm with your supplier.');
+    lines.push('by SlabSet.online');
     return lines.join('\n');
   }
 
@@ -893,9 +1029,14 @@
         track('spec_share', params);
       }).catch(function () {});
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
-      // no share target on desktop - copying is the honest fallback
+      // no share target on desktop - copying is the honest fallback. No flash label
+      // here either (Andre's call): Share's own confirmation is the OS share sheet
+      // itself popping up on the path that has one - "that is enough for
+      // confirmation" - so this fallback path stays silent to match, rather than
+      // being the one case where Share earns a flash label a working share sheet
+      // never gets. Desktop users get a silently-populated clipboard, same as before,
+      // just without a button-text confirmation of it.
       navigator.clipboard.writeText(text).then(function () {
-        flashLabel('shareLabel', 'Copied');
         params.method = 'copy_fallback';
         track('spec_share', params);
       }, function () {});
@@ -910,7 +1051,8 @@
     btn.setAttribute('aria-label', 'Switch to ' + (toDark ? 'dark' : 'light') + ' theme');
     btn.setAttribute('aria-pressed', String(mode === 'dark'));
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', mode === 'dark' ? '#1c1c1e' : '#f2f2f7');
+    // Light theme-color matches --bg (#ffffff after the v22.22 invert), not the old grey page chrome.
+    if (meta) meta.setAttribute('content', mode === 'dark' ? '#1c1c1e' : '#ffffff');
   }
   applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 

@@ -1,16 +1,22 @@
-/* SlabSet v19 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
-   site legibility sizing. No card containers - fields, diagram and order sit directly
-   on the page background. Hairlines now bracket groups only (top/bottom of #fields,
-   the pinned bar's lower edge, the keypad's upper edge) rather than sitting between
-   every row - row-to-row separation comes from bold labels, whitespace and (in Order)
-   the colour stripe/badge instead. Interactive chips (field values, unit badges,
-   wastage pull-down, bag-size toggle, keys, buttons) keep their soft recessed/filled
-   treatment since those are controls, not content cards. */
+/* SlabSet v22 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
+   site legibility sizing. Two cards (Inputs, Outputs), same as v21. v22 reverses the
+   v19 "no hairlines" call for the dimension/order rows specifically (Andre's explicit
+   ask): the recessed grey chip (--surface-3) behind field values, the unit toggle and
+   the wastage pulldown is gone - those now read as plain black text sitting directly
+   on the card's white surface, and a 1px hairline (--border) marks the seam between
+   one row and the next instead. Everything else (keypad keys, Copy/Share, the diagram
+   fill) keeps its prior treatment - this is a change to the dimension/order rows only,
+   not a full flatten of every control in the app. */
 
 :root {
-  --bg: #f2f2f7;
-  --surface-1: #ffffff;
-  --surface-2: #f2f2f7;
+  /* 2026-08-12 (Andre's ask, "invert colours - make bg white and the cards the
+     grey"): the two existing tokens swap values outright - no new colour
+     introduced, unlike the previous white-bg/off-white-card try (v22.21, reverted
+     same day). --surface-2 (the header's own background) follows --bg down the same
+     "stays seamless with the page" relationship it's always had. */
+  --bg: #ffffff;
+  --surface-1: #f2f2f7;
+  --surface-2: #ffffff;
   --surface-3: #e5e5ea;
   --border: #d1d1d6;
   --border-strong: #c7c7cc;
@@ -42,6 +48,11 @@
      both actual button fills, not just the raw accent swatch: 5.03:1 light, 5.78:1
      dark - both clear the 4.5:1 text minimum. */
   --accent-text: #ffffff;
+  /* 2026-08-12: trying .output-order (Buying options) with a fill again - pale
+     lavender in light theme, dark desaturated blue-violet below in
+     [data-theme="dark"]. Same token/values v22 shipped with, dropped in v22.1 when
+     the card went flat; brought back as an experiment, not yet a settled call. */
+  --results-light-bg: #EEF2FF;
 
   /* Job-site type scale - v18's HIG steps carried over, each bumped ~35-45% for
      outdoor legibility (direct sun, arm's-length, one glance while holding a tape).
@@ -59,7 +70,9 @@
 
 [data-theme="dark"] {
   --bg: #000000;
-  --surface-1: #2c2c2e;
+  /* v22.31: nudged a touch lighter than #2c2c2e so grey cards separate from the
+     black page without loud borders (Designer dark-card separation). */
+  --surface-1: #303033;
   --surface-2: #000000;   /* matches --bg, same relationship as light mode - keeps the
                               header/page seamless rather than reading as a grey bar
                               floating on a black page */
@@ -86,9 +99,33 @@
      lightness), so white text on it would be low-contrast. Matches the wordmark's
      "Set" chip ink colour (#0D0905) for a consistent on-bright-surface tone. */
   --accent-text: #0D0905;
+  /* Dark-theme pairing for --results-light-bg (:root) - a dark, desaturated
+     blue-violet rather than the light theme's pale lavender lightened further; an
+     aesthetic judgement call (unlike --diagram-accent's dark tint above, there's no
+     meaningful hue to preserve from a colour this close to white), not a strict
+     same-hue derivation. Default theme-token text colours (--text-primary etc.)
+     already work against it unmodified, same as they do against --surface-1 dark. */
+  --results-light-bg: #211F3D;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Standard visually-hidden utility - present for anything that reads text (screen
+   readers, find-in-page, a plain text selection) but takes no layout space and paints
+   nothing, so it never affects the visible page. Clip-based rather than
+   `display:none`/`visibility:hidden`, which would also remove it from that reading -
+   the whole point here is text that's real but invisible, not text that's gone. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* Inline sprite icon - sized by the font-size of their context. fill/stroke must be set
    here, not on the sprite: presentation attributes on the sprite root don't reach a <use>
@@ -140,6 +177,16 @@ body {
      meta tag - no maximum-scale/user-scalable=no there, deliberately). */
   touch-action: manipulation;
 }
+/* Andre flagged a preset list's open dropdown ("10% — Recommended for standard site",
+   Wastage's picker) reading in a different font to the rest of the row - form
+   controls don't inherit body's font-family by default in most UA stylesheets.
+   One rule for every native <select> in the app (shape, m/mm, bag size, wastage all
+   use the same invisible-overlay-select technique) rather than repeating it per
+   component. Browsers that render a <select>'s open dropdown from CSS (desktop
+   Chrome/Firefox/Safari) pick this up; iOS's own picker wheel is OS-drawn and out of
+   CSS's reach regardless, but it already renders in SF Pro there, which is what
+   body's own font stack asks for anyway - no mismatch on the actual target hardware. */
+select { font-family: inherit; }
 
 /* On a phone the app IS the viewport. dvh so the iOS URL bar collapsing doesn't strand
    the keypad; svh as the fallback for engines without dvh. */
@@ -176,40 +223,61 @@ body {
   }
 }
 
-/* Header - a plain nav bar: wordmark leading, theme toggle trailing. No chrome
-   on the trailing icon beyond a soft fill, matching how iOS nav bars actually render.
-   Logo mark removed, title back to plain left-aligned flow (was briefly centred via
-   absolute positioning while the logo sat separately at the leading edge). */
+/* Header - mark + "SlabSet Concrete" lockup on the left, theme toggle trailing. */
 .header {
   flex-shrink: 0;
-  padding: 10px 14px;
+  padding: 10px 12px 0;
   padding-top: calc(10px + env(safe-area-inset-top));
   background: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-height: 56px;
 }
 
-.title {
-  font-size: var(--text-m);   /* matches .field-label ("Diameter" etc.) exactly */
-  font-weight: 400;
-  color: var(--text-secondary);
-  letter-spacing: -0.01em;
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
-.title b { font-weight: 700; color: var(--text-primary); }
-/* "Set" gets the mark's own yellow (see shared/logo.svg's #F2CD52 fill on #0D0905) as a
-   square behind it - sharp corners on purpose, no border-radius, so it reads as a flat
-   tag/stamp rather than another soft chip like the rest of the app's controls. Fixed
-   colours, not theme tokens - same reasoning as .volume-card's navy: it's the brand
-   mark's own palette, not a surface that should flip with light/dark. */
-.title-set {
-  background: #F2CD52;
-  color: #0D0905;
-  /* A slight breathing gap before "Set" - roughly half a normal wordspace at this
-     font size, not flush (read as too merged) and not a full space (read as two
-     separate words again). */
-  padding: 1px 4px 1px 2px;
+
+.brand-mark {
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  overflow: hidden;
+  line-height: 0;
+}
+.brand-mark img {
+  width: 36px;
+  height: 36px;
+  display: block;
+}
+
+/* One-line wordmark beside the mark: plain bold "SlabSet" + same-size regular "Concrete".
+   No yellow Set stamp. Weight alone carries hierarchy. */
+.title {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35em;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.title-brand {
+  font-size: var(--text-m);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.title-sub {
+  font-size: var(--text-m);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 /* Back to a single icon that swaps per theme (moon shown in light mode, sun in dark -
@@ -219,18 +287,34 @@ body {
    squircle radius. */
 .theme-toggle {
   appearance: none;
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
+  /* 44×44 tap target; visible tile is 36×36 to match .brand-mark */
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--surface-3);
+  border-radius: 0;
+  background: transparent;
   color: var(--text-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  margin-right: -4px; /* 36px tile to 12px card edge */
+}
+.theme-toggle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  border-radius: 8px; /* match .brand-mark */
+  background: var(--surface-3);
+  z-index: -1;
 }
 .theme-toggle:focus-visible { outline: 2px solid var(--border-accent); outline-offset: 1px; }
 .theme-toggle svg { width: 18px; height: 18px; display: block; }
@@ -239,16 +323,12 @@ body {
 [data-theme="dark"] .theme-toggle .ico-sun { display: block; }
 [data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 
-/* ── Inputs card ──────────────────────────────────────────────────────────────
-   Shape, Diagram and Dimensions/Wastage grouped into one card (2026-08-04) - the
-   second card in the app alongside .volume-card and .order-block, closing the gap
-   where Volume and Order had a container but the actual input work didn't. Same
-   language as .order-block (--surface-1, --radius, 12px padding); internal gap
-   matches the same 12px used for card-to-card spacing in #scroll-area and before
-   .inputs-card itself (see .volume-card) - one consistent unit throughout. Trimmed
-   from 16px (2026-08-05, vertical-space pass) - the keypad covers roughly a third of
-   the screen while typing, so reclaiming space from padding/gaps directly grows how
-   much of the stack stays visible above it. */
+/* ── Inputs / Job card ────────────────────────────────────────────────────────
+   Shape, Diagram and Job fields in one card (2026-08-04; eyebrow "Job" since
+   v22.26). Same language as .output-card (--surface-1, --radius, 12px padding);
+   internal gap matches #scroll-area's 12px card gap. Trimmed from 16px
+   (2026-08-05 vertical-space pass) so more of the stack stays visible above the
+   keypad. */
 .inputs-card {
   display: flex;
   flex-direction: column;
@@ -288,95 +368,82 @@ body {
   font-size: var(--text-m);   /* 16px+, or iOS zooms the page when the menu opens */
 }
 
-/* ── Total Volume card ────────────────────────────────────────────────────────
-   v21: moved into the scroll flow, between .inputs-card and .order-block - Andre's
-   call (see index.html's comment above the markup). No longer pinned, so no more
-   flex-shrink/margin gymnastics to sit it outside #scroll-area: it's a plain flex
-   child now, spaced by #scroll-area's own 12px gap exactly like .inputs-card and
-   .order-block either side of it, same as the old chrome-bar-to-card journey settled
-   for those two. Label reuses .field-label so "Total Volume" matches the weight/size
-   of Length/Width/Thickness/Wastage above it; the value keeps its own oversized
-   treatment. */
-.volume-card {
+/* ── Output cards (Order + Buy in scroll; Job uses .inputs-card) ───────────────
+   Shared shell for cards in #scroll-area. v22.26 eyebrows (Job / Order / Buy).
+   Flat --surface-1, --radius, overflow hidden; each section carries its own
+   12px padding. Spaced by #scroll-area's 12px gap like .inputs-card.
+   (History: briefly one merged Outputs card in v21/v22.1; Buy split back out
+   2026-08-12. v22.27 briefly hosted the Order ledger in the pin; v22.28 returns
+   the full ledger to this scroll Order card — pin is one-line summary only.) */
+.output-card {
   display: flex;
   flex-direction: column;
-  padding: 12px;
-  /* Back to the app's own adaptive surface (Andre's call, after weighing the LCD-yellow
-     and navy fills that lived here before) - HIG treats colour as vocabulary, and this
-     app's yellow is already spoken for by --caution, so a saturated fill on the answer
-     risked reading as a warning rather than a result. Matches .inputs-card/.order-block:
-     the answer's hierarchy comes from the oversized bold figure below, not from a
-     one-off card colour, and the one deliberate accent in the app stays reserved for
-     the interactive Copy/Share buttons (--diagram-accent). */
   background: var(--surface-1);
   border-radius: var(--radius);
+  overflow: hidden;
 }
-/* Eyebrow+waste-note column on the left, figure on the right (Andre's call) -
-   top-aligned (not baseline) so "Total Volume" sits at the card's top-left corner
-   instead of dragging down to the big figure's baseline. */
-.volume-row {
+/* v22.31: dark-only calm separation — hairline, not a loud border. */
+[data-theme="dark"] .inputs-card,
+[data-theme="dark"] .output-card {
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.07);
+}
+/* flex column + 12px gap so the Order/Buy .tv-label eyebrows aren't flush against
+   the content below (matches .inputs-card's Job eyebrow spacing). */
+.tv-section { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+/* Ledger rows (#volume-breakdown in the scroll Order card, built in app.js's
+   renderResults): Base quantity, + N% Wastage, Order quantity - label left, figure
+   right, same .field-line shape (flex, space-between, hard 44px height so nothing
+   inside can push a row taller than its neighbours) as the Inputs card's dimension
+   rows. Order quantity is the one row marked .ledger-total: its figure gets
+   .qty-figure (shared with Buy figures - one rule app-wide for "the number that's
+   the actual answer"), and its label goes bold to match, so it reads as the total
+   the two rows above it build up to. */
+.ledger-row {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
+  /* Reverted same day: tried align-items: baseline here to fix the Wastage row's
+     internal misalignment (see .wastage-pulldown's comment below) - wrong level to
+     fix it at. baseline changes where each row's *own* baseline sits within its
+     fixed 44px height based on that row's content (a flex item's ascent above its
+     baseline eats into the row's height asymmetrically, unlike center's even
+     top/bottom split) - Order quantity's bold, larger --text-m value gives that row
+     a different baseline position than Base quantity's/Wastage's plain --text-s
+     text, so the three rows stopped lining up with each other at all (Andre: "you
+     messed up the vertical spacing" - gaps around each row became uneven, row to
+     row, instead of each row centring the same way). Back to center, which is what
+     actually keeps every row's content sitting at the same height inside its 44px
+     box regardless of what's inside it - the Wastage-internal fix lives entirely in
+     .wastage-pulldown's own vertical-align now, see its comment, and doesn't need
+     help from this rule. */
+  align-items: center;
   gap: 8px;
-}
-/* Groups the eyebrow and its wastage footnote into one left-hand column, stacked
-   tight (small gap, not the old block-level default spacing) so the footnote reads
-   as sitting right under "Total Volume" instead of drifting down to the bottom of
-   the card - which is where it landed once the big figure on the right made the
-   card taller than this column's own content. */
-.volume-label-col {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-/* "Total Volume" now sized/weighted to match .field-label ("Wastage" etc. above it)
-   exactly (Andre's call) - same size, weight and colour as every other row label in
-   the app, not a smaller secondary caption. */
-.volume-eyebrow {
-  display: block;
-  font-size: var(--text-m);
-  font-weight: 600;
+  height: 44px;   /* hard height, not min-height - see .field-line's comment */
+  overflow: hidden;
+  font-size: var(--text-s);
+  font-weight: 400;
   color: var(--text-primary);
 }
-/* Faint, small - a footnote on the headline number, not competing with it. Invisible
-   (not display:none) whenever wastage is 0% or the volume isn't complete yet - the
-   line-height is reserved via min-height at all times, specifically so .volume-card's
-   overall height never changes as this toggles. It's pinned above the scroll area, so
-   a size change here would shift/shake the whole stack below it on every keystroke
-   that crosses the wastage-note's on/off threshold.
-   Stays at --text-xxs even though .volume-eyebrow grew past it - this is a footnote on
-   the figure, not part of the label, so it keeps reading as secondary next to the now
-   larger "Total Volume". */
-.volume-waste-note {
+.ledger-row + .ledger-row { box-shadow: inset 0 0.5px 0 0 var(--border); }
+.ledger-val { font-variant-numeric: tabular-nums; }
+/* v22.71: supporting figures match Job (primary / 600). Order quantity stays hero. */
+.ledger-row:not(.ledger-total) .ledger-val { font-weight: 600; }
+.ledger-row.ledger-total .ledger-label { font-weight: 700; }
+/* Nothing measured yet: placeholder, not a reading. Greyed so it can't be mistaken for
+   an answer - v12 shipped a live-looking "0.99 example only" in this slot. Also
+   Wastage's own value slot pre-completion ("—") - that row briefly (same day) had a
+   two-piece value slot of its own (.ledger-val--wastage, control + amount together)
+   before the control moved back onto the label side; the value slot is just the
+   amount again now, so this one rule covers it too. */
+.ledger-val.is-empty { color: var(--text-muted); }
+/* Eyebrow caption (Job / Order / Buy) - small, uppercase, muted, above its
+   content rather than competing with row text at the same size. */
+.tv-label {
   font-size: var(--text-xxs);
   font-weight: 600;
-  line-height: 1.3;
-  min-height: calc(var(--text-xxs) * 1.3);
-  color: var(--text-secondary);
-  margin-top: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
-.volume-value {
-  font-size: 1.875rem;   /* 30px - deliberately off the shared scale: bigger than
-                             --text-l (26px) so the answer stays visually distinct
-                             from the shape name and the field values above it */
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  text-align: right;   /* back to the side-by-side row's alignment (Andre's call) -
-                           label left in .volume-row, number right */
-  font-variant-numeric: tabular-nums;
-  line-height: 1.15;
-  color: var(--text-primary);   /* back to the theme token now the card is adaptive
-                                     again, same as every other card's content colour */
-}
-/* Nothing measured yet: placeholder, not a reading. Greyed so it can't be mistaken for an
-   answer - v12 shipped a live-looking "0.99 example only" in this slot. */
-.volume-value.is-empty { color: var(--text-muted); font-weight: 500; }
-
-/* "m³" sized down from the number it follows, in the volume hero only (not Order's
-   Ready-mix line, which stays one uniform size). Inherits weight/colour from its
-   parent so it still reads as part of the same number, just at a calmer size. */
-.unit-suffix { font-size: var(--text-s); }
 
 /* Scroll area */
 #scroll-area {
@@ -387,6 +454,7 @@ body {
                                too (per spec), so any touch drag not perfectly vertical
                                could rubber-band the section sideways */
   overscroll-behavior: contain;
+  /* v22.70 (Andre): 12px above Job — same as card-to-card gap / side padding. */
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -396,15 +464,6 @@ body {
 }
 #scroll-area::-webkit-scrollbar { display: none; }
 #scroll-area > * { flex-shrink: 0; }
-
-.section-label {
-  font-size: var(--text-xxs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
 
 /* Diagram - no card, sits directly on the page background. Holds v17's inlined,
    highlighting SVG, whose own shapes carry their fill (see [fill="#ffffff"] below).
@@ -424,11 +483,12 @@ body {
 }
 .diagram-svg { display: block; }
 .diagram-svg [stroke] { stroke: var(--text-primary); }
-/* Filled with the same recessed-chip grey as the dimension value boxes (--surface-3),
-   not the card's own background (--surface-1, which made the shape's solid faces
-   invisible - just an outline blending into the card behind it). Andre's call - reads
-   as a filled solid now, in the same visual language as the field boxes it's
-   illustrating, rather than a blank line drawing. */
+/* Filled with --surface-3, not the card's own background (--surface-1, which made the
+   shape's solid faces invisible - just an outline blending into the card behind it).
+   Andre's call - reads as a filled solid, not a blank line drawing. v22 dropped the
+   grey chip from the dimension value boxes below (see .field-val), but left this fill
+   as-is - the diagram is an illustration, not a row control, and untouched by that
+   change. */
 .diagram-svg [fill="#ffffff"] { fill: var(--surface-3); }
 
 /* No more "Length"/"Width" words drawn on the drawing - which dimension you're on is
@@ -445,29 +505,59 @@ body {
   .diagram-svg .is-muted, .diagram-svg .is-active line { transition: none; }
 }
 
-/* Fields - no card, a plain list on the page background. Wastage is the last row.
-   No hairlines at all now - not bracketing the group, not between rows. The bold
-   label/value and generous whitespace carry the separating job entirely. */
+/* Fields - a plain list inside the Inputs card. v22 (Andre's call, settled after two
+   tries - a per-row grey card was tried and rejected as looking like a nested
+   card-in-a-card): HIG's own grouped-list pattern instead - one card (.inputs-card)
+   holds every row, separated by a true hairline (0.5px, not a full 1px line - iOS's
+   own separator weight) rather than a filled box per row.
+   Drawn as a box-shadow, not a border - measured via Playwright (Andre flagged the
+   Wastage row specifically, back when it was still one of these rows - it turned out
+   to be every row after the first): a real border-top adds its own thickness on top
+   of the row's already-floored 44px content height (the field controls inside can't
+   shrink to make room for it), so every bordered row rendered 44.5px, 0.5px taller
+   than the first row's clean 44px. box-shadow paints without occupying layout space,
+   so it can't do that.
+   Applied to .field-row itself (not .field-line), so it lands above the whole row
+   including any .field-warn under a warned field, and doesn't double up when a row has
+   none. A matching hairline sits on #fields itself, above the first row - the seam
+   between the Diagram and the dimension list, same divider language as row-to-row
+   below it. (Briefly dropped this same day when the Job/"Dimensions" eyebrow shipped as a caption
+   directly above #fields - moved to the card's top-left instead, above the Shape
+   heading too, so it no longer sits next to #fields at all; the hairline's back to
+   mark that seam on its own, same as before the Job eyebrow existed. A same-treatment
+   hairline was tried on #fields' bottom edge too, to close off the last row - Andre
+   didn't want a line there, reverted; see CONTEXT.md.) */
+#fields { box-shadow: inset 0 0.5px 0 0 var(--border); }
 .field-row { display: flex; flex-direction: column; }
+.field-row + .field-row { box-shadow: inset 0 0.5px 0 0 var(--border); }
 .field-line {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;   /* was 8px, vertical-space pass */
+  height: 44px;   /* HIG's stated tap-target minimum - hard height, not min-height, so
+                      nothing inside (e.g. an unstyled native <select>) can push a
+                      specific row taller than the rest */
+  overflow: hidden;
 }
-/* Optional-field note ("Base slab" / "Optional") uses the same position: absolute
-   pattern as .order-row-recommended and for the same reason - keeps
-   .field-label-group exactly 1 line tall so .field-line's align-items: center centres
-   it against .field-controls identically whether or not the row is optional, instead
-   of a taller 2-line group on the optional row alone pushing its label up relative to
-   every other row's label. */
+/* Optional-field note ("Base slab" / "Optional") uses position: absolute so it hangs
+   below the label without being part of its flow - keeps .field-label-group exactly
+   1 line tall so .field-line's align-items: center centres it against .field-controls
+   identically whether or not the row is optional, instead of a taller 2-line group on
+   the optional row alone pushing its label up relative to every other row's label. */
 .field-label-group {
   position: relative;
   min-width: 0;
 }
 .field-label {
-  font-size: var(--text-m);
+  /* 2026-08-12 (Andre's ask, "same as the lower card i.e. type small"): was --text-m
+     (20px), the same step .shape-heading above it uses - dropped to --text-s (17px)
+     to match the Outputs card's ledger rows (.ledger-row is --text-s throughout) so
+     the two cards read at one consistent body size instead of the Inputs card's rows
+     being a visible step larger than the Outputs card's. Weight (600) untouched -
+     only asked about size ("text and numbers"), and label/value staying bolder than
+     the Outputs ledger's plain 400 still marks these as the editable fields they are. */
+  font-size: var(--text-s);
   font-weight: 600;
   color: var(--text-primary);
   display: block;
@@ -487,29 +577,55 @@ body {
 }
 .field-controls { display: flex; gap: 6px; align-items: center; flex: none; }
 
+/* v22 (Andre's call): the recessed grey chip (--surface-3) is gone - the value now
+   sits as plain black text directly on the card's white surface, no box behind it.
+   Tap target and right-edge alignment are unchanged (same width/min-height/padding as
+   before), just nothing painted behind them any more. */
 .field-val {
+  position: relative;   /* anchors .field-val.focused::after below */
   width: 96px;
-  min-height: 44px;   /* HIG's stated tap-target minimum - was 42px */
-  border-radius: var(--radius-sm);
+  height: 44px;   /* hard height, not min-height - see .field-line's comment */
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 10px;
-  font-size: var(--text-m);
+  padding: 0 4px;
+  font-size: var(--text-s);   /* matches .field-label - see its 2026-08-12 comment */
   font-weight: 600;
-  background: var(--surface-3);
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   user-select: none;
 }
 /* Same blue as the diagram's highlighted line, so the focused box and the edge it
-   measures read as one connected thing rather than two separate signals. Ring, not a
-   solid fill (tried solid+white-text first, but that's HIG's language for a *selected
-   choice* - a picked chip, an active segment - not an *active text input*; a ring lets
-   the value keep its own normal text colour while only the border signals focus). */
-.field-val.focused {
+   measures read as one connected thing rather than two separate signals. Still a ring,
+   not a fill - the box behind it is gone now (see .field-val above), so the ring alone
+   is the only focus signal left on this control.
+   v22 (Andre's ask): the ring reads 40px tall, not the full 44px tap target - drawn on
+   a ::after inset 4px top/bottom from .field-val's own box (36px), then box-shadow's
+   2px spread expands that back out by 2px on every edge, landing the ring's own outer
+   edge at 40px tall. Tap target itself is untouched (still the full 44px .field-val
+   box) - only the visible ring shrinks.
+   2026-08-12 fix: left/right were 0, so the same 2px box-shadow spread bled 2px past
+   .field-val's own left/right edges too, same trick as the top/bottom inset. That was
+   invisible everywhere a dimension row's value box had a neighbour (unit-picker,
+   wastage-pulldown) absorbing the 2px before .field-line's own `overflow: hidden`
+   boundary - but a count field's Quantity/Steps row (v22.3 dropped its old invisible
+   placeholder so the value sits flush against the row's true right edge, see that
+   delta) has no such buffer any more, so the ring's right side was getting clipped
+   flat, no rounded corner, right where .field-line's clip region began. Insetting
+   left/right by the same 2px the box-shadow spreads keeps the ring fully inside
+   .field-val's own box on every side - it no longer depends on a neighbour existing
+   to have room to bleed into. */
+.field-val.focused::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 2px;
+  right: 2px;
+  border-radius: var(--radius-sm);
   box-shadow: 0 0 0 2px var(--diagram-accent);
-  background: var(--surface-1);
+  pointer-events: none;
 }
 .field-val.is-empty { color: var(--text-muted); }
 
@@ -521,24 +637,25 @@ body {
    different idioms across Shape/Wastage/Unit. Fixed 76px width (not content-sized) so
    every unit control lines up on the same right edge regardless of which unit is
    active. */
+/* v22: chip background dropped, same as .field-val - current value + chevron sit as
+   plain black text on the card, no recessed box behind them. */
 .unit-picker {
   position: relative;
   width: 60px;
-  min-height: 44px;   /* HIG's stated tap-target minimum - was 42px */
+  height: 44px;   /* hard height, not min-height - see .field-line's comment */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-3);
   cursor: pointer;
 }
-/* Content-sized variant for pickers outside the Dimensions list, which don't need to
-   line up on that list's fixed 76px right edge - the bag-size picker in Order ("20kg"
-   etc, 4 characters) would be cramped in the same fixed width tuned for "m"/"mm". */
-.unit-picker.unit-picker--auto { width: auto; padding: 0 10px; margin-left: 6px; }
-.unit-picker-current { font-size: var(--text-xs); font-weight: 600; color: var(--text-accent); }
-.unit-picker-chevron { font-size: var(--text-m); line-height: 1; color: var(--text-secondary); }
+/* v22: matches .field-label/.field-val's size, not its own smaller --text-xs step -
+   Andre's ask, so "Length   25   m ▾" reads as one uniform size across the whole row
+   instead of the unit trailing off smaller. Stepped down with them from --text-m to
+   --text-s 2026-08-12 (same ask, "type small") - still matching, just at the smaller
+   step now. */
+.unit-picker-current { font-size: var(--text-s); font-weight: 600; color: var(--text-primary); }
+.unit-picker-chevron { font-size: var(--text-s); line-height: 1; color: var(--text-secondary); }
 .unit-picker-select {
   position: absolute;
   inset: 0;
@@ -552,34 +669,49 @@ body {
   font-size: var(--text-m);   /* 16px+, or iOS zooms the page when the menu opens */
 }
 
-/* Wastage is a fixed set of presets, not a typed value, carried over from v17. One
-   button, 162px wide - the exact combined width of field-val (96px) + gap (6px) +
-   unit-picker (60px) above, so it lands on the same right edge as the dimension
-   rows. Was two separate boxes (value, chevron); merged into one 2026-08-02. Borderless
-   (v19, same reasoning as .field-val/.unit-picker above) - fill on --surface-3, not
-   --surface-2, since a border no longer does the job of making the chip visible
-   against the page background. */
+/* Wastage's control - a fixed set of presets, not a typed value, carried over from
+   v17. Was its own fixed-162px-wide row in the Inputs card (see git history);
+   relocated 2026-08-11 into the Outputs ledger's "Wastage" row, trailing right after
+   the word "Wastage" in that row's label ("Wastage +10% ▾ ... 0.2 m³") rather than
+   sitting in the value slot - content-sized, not a fixed block, the same treatment as
+   .unit-picker--inline (the bag-size chip in Buying options, same idea: a picker that
+   sits mid-sentence rather than owning a row). */
 .wastage-pulldown {
   position: relative;
-  width: 162px;
-  min-height: 44px;   /* HIG's stated tap-target minimum - was 42px */
-  padding: 0 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-3);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  gap: 2px;
   cursor: pointer;
+  /* Idle colour matches .unit-picker (primary text + secondary chevron), not
+     accent blue - the loud "+10% Wastage" chip was outshouting Order quantity
+     (v22.24 tighten). "Wastage" sits outside this element again as plain
+     .ledger-label text; only the +N% control lives here. */
+  color: var(--text-primary);
+  /* 2026-08-12 fix (Andre: "all on same base line") - was middle, which floated this
+     chip at the vertical centre of the "Wastage" text next to it in their shared
+     inline formatting context, rather than sharing its actual baseline. This is the
+     one place that fix actually belongs - .ledger-label is a plain <span>, not a flex
+     container, so vertical-align here works directly against "Wastage"'s own text
+     baseline with no effect on how .ledger-row centres its two flex children (see
+     that rule's comment for the align-items: baseline attempt that tried fixing this
+     one level up and broke row-to-row spacing instead). An inline-flex box has no
+     internal baseline of its own to offer the surrounding line (nothing here opts
+     into flex baseline alignment), so vertical-align: baseline falls back to its
+     bottom margin edge - close enough to "+10%"'s own text baseline, with no
+     padding/border on this element to throw that off, to read as one shared line
+     with "Wastage" next to it. */
+  vertical-align: baseline;
 }
+/* Same size/weight language as .unit-picker-current - primary text, not accent. */
 #wastage-current {
-  font-size: var(--text-m);
-  font-weight: 600;   /* matches .field-val's weight, not just its size */
+  font-size: var(--text-s);
+  font-weight: 600;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 .wastage-chevron {
   flex-shrink: 0;
-  font-size: var(--text-l);
+  font-size: var(--text-s);
   line-height: 1;
   color: var(--text-secondary);
 }
@@ -626,80 +758,241 @@ body {
    this the strip shows as an empty amber capsule whenever there is nothing to warn about. */
 .check-strip[hidden] { display: none; }
 
-/* Order - two rows, Bags and Ready-mix. One of three cards in the app now, alongside
-   .volume-card and .inputs-card - a two-item decision list (Bags vs Ready-mix) is
-   exactly the content HIG wraps in an inset grouped card. "What to order" sits inside
-   the card, top-left, as its header - not a caption floating above it. No line between
-   the two rows: the bold name and (on the recommended row) the subtitle already
-   distinguish them, so a hairline stayed redundant even inside the card. No extra
-   margin-top - #scroll-area's own gap (20px) is enough separation now that this card's
-   neighbour above it (.inputs-card) is also a card; the extra margin was only needed
-   when Order sat next to bare, containerless content. */
-.order-block {
+/* Buy card body (.output-order) - Ready-mix + bags tiles inside .output-card.
+   Own card since 2026-08-12 (split from Order). Hairline / quiet-rec language
+   from v22.23–v22.25; no lavender tile fill.
+*/
+.output-order {
+  /* Bottom edge history (2026-08-12): 12px -> 20px -> 28px, each bump chasing
+     "needs whitespace before Copy/Share" while Buying options was still glued
+     directly to it inside one shared card, no boundary between them. Back to flat
+     12px now that Buying options is its own card (see .output-card's comment) - the
+     card's own edge plus #scroll-area's 12px card-to-card gap already separate it
+     from Copy/Share on their own, so the extra bottom padding was stacking on top of
+     real whitespace that didn't exist when 28px was tuned, reading as too much
+     (Andre flagged it, screenshot). One edge, matching the app's usual rhythm again,
+     same as top/left/right always did.
+     flex column + 12px gap added same day - the "Buying options" caption had 0px
+     separating it from the .buy-tile cards below, same missing-gap fix as
+     .tv-section (see that rule's comment), just more visible here since the content
+     right under the caption is a filled colour block, not plain text. */
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  background: var(--surface-1);
-  border-radius: var(--radius);
-  padding: 12px;
+  gap: 12px;
 }
-.order-row {
+
+/* HIG Supply: grey card is the page; white grouped lists sit on it.
+   Two 44px rows (Ready-mix / Bags), inset hairline. v22.74 bag-size segment
+   sits on the grey Supply card (no second white .hig-group). */
+.hig-stack {
   display: flex;
-  justify-content: space-between;
-  align-items: center;   /* back to centring both sides as whole blocks - see
-                             .order-row-recommended below for how the subtitle avoids
-                             disturbing this */
-  padding: 6px 0;   /* was 8px, vertical-space pass */
-  min-height: 48px;   /* was 52px - still comfortably above the 44px unit-picker/
-                          order-unit-box it needs to fit */
+  flex-direction: column;
+  gap: 0;
 }
-/* Title + subtitle, the standard table-cell pattern - not a coloured badge glued onto
-   the name. No fill/border/pill, so it reads as an annotation rather than a tag
-   competing with the name for space; Andre asked for it in the app's one accent colour
-   (--diagram-accent, otherwise reserved for the live diagram highlight) rather than
-   plain secondary grey, so it still stands out at a glance despite the lighter
-   treatment. Also sidesteps the v18 bug where the badge's own margin stacked on top of
-   .order-row-name's flex gap for an inconsistent double space.
-   .order-row-recommended is absolutely positioned under the name rather than stacked
-   in normal flow - first tried flex-column-stacked, but that made the name-group
-   2 lines tall on the recommended row only, and .order-row's centring then centred
-   that taller block against the value, pushing the name up off the value's line (and,
-   worse, off the Bags row's un-recommended baseline too, since Bags stayed 1 line and
-   sat noticeably higher by comparison). Taking the subtitle out of flow keeps
-   name-group exactly 1 line tall on every row, so centring behaves identically whether
-   or not a row is recommended - the subtitle hangs below without ever being part of
-   the height that centring measures. */
-.order-row-name-group {
+.hig-group {
+  background: #ffffff;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+[data-theme="dark"] .hig-group {
+  background: #1c1c1e;
+}
+.hig-row {
   position: relative;
-}
-.order-row-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 44px;
+  padding: 0 16px;
   font-size: var(--text-s);
-  font-weight: 600;
   color: var(--text-primary);
 }
-.order-row-recommended {
+.hig-row + .hig-row::before {
+  content: "";
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 2px;
-  white-space: nowrap;
+  left: 16px;
+  right: 0;
+  top: 0;
+  height: 0.5px;
+  background: var(--border);
+}
+.hig-row-label { font-weight: 400; min-width: 0; }
+.hig-row-val {
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  text-align: right;
+}
+.hig-row-val strong { font-weight: 700; }
+.hig-footer {
+  margin: 6px 16px 0;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.hig-caption {
+  margin: 12px 16px 6px;
   font-size: var(--text-xxs);
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
-  /* v21: back to blue (Andre's call, reversing v20's walk-back - see git history for
-     that reasoning if this flip-flops again). At text-secondary weight "Recommended"
-     was easy to scroll past - the one moment the app tells you which option to pick
-     was reading at the same visual priority as everything around it. Diagram-accent is
-     spatially and temporally separate from its other meaning (the focused-field
-     highlight lives up in the Inputs card, this lives down in Order, and the two never
-     light up together), so the collision risk flagged in v20 is more theoretical than
-     practical here. */
-  color: var(--diagram-accent);
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
-.order-row-value {
+
+.hig-stack .bag-size-buttons { margin: 0; }
+
+/* Buy card .tv-label uses the shared eyebrow treatment above.*/
+/* v22.35/v22.37: Ready-mix / Bags are discrete bordered cards again (gap +
+   borders), not hairline-separated flat blocks. Winner accent outline only —
+   no edge Recommended badge (v22.37). */
+.buy-split {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.buy-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  /* Just a hair darker than the Supply card (--surface-1), no outline. */
+  background: color-mix(in srgb, var(--surface-1) 95%, #000 5%);
+}
+/* v22.55 Supply ledger row: label left, value right (was missing — labels
+   glued to figures as "Ready-mix0.3 m³" / "30kg bags18"). */
+.buy-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  font-size: var(--text-s);
+}
+.buy-row-label {
+  font-weight: 400;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.buy-row-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+  flex-shrink: 0;
+}
+.buy-row-val strong { font-weight: 600; }
+/* .buy-tile-label (a separate regular-weight caption under the figure) removed
+   2026-08-12 - both tiles are one line now ("1.4 m³ Ready-mix", "34 × 20kg bags"),
+   Andre's ask, so there's no longer a second line to style.
+   Same day, second pass (Andre's ask): dropped from .qty-figure (--text-m, whole
+   line bold) to plain --text-s, bold on just the result number - "m³ Ready-mix"/
+   "× 20kg bags" are context for the number, not the answer itself. font-weight
+   explicit on both rules rather than relying on <strong>'s browser-default bold,
+   same habit the rest of this stylesheet keeps everywhere else. */
+.buy-tile-val { font-variant-numeric: tabular-nums; font-size: var(--text-s); font-weight: 400; }
+.buy-tile-val strong { font-weight: 700; }
+/* Quiet recommendation (v22.24–v22.37): winner = accent border + reason line
+   ("Recommended. …"); loser / dead band = hairline border only. Border carries
+   the selection (not a focus-visible ring / box-shadow focus mimic). */
+.buy-tile.is-recommended {
+  border-color: var(--diagram-accent);
+  border-width: 1.5px;
+}
+.buy-tile.is-recommended .buy-tile-val { color: var(--text-primary); }
+.buy-tile.is-demoted { color: var(--text-muted); }
+.buy-tile.is-demoted .buy-tile-val { color: var(--text-muted); }
+.buy-tile.is-demoted .buy-tile-val strong { font-weight: 600; color: var(--text-secondary); }
+.buy-rec {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+/* Demoted Bags tile: unselected segments stay muted (track is shared; selected
+   thumb still uses primary ink via .is-selected). */
+.buy-tile.is-demoted .bag-size-btn:not(.is-selected) {
+  color: var(--text-muted);
+}
+/* The quantity itself, a step up from the label under it (Andre's call) - "2.2 m³"
+   or the bag count, not the whole tile. Bolder too, so the number both reads bigger
+   and carries more visual weight than its label. Shared with the Order-quantity
+   ledger row's figure above (.ledger-total .ledger-val, same class, same treatment) -
+   one rule for "the answer" wherever it appears in this card. */
+.qty-figure {
   font-size: var(--text-m);
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+}
+/* v22.26/v22.28: Order quantity figure is the hero answer in the Order ledger —
+   a step above Base/Wastage (--text-s rows) and above plain --text-m .qty-figure.
+   (v22.27 briefly overrode this for a mini pin ledger; removed in v22.28.) */
+/* v22.31: push Order hero further — --text-l + heavier weight + slight tracking. */
+.ledger-row.ledger-total .qty-figure {
+  font-size: var(--text-l);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+/* Bag size - was .unit-picker--inline, a native-select chip sitting mid-label
+   ("[20kg ▾] bags", removed here). v22.15 (Andre's ask, written out - "75 bags /
+   20kg 25kg 30kg - these are buttons (20 default)"): three real buttons instead, one
+   per size, under the bag count rather than inline with it. This is the segmented-
+   control approach v21 tried once already as "all three pack sizes as their own
+   row" and reverted in favour of the one-pill picker (see git history / that round's
+   CONTEXT.md) - reversing the reversal here at Andre's own explicit request, not
+   silently dropping the earlier call. */
+/* v22.31: visible "Bag size" caption separates chips from Ready-mix/Bags choice. */
+/* v22.43 (Andre): iOS HIG segmented control — grey track, white/elevated selected
+   thumb, muted unselected labels. Not separate bordered chips / mid-grey fill
+   (v22.42) / blue fill. Supply winner outline (.buy-tile.is-recommended) unchanged.
+   v22.73: HIG track + white thumb; track is --surface-3 so it recesses into the tile instead of a white-on-grey-on-white sandwich. */
+.bag-size-block { margin-top: 12px; }
+.bag-size-caption {
+  font-size: var(--text-xxs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.bag-size-buttons {
+  display: flex;
+  gap: 0;
+  margin-top: 0;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  /* v22.73 HIG: recessed track (darker than Bags tile), white elevated thumb. */
+  background: var(--surface-3);
+}
+.bag-size-btn {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 6px 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.bag-size-btn.is-selected {
+  background: var(--bg);
+  color: var(--text-primary);
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+[data-theme="dark"] .bag-size-buttons {
+  background: #2c2c2e;
+}
+[data-theme="dark"] .bag-size-btn.is-selected {
+  background: var(--surface-3);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 .order-empty { font-size: var(--text-s); color: var(--text-muted); padding: 14px; }
 
@@ -715,7 +1008,7 @@ body {
   font-family: inherit;
   font-size: var(--text-s);
   font-weight: 600;
-  height: 56px;
+  height: 44px; /* keep 44 */
   border: 0;
   border-radius: var(--radius);
   /* Was var(--text-primary) - flat black/white, no different from any other filled
@@ -799,6 +1092,14 @@ body {
 }
 .key:focus-visible { outline: 2px solid var(--border-accent); outline-offset: 1px; }
 .key:active { transform: scale(0.96); background: var(--surface-3); }
+/* v22.31: Tabler-style backspace glyph — lighter than the system ⌫ outline box. */
+.key-back-ico {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+  stroke-width: 1.75;
+  opacity: 0.85;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .key:active { transform: none; }
