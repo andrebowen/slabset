@@ -71,6 +71,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #2E2A24;
   /* v22.31: nudged a touch lighter than #2c2c2e so grey cards separate from the
      black page without loud borders (Designer dark-card separation). */
@@ -145,7 +146,11 @@
   stroke-linejoin: round;
 }
 
-html { height: 100%; }
+html {
+  height: 100%;
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* v20: smooths the light/dark switch, which previously flipped every colour on the
    page instantly (background, text, borders, focus rings all snapped at once - the
@@ -222,6 +227,71 @@ select { font-family: inherit; }
     border: 0.5px solid var(--border-strong);
     overflow: hidden;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Legal sheets (terms.html, privacy.html). App body is a locked phone shell
+   (overflow hidden, desktop phone-frame). These are documents: they scroll,
+   they have side margins, headings have space. */
+body.legal {
+  height: auto;
+  min-height: 100%;
+  overflow: auto;
+  overscroll-behavior: auto;
+  display: block;
+  background: var(--bg);
+}
+.legal-page {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+.legal-back {
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: var(--text-s);
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.legal-back:active { text-decoration: underline; }
+.legal-page h1 {
+  font-size: var(--text-l);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.legal-page h2 {
+  font-size: var(--text-s);
+  font-weight: 600;
+  margin: 28px 0 8px;
+}
+.legal-page p {
+  font-size: var(--text-s);
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+.legal-page p em {
+  font-style: normal;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.legal-page a { color: var(--text-secondary); }
+
+@media (min-width: 481px) {
+  body.legal {
+    display: block;
+    padding: 0;
+    background: var(--bg);
+  }
+  .legal-page {
+    padding-top: 40px;
+    padding-bottom: 56px;
+    padding-left: 32px;
+    padding-right: 32px;
   }
 }
 
@@ -357,6 +427,18 @@ select { font-family: inherit; }
   border: 0;
   cursor: pointer;
   font-size: var(--text-m);   /* 16px+, or iOS zooms the page when the menu opens */
+}
+
+/* iOS paints a black tap flash on opacity:0 native <select> overlays
+   (dark system form controls on a light page). Same overlay is Shape,
+   unit picker, and Wastage. */
+.shape-heading select,
+.unit-picker-select,
+.ledger-row[data-row="wastage"] > select {
+  background: transparent;
+  color: transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: none;
 }
 
 /* ── Output cards (Order + Buy in scroll; Job uses .inputs-card) ───────────────
