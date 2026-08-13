@@ -1,5 +1,5 @@
 /* SlabSet v23 - same structure as v22, but iOS cold greys swapped for a warm
-   parchment scale keyed to og-image.png (#EAE6DD). Parchment page / white cards.
+   parchment scale keyed to og-image.png (#DED8CB). Parchment page / white cards.
    SlabSet v22 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
    site legibility sizing. Two cards (Inputs, Outputs), same as v21. v22 reverses the
    v19 "no hairlines" call for the dimension/order rows specifically (Andre's explicit
@@ -16,9 +16,9 @@
      introduced, unlike the previous white-bg/off-white-card try (v22.21, reverted
      same day). --surface-2 (the header's own background) follows --bg down the same
      "stays seamless with the page" relationship it's always had. */
-  --bg: #EAE6DD;
+  --bg: #DED8CB;
   --surface-1: #ffffff;
-  --surface-2: #EAE6DD;
+  --surface-2: #DED8CB;
   --surface-3: #E8E2D6;
   --border: #C9C2B3;
   --border-strong: #BDB5A4;
@@ -279,7 +279,7 @@ select { font-family: inherit; }
 .title-sub {
   font-size: var(--text-m);
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 /* HIG bar-button: glyph only, no plate. 36px in layout (matches .brand-mark);
@@ -486,15 +486,19 @@ select { font-family: inherit; }
 /* No more "Length"/"Width" words drawn on the drawing - which dimension you're on is
    now signalled purely by colour on its line, not a label. */
 .diagram-svg text { display: none; }
-/* The rest of the drawing recedes; the focused dimension's leader/extension lines and
-   tick marks turn the accent colour instead of just holding full ink - a colour change
-   reads faster than a contrast change alone. */
-.diagram-svg .is-muted { opacity: 0.18; }
-.diagram-svg g.dim.is-active line { stroke: var(--diagram-accent); stroke-width: 2px; opacity: 1; }
-.diagram-svg .is-muted,
-.diagram-svg .is-active line { transition: opacity 0.15s ease, stroke 0.15s ease; }
+/* Dim lines start muted (0.18) so a newly injected shape doesn't flash full-ink
+   then fade. The active group eases up to full ink. */
+#diagram g.dim line {
+  opacity: 0.18;
+  transition: opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+}
+#diagram g.dim.is-active line {
+  stroke: var(--text-primary);
+  stroke-width: 2px;
+  opacity: 1;
+}
 @media (prefers-reduced-motion: reduce) {
-  .diagram-svg .is-muted, .diagram-svg .is-active line { transition: none; }
+  #diagram g.dim line { transition: none; }
 }
 
 /* Fields - a plain list inside the Inputs card. v22 (Andre's call, settled after two
@@ -577,7 +581,8 @@ select { font-family: inherit; }
    Tap target and right-edge alignment are unchanged (same width/min-height/padding as
    before), just nothing painted behind them any more. */
 .field-val {
-  position: relative;   /* anchors .field-val.focused::after below */
+  position: relative;
+  z-index: 0; /* well sits behind the number */
   width: 96px;
   height: 44px;   /* hard height, not min-height - see .field-line's comment */
   display: flex;
@@ -590,6 +595,24 @@ select { font-family: inherit; }
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   user-select: none;
+}
+.field-val::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--bg) 70%, #fff);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.field-val.focused::before { opacity: 1; }
+[data-theme="dark"] .field-val::before {
+  background: var(--surface-3);
 }
 /* Same blue as the diagram's highlighted line, so the focused box and the edge it
    measures read as one connected thing rather than two separate signals. Still a ring,
@@ -621,18 +644,7 @@ select { font-family: inherit; }
    the count field's Quantity/Steps row got its invisible unit-picker placeholder back
    (see app.js, 2026-08-12), so every row has ~60px of buffer before .field-line's clip
    edge again, not just dimension rows. */
-.field-val.focused::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 14px; /* pull left in so the ring doesn't sit on the row label; right unchanged */
-  right: 2px;
-  transform: translateX(6px);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0 0 2px var(--diagram-accent);
-  pointer-events: none;
-}
+
 .field-val.is-empty { color: var(--text-muted); }
 
 /* m ⇄ mm toggle - native picker, matching .shape-heading/.wastage-pulldown's existing
@@ -798,21 +810,21 @@ select { font-family: inherit; }
   gap: 12px;
 }
 
-/* HIG Supply: grey card is the page; white grouped lists sit on it.
-   Two 44px rows (Ready-mix / Bags), inset hairline. v22.74 bag-size segment
-   sits on the grey Supply card (no second white .hig-group). */
+/* HIG Supply: white card on parchment page. Ready-mix / Bags are
+   grouped-list rows on that card (no second parchment well), hairline
+   between them. Bag-size track stays a light recess (segmented control). */
 .hig-stack {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 .hig-group {
-  background: color-mix(in srgb, var(--bg) 70%, #fff);
-  border-radius: var(--radius);
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
 }
 [data-theme="dark"] .hig-group {
-  background: var(--bg);
+  background: transparent;
 }
 .hig-row {
   position: relative;
@@ -821,18 +833,12 @@ select { font-family: inherit; }
   justify-content: space-between;
   gap: 12px;
   height: 44px;
-  padding: 0 16px;
+  padding: 0;
   font-size: var(--text-s);
   color: var(--text-primary);
 }
-.hig-row + .hig-row::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 0;
-  top: 0;
-  height: 0.5px;
-  background: var(--border);
+.hig-row + .hig-row {
+  box-shadow: inset 0 0.5px 0 0 var(--border);
 }
 .hig-row-label { font-weight: 400; min-width: 0; }
 .hig-row-val {
@@ -842,13 +848,13 @@ select { font-family: inherit; }
 }
 .hig-row-val strong { font-weight: 700; }
 .hig-footer {
-  margin: 6px 16px 0;
+  margin: 6px 0 0;
   font-size: var(--text-xs);
   font-weight: 400;
   color: var(--text-muted);
 }
 .hig-caption {
-  margin: 12px 16px 6px;
+  margin: 12px 0 6px;
   font-size: var(--text-xs); /* 14px */
   font-weight: 400;
   letter-spacing: 0;
@@ -951,6 +957,11 @@ select { font-family: inherit; }
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
+.qty-figure.is-enter { animation: qty-in 0.15s ease; }
+@keyframes qty-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .qty-figure.is-enter { animation: none; }
+}
 /* Bag size - was .unit-picker--inline, a native-select chip sitting mid-label
    ("[20kg ▾] bags", removed here). v22.15 (Andre's ask, written out - "75 bags /
    20kg 25kg 30kg - these are buttons (20 default)"): three real buttons instead, one
@@ -979,7 +990,7 @@ select { font-family: inherit; }
   margin-top: 0;
   padding: 2px;
   border-radius: var(--radius-sm);
-  /* Lighter parchment than the page, same as Ready-mix/Bags group. */
+  /* Light recess vs the white Supply card (segmented-control track). */
   background: color-mix(in srgb, var(--bg) 70%, #fff);
 }
 .bag-size-btn {
@@ -1033,8 +1044,8 @@ select { font-family: inherit; }
      comment) rather than blending into the greyscale system - same colour already
      means "you're interacting with this" everywhere else (diagram highlight, focused-
      field ring), so this isn't a new signal, just its biggest use of it. */
-  background: var(--diagram-accent);
-  color: var(--accent-text);
+  background: var(--text-primary);
+  color: var(--bg);
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -124,7 +124,8 @@
   var state = {
     shape: 'slab',
     focus: 'slabL',
-    bagSize: 20
+    bagSize: 20,
+    hadOrder: false
   };
 
   var DRAFT_KEY = 'slabset-draft';
@@ -524,6 +525,16 @@
   }
   document.addEventListener('click', function (e) {
     if (e.target.closest('.field-row') || e.target.closest('#keypad-wrap')) return;
+    // Opening Wastage's native picker must not rebuild Order (that destroys the
+    // <select> mid-open) or the whole lower stack flashes. Dismiss the keypad only.
+    if (e.target.closest('[data-row="wastage"]') || e.target.closest('#wastage-select')) {
+      if (state.focus == null) return;
+      settle(state.focus);
+      state.focus = null;
+      showKeypad(false);
+      renderFields();
+      return;
+    }
     blurField();
   });
 
@@ -578,12 +589,14 @@
     // v22.28: full Order ledger in #volume-breakdown (scroll Order card).
     // v22.30: top pinned Order strip removed — Order card under Job is the sole order readout.
     var volEl = document.getElementById('volume-breakdown');
-    function ledgerRow(label, value, isTotal, isEmpty) {
+    function ledgerRow(label, value, isTotal, isEmpty, enter) {
       return '<div class="ledger-row' + (isTotal ? ' ledger-total' : '') + '">' +
         '<span class="ledger-label">' + label + '</span>' +
-        '<span class="ledger-val' + (isTotal ? ' qty-figure' : '') + (isEmpty ? ' is-empty' : '') + '">' + value + '</span>' +
+        '<span class="ledger-val' + (isTotal ? ' qty-figure' : '') + (isEmpty ? ' is-empty' : '') + (enter ? ' is-enter' : '') + '">' + value + '</span>' +
       '</div>';
     }
+    var orderEnter = complete && !state.hadOrder;
+    state.hadOrder = !!complete;
     if (!complete) {
       volEl.innerHTML =
         ledgerRow('Base quantity', '—', false, true) +
@@ -594,7 +607,7 @@
       volEl.innerHTML =
         ledgerRow('Base quantity', withCommas(baseVol.toFixed(2)) + ' m³', false, false) +
         wastageLedgerRow(withCommas((withWaste - baseVol).toFixed(2)) + ' m³') +
-        ledgerRow('Order quantity', withCommas(withWaste.toFixed(2)) + ' m³', true, false);
+        ledgerRow('Order quantity', withCommas(withWaste.toFixed(2)) + ' m³', true, false, orderEnter);
     }
     renderWastagePulldown();
 
@@ -1033,19 +1046,17 @@
     if (navigator.share) {
       navigator.share({ title: 'SlabSet spec sheet', text: text }).then(function () {
         track('spec_share', params);
-      }).catch(function () {});
+      }).catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        flashLabel('shareLabel', "Couldn't share");
+      });
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
-      // no share target on desktop - copying is the honest fallback. No flash label
-      // here either (Andre's call): Share's own confirmation is the OS share sheet
-      // itself popping up on the path that has one - "that is enough for
-      // confirmation" - so this fallback path stays silent to match, rather than
-      // being the one case where Share earns a flash label a working share sheet
-      // never gets. Desktop users get a silently-populated clipboard, same as before,
-      // just without a button-text confirmation of it.
       navigator.clipboard.writeText(text).then(function () {
         params.method = 'copy_fallback';
         track('spec_share', params);
-      }, function () {});
+      }, function () { flashLabel('shareLabel', "Couldn't share"); });
+    } else {
+      flashLabel('shareLabel', "Couldn't share");
     }
   });
 
@@ -1057,8 +1068,8 @@
     btn.setAttribute('aria-label', 'Switch to ' + (toDark ? 'dark' : 'light') + ' theme');
     btn.setAttribute('aria-pressed', String(mode === 'dark'));
     var meta = document.querySelector('meta[name="theme-color"]');
-    // Light theme-color matches --bg (parchment #EAE6DD), not the card.
-    if (meta) meta.setAttribute('content', mode === 'dark' ? '#2E2A24' : '#EAE6DD');
+    // Light theme-color matches --bg (parchment #DED8CB), not the card.
+    if (meta) meta.setAttribute('content', mode === 'dark' ? '#2E2A24' : '#DED8CB');
   }
   applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 
