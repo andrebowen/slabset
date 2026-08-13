@@ -1,5 +1,5 @@
 /* SlabSet v23 - same structure as v22, but iOS cold greys swapped for a warm
-   parchment scale keyed to og-image.png (#F0EEE7). Parchment page / white cards.
+   parchment scale keyed to og-image.png (#EAE6DD). Parchment page / white cards.
    SlabSet v22 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
    site legibility sizing. Two cards (Inputs, Outputs), same as v21. v22 reverses the
    v19 "no hairlines" call for the dimension/order rows specifically (Andre's explicit
@@ -16,9 +16,9 @@
      introduced, unlike the previous white-bg/off-white-card try (v22.21, reverted
      same day). --surface-2 (the header's own background) follows --bg down the same
      "stays seamless with the page" relationship it's always had. */
-  --bg: #F0EEE7;
+  --bg: #EAE6DD;
   --surface-1: #ffffff;
-  --surface-2: #F0EEE7;
+  --surface-2: #EAE6DD;
   --surface-3: #E8E2D6;
   --border: #C9C2B3;
   --border-strong: #BDB5A4;
@@ -282,51 +282,37 @@ select { font-family: inherit; }
   color: var(--text-muted);
 }
 
-/* Back to a single icon that swaps per theme (moon shown in light mode, sun in dark -
-   i.e. it shows what tapping it switches TO), not the dual-icon diagonal-split design.
-   Square now, not circular - was 36px + border-radius:50%; kept the 44px HIG tap-target
-   size from the diagonal-split version, just dropped the circle for the app's usual
-   squircle radius. */
+/* HIG bar-button: glyph only, no plate. 36px in layout (matches .brand-mark);
+   44px tap overflows and does not participate in layout. */
 .theme-toggle {
   appearance: none;
   position: relative;
   z-index: 1;
   flex-shrink: 0;
-  /* 44×44 tap target; visible tile is 36×36 to match .brand-mark */
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--text-primary);
+  color: #000000;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  margin-right: -4px; /* 36px tile to 12px card edge */
 }
-.theme-toggle::before {
+.theme-toggle::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 36px;
-  height: 36px;
-  transform: translate(-50%, -50%);
-  border-radius: 8px; /* match .brand-mark */
-  background: #DED8CB; /* OG parchment, a step darker than --bg */
-  z-index: -1;
+  inset: -4px;
 }
-[data-theme="dark"] .theme-toggle::before {
-  background: #1C1914;
-}
+[data-theme="dark"] .theme-toggle { color: var(--text-primary); }
 .theme-toggle:focus-visible { outline: 2px solid var(--border-accent); outline-offset: 1px; }
-.theme-toggle svg { width: 18px; height: 18px; display: block; }
-.theme-toggle .ico-sun { display: none; }
-.theme-toggle .ico-moon { display: block; }
-[data-theme="dark"] .theme-toggle .ico-sun { display: block; }
-[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
+.theme-toggle svg { width: 22px; height: 22px; display: block; }
+.theme-toggle .ico-sun { display: block; }
+.theme-toggle .ico-moon { display: none; }
+[data-theme="dark"] .theme-toggle .ico-sun { display: none; }
+[data-theme="dark"] .theme-toggle .ico-moon { display: block; }
 
 /* ── Inputs / Job card ────────────────────────────────────────────────────────
    Shape, Diagram and Job fields in one card (2026-08-04; eyebrow "Job" since
@@ -494,7 +480,8 @@ select { font-family: inherit; }
    grey chip from the dimension value boxes below (see .field-val), but left this fill
    as-is - the diagram is an illustration, not a row control, and untouched by that
    change. */
-.diagram-svg [fill="#ffffff"] { fill: var(--bg); }
+.diagram-svg [fill="#ffffff"] { fill: color-mix(in srgb, var(--bg) 70%, #fff); }
+[data-theme="dark"] .diagram-svg [fill="#ffffff"] { fill: var(--bg); }
 
 /* No more "Length"/"Width" words drawn on the drawing - which dimension you're on is
    now signalled purely by colour on its line, not a label. */
@@ -533,7 +520,7 @@ select { font-family: inherit; }
    hairline was tried on #fields' bottom edge too, to close off the last row - Andre
    didn't want a line there, reverted; see CONTEXT.md.) */
 #fields { box-shadow: inset 0 0.5px 0 0 var(--border); }
-.field-row { display: flex; flex-direction: column; }
+.field-row { display: flex; flex-direction: column; cursor: pointer; }
 .field-row + .field-row { box-shadow: inset 0 0.5px 0 0 var(--border); }
 .field-line {
   display: flex;
@@ -740,7 +727,11 @@ select { font-family: inherit; }
   line-height: 1;
   color: var(--text-secondary);
 }
-.wastage-pulldown select {
+.ledger-row[data-row="wastage"] {
+  position: relative;
+  cursor: pointer;
+}
+.ledger-row[data-row="wastage"] > select {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -816,7 +807,7 @@ select { font-family: inherit; }
   gap: 0;
 }
 .hig-group {
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 70%, #fff);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -989,7 +980,7 @@ select { font-family: inherit; }
   padding: 2px;
   border-radius: var(--radius-sm);
   /* Lighter parchment than the page, same as Ready-mix/Bags group. */
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 70%, #fff);
 }
 .bag-size-btn {
   flex: 1;

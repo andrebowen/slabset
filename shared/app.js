@@ -426,9 +426,9 @@
         // already carries the accessible name/value.
         '<span id="wastage-current" aria-hidden="true"></span>' +
         '<svg class="ti wastage-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
-        '<select id="wastage-select" aria-label="Wastage"></select>' +
       '</span></span>' +
       '<span class="ledger-val' + (amountStr ? '' : ' is-empty') + '">' + (amountStr || '—') + '</span>' +
+      '<select id="wastage-select" aria-label="Wastage"></select>' +
     '</div>';
   }
 
@@ -446,8 +446,14 @@
   }
 
   function wireFieldBoxes(root) {
+    Array.prototype.forEach.call(root.querySelectorAll('.field-row'), function (row) {
+      row.addEventListener('click', function (e) {
+        if (e.target.closest('.unit-picker')) return;
+        var id = row.getAttribute('data-row');
+        if (id) focusField(id);
+      });
+    });
     Array.prototype.forEach.call(root.querySelectorAll('[data-field]'), function (box) {
-      box.addEventListener('click', function () { focusField(box.getAttribute('data-field')); });
       box.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusField(box.getAttribute('data-field'), true); }
       });
@@ -1051,8 +1057,8 @@
     btn.setAttribute('aria-label', 'Switch to ' + (toDark ? 'dark' : 'light') + ' theme');
     btn.setAttribute('aria-pressed', String(mode === 'dark'));
     var meta = document.querySelector('meta[name="theme-color"]');
-    // Light theme-color matches --bg (parchment #F0EEE7), not the card.
-    if (meta) meta.setAttribute('content', mode === 'dark' ? '#2E2A24' : '#F0EEE7');
+    // Light theme-color matches --bg (parchment #EAE6DD), not the card.
+    if (meta) meta.setAttribute('content', mode === 'dark' ? '#2E2A24' : '#EAE6DD');
   }
   applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 
