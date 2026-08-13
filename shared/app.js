@@ -70,7 +70,7 @@
              {id:'stR',label:'Rise',lo:0.1,hi:0.22},
              {id:'stG',label:'Going',lo:0.2,hi:0.4},
              {id:'stW',label:'Width',lo:0.7,hi:3},
-             {id:'stBT',label:'Base slab',optional:true,lo:0,hi:0.3}],
+             {id:'stBT',label:'Base',optional:true,lo:0,hi:0.3}],
      vol:function(v){
        var wedge = v.stW * v.stG * v.stR * (v.stN * (v.stN + 1) / 2);
        return wedge + v.stW * (v.stG * v.stN) * v.stBT;
@@ -403,7 +403,7 @@
         '<div class="field-line">' +
           '<div class="field-label-group">' +
             '<span class="field-label">' + f.label + '</span>' +
-            (f.optional ? '<span class="field-optional-note">Optional</span>' : '') +
+            (f.optional ? '<span class="field-optional-note">(optional)</span>' : '') +
           '</div>' +
           '<div class="field-controls">' + valueBox(f) + unitEl + '</div>' +
         '</div>' +
@@ -1051,8 +1051,8 @@
     btn.setAttribute('aria-label', 'Switch to ' + (toDark ? 'dark' : 'light') + ' theme');
     btn.setAttribute('aria-pressed', String(mode === 'dark'));
     var meta = document.querySelector('meta[name="theme-color"]');
-    // Light theme-color matches --bg (#ffffff after the v22.22 invert), not the old grey page chrome.
-    if (meta) meta.setAttribute('content', mode === 'dark' ? '#1c1c1e' : '#ffffff');
+    // Light theme-color matches --bg (parchment #F0EEE7), not the card.
+    if (meta) meta.setAttribute('content', mode === 'dark' ? '#2E2A24' : '#F0EEE7');
   }
   applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 

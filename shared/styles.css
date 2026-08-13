@@ -1,4 +1,6 @@
-/* SlabSet v22 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
+/* SlabSet v23 - same structure as v22, but iOS cold greys swapped for a warm
+   parchment scale keyed to og-image.png (#F0EEE7). Parchment page / white cards.
+   SlabSet v22 - HIG style: SF Pro, a 6-size type scale (v18's 5 plus --text-xxs), job-
    site legibility sizing. Two cards (Inputs, Outputs), same as v21. v22 reverses the
    v19 "no hairlines" call for the dimension/order rows specifically (Andre's explicit
    ask): the recessed grey chip (--surface-3) behind field values, the unit toggle and
@@ -14,22 +16,22 @@
      introduced, unlike the previous white-bg/off-white-card try (v22.21, reverted
      same day). --surface-2 (the header's own background) follows --bg down the same
      "stays seamless with the page" relationship it's always had. */
-  --bg: #ffffff;
-  --surface-1: #f2f2f7;
-  --surface-2: #ffffff;
-  --surface-3: #e5e5ea;
-  --border: #d1d1d6;
-  --border-strong: #c7c7cc;
-  --border-accent: #8e8e93;
-  --text-primary: #1c1c1e;
-  --text-secondary: #636366;
+  --bg: #F0EEE7;
+  --surface-1: #ffffff;
+  --surface-2: #F0EEE7;
+  --surface-3: #E8E2D6;
+  --border: #C9C2B3;
+  --border-strong: #BDB5A4;
+  --border-accent: #8A8376;
+  --text-primary: #1C1914;
+  --text-secondary: #5F5A52;
   /* v20: darkened from #79797d - measured 3.89:1/4.34:1 (bg/card), which fails WCAG AA
      (4.5:1) at every size this token is actually used at (11-17px, none large/bold
      enough to qualify for the reduced 3:1 threshold). #6c6c70 clears 4.5:1 against
      both --bg and --surface-1. */
-  --text-muted: #6c6c70;
-  --text-accent: #3a3a3c;
-  --bg-accent: #e8e8ed;
+  --text-muted: #5C574F;
+  --text-accent: #3A362F;
+  --bg-accent: #EDE8DC;
   --caution: #8a6100;
   --caution-bg: #fdf3dd;
   --radius: 10px;
@@ -52,7 +54,7 @@
      lavender in light theme, dark desaturated blue-violet below in
      [data-theme="dark"]. Same token/values v22 shipped with, dropped in v22.1 when
      the card went flat; brought back as an experiment, not yet a settled call. */
-  --results-light-bg: #EEF2FF;
+  --results-light-bg: #FFFFFF;
 
   /* Job-site type scale - v18's HIG steps carried over, each bumped ~35-45% for
      outdoor legibility (direct sun, arm's-length, one glance while holding a tape).
@@ -69,23 +71,23 @@
 }
 
 [data-theme="dark"] {
-  --bg: #000000;
+  --bg: #2E2A24;
   /* v22.31: nudged a touch lighter than #2c2c2e so grey cards separate from the
      black page without loud borders (Designer dark-card separation). */
-  --surface-1: #303033;
-  --surface-2: #000000;   /* matches --bg, same relationship as light mode - keeps the
+  --surface-1: #3F3A32;
+  --surface-2: #2E2A24;   /* matches --bg, same relationship as light mode - keeps the
                               header/page seamless rather than reading as a grey bar
                               floating on a black page */
-  --surface-3: #3a3a3c;
-  --border: #38383a;
-  --border-strong: #48484a;
-  --border-accent: #8e8e93;
-  --text-primary: #f2f2f7;
-  --text-secondary: #98989f;
+  --surface-3: #4E483E;
+  --border: #3F3A32;
+  --border-strong: #4E483E;
+  --border-accent: #8A8376;
+  --text-primary: #F4F0E8;
+  --text-secondary: #A39C90;
   /* v20: lightened from #7c7c80 - same AA-contrast fix as light mode, see :root. */
-  --text-muted: #939396;
-  --text-accent: #e5e5ea;
-  --bg-accent: #000000;
+  --text-muted: #9C9589;
+  --text-accent: #E8E2D6;
+  --bg-accent: #2E2A24;
   --caution: #f5c451;
   --caution-bg: #2e2510;
   /* Dark-mode tint of light mode's #3568DD (:root), not the same literal value -
@@ -105,7 +107,7 @@
      meaningful hue to preserve from a colour this close to white), not a strict
      same-hue derivation. Default theme-token text colours (--text-primary etc.)
      already work against it unmodified, same as they do against --surface-1 dark. */
-  --results-light-bg: #211F3D;
+  --results-light-bg: #2A2418;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -313,8 +315,11 @@ select { font-family: inherit; }
   height: 36px;
   transform: translate(-50%, -50%);
   border-radius: 8px; /* match .brand-mark */
-  background: var(--surface-3);
+  background: #DED8CB; /* OG parchment, a step darker than --bg */
   z-index: -1;
+}
+[data-theme="dark"] .theme-toggle::before {
+  background: #1C1914;
 }
 .theme-toggle:focus-visible { outline: 2px solid var(--border-accent); outline-offset: 1px; }
 .theme-toggle svg { width: 18px; height: 18px; display: block; }
@@ -489,7 +494,7 @@ select { font-family: inherit; }
    grey chip from the dimension value boxes below (see .field-val), but left this fill
    as-is - the diagram is an illustration, not a row control, and untouched by that
    change. */
-.diagram-svg [fill="#ffffff"] { fill: var(--surface-3); }
+.diagram-svg [fill="#ffffff"] { fill: var(--bg); }
 
 /* No more "Length"/"Width" words drawn on the drawing - which dimension you're on is
    now signalled purely by colour on its line, not a label. */
@@ -548,14 +553,12 @@ select { font-family: inherit; }
      the whole field-controls block (numbers included) right, not just the unit. */
   margin-right: -4px;
 }
-/* Optional-field note ("Base slab" / "Optional") uses position: absolute so it hangs
-   below the label without being part of its flow - keeps .field-label-group exactly
-   1 line tall so .field-line's align-items: center centres it against .field-controls
-   identically whether or not the row is optional, instead of a taller 2-line group on
-   the optional row alone pushing its label up relative to every other row's label. */
+/* Optional-field note sits on the same line as the label, lighter grey. */
 .field-label-group {
-  position: relative;
-  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  flex-shrink: 0;
 }
 .field-label {
   /* 2026-08-12 (Andre's ask, "same as the lower card i.e. type small"): was --text-m
@@ -575,12 +578,9 @@ select { font-family: inherit; }
   white-space: nowrap;
 }
 .field-optional-note {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 2px;
   white-space: nowrap;
-  font-size: var(--text-xxs);
+  font-size: var(--text-s);
+  font-weight: 400;
   color: var(--text-muted);
 }
 .field-controls { display: flex; gap: 6px; align-items: center; flex: none; }
@@ -639,7 +639,7 @@ select { font-family: inherit; }
   position: absolute;
   top: 4px;
   bottom: 4px;
-  left: 2px;
+  left: 14px; /* pull left in so the ring doesn't sit on the row label; right unchanged */
   right: 2px;
   transform: translateX(6px);
   border-radius: var(--radius-sm);
@@ -816,12 +816,12 @@ select { font-family: inherit; }
   gap: 0;
 }
 .hig-group {
-  background: #ffffff;
+  background: var(--bg);
   border-radius: var(--radius);
   overflow: hidden;
 }
 [data-theme="dark"] .hig-group {
-  background: #1c1c1e;
+  background: var(--bg);
 }
 .hig-row {
   position: relative;
@@ -988,8 +988,8 @@ select { font-family: inherit; }
   margin-top: 0;
   padding: 2px;
   border-radius: var(--radius-sm);
-  /* v22.73 HIG: recessed track (darker than Bags tile), white elevated thumb. */
-  background: var(--surface-3);
+  /* Lighter parchment than the page, same as Ready-mix/Bags group. */
+  background: var(--bg);
 }
 .bag-size-btn {
   flex: 1;
@@ -1006,16 +1006,16 @@ select { font-family: inherit; }
   cursor: pointer;
 }
 .bag-size-btn.is-selected {
-  background: var(--bg);
+  background: var(--surface-1);
   color: var(--text-primary);
   border: none;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 [data-theme="dark"] .bag-size-buttons {
-  background: #2c2c2e;
+  background: var(--bg);
 }
 [data-theme="dark"] .bag-size-btn.is-selected {
-  background: var(--surface-3);
+  background: var(--surface-1);
   color: var(--text-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }

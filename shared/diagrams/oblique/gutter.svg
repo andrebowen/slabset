@@ -2,6 +2,8 @@
   <title>Gutter / Kerb - oblique dimensions</title>
 <path d="M 240.00 -60.00 L 60.00 -60.00 L 80.36 -80.36 L 260.36 -80.36 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
 <path d="M 60.00 -120.00 L 0.00 -120.00 L 20.36 -140.36 L 80.36 -140.36 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 240.00 0.00 L 240.00 -60.00 L 260.36 -80.36 L 260.36 -20.36 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 60.00 -60.00 L 60.00 -120.00 L 80.36 -140.36 L 80.36 -80.36 Z" fill="#ffffff" stroke="#18181b" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
 <line x1="240.00" y1="-60.00" x2="260.36" y2="-80.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
 <line x1="60.00" y1="-60.00" x2="80.36" y2="-80.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
 <line x1="60.00" y1="-120.00" x2="80.36" y2="-140.36" stroke="#18181b" stroke-width="2.25" stroke-linecap="round"/>
