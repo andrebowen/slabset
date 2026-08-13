@@ -149,6 +149,8 @@
 html {
   height: 100%;
   color-scheme: light;
+}
+* {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -159,7 +161,13 @@ html {
    (.key, .diagram-svg's highlight, .keypad-wrap's slide) override this per-property,
    not fight it - a later, more specific rule replaces the whole `transition` list for
    that element rather than merging with it. */
+/* Colour/border only on * — background-color here made iOS :active
+   (a black tile on rows and buttons) ease in over 150ms. Surfaces that
+   actually change on theme switch keep a background transition below. */
 *, *::before, *::after {
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+html, body, .shell, .header, .inputs-card, .output-card, .keypad-wrap {
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1143,6 +1151,21 @@ body.legal {
   cursor: pointer;
 }
 .spec-btn:active { opacity: 0.85; }
+
+.field-row:active,
+.field-val:active,
+.ledger-row:active,
+.hig-row:active,
+.shape-heading:active,
+.theme-toggle:active,
+.bag-size-btn:active,
+.foot-links a:active {
+  background-color: transparent;
+}
+.bag-size-btn.is-selected:active {
+  background: var(--surface-1);
+}
+
 .spec-btn[disabled] { opacity: 0.4; cursor: default; }
 
 /* Footer */

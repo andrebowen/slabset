@@ -618,20 +618,7 @@
     var el = document.getElementById('options');
 
     if (!complete) {
-      var missingLabel = null;
-      var shapeFields = currentShape().fields;
-      for (var mi = 0; mi < shapeFields.length; mi++) {
-        if (shapeFields[mi].optional) continue;
-        if (!vals[shapeFields[mi].id] || parseFloat(vals[shapeFields[mi].id]) <= 0) {
-          missingLabel = shapeFields[mi].label;
-          break;
-        }
-      }
-      // v22.60: calmer empty Supply copy; names first missing field (lowercase).
-      var emptyHint = missingLabel
-        ? ('Add ' + missingLabel.toLowerCase() + ' to see supply.')
-        : 'Add dimensions to see supply.';
-      el.innerHTML = '<p class="order-empty">' + emptyHint + '</p>';
+      el.innerHTML = '<p class="order-empty">Add all dimensions to see supply quantities.</p>';
     } else {
       var ready = readyOrder(withWaste);
       var bags = bagCount(withWaste);
