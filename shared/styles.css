@@ -539,6 +539,14 @@ select { font-family: inherit; }
                       nothing inside (e.g. an unstyled native <select>) can push a
                       specific row taller than the rest */
   overflow: hidden;
+  /* 2026-08-13 (Andre's ask): "mm"/"m" read too close to the card's own edge - bleeds
+     4px into .inputs-card's 12px padding (still 8px of true whitespace left) so
+     .field-controls has 4px more room to its right. Paired with .unit-picker's own
+     margin-left below: that's where the extra 4px actually lands, not here on
+     .field-val - this widens the row's right edge without shifting field-val (and the
+     numbers/ring inside it) at all. Without that pairing this alone would just push
+     the whole field-controls block (numbers included) right, not just the unit. */
+  margin-right: -4px;
 }
 /* Optional-field note ("Base slab" / "Optional") uses position: absolute so it hangs
    below the label without being part of its flow - keeps .field-label-group exactly
@@ -615,7 +623,17 @@ select { font-family: inherit; }
    flat, no rounded corner, right where .field-line's clip region began. Insetting
    left/right by the same 2px the box-shadow spreads keeps the ring fully inside
    .field-val's own box on every side - it no longer depends on a neighbour existing
-   to have room to bleed into. */
+   to have room to bleed into.
+   2026-08-13 (Andre's ask): ring read tight against the value's right-most digit -
+   right/left insets both being 2px means the ring wraps .field-val's full 96px box,
+   but the value text sits right-aligned inside it, so almost all the slack lands on
+   the ring's left side and almost none on the right. Nudged the whole ring right with
+   a translateX rather than just closing up `right`, so top/bottom/left/right stay the
+   documented values above (still correct for the 40px-tall / no-flat-corner math) and
+   only the rendered position shifts. Safe to bleed past .field-val's own right edge -
+   the count field's Quantity/Steps row got its invisible unit-picker placeholder back
+   (see app.js, 2026-08-12), so every row has ~60px of buffer before .field-line's clip
+   edge again, not just dimension rows. */
 .field-val.focused::after {
   content: '';
   position: absolute;
@@ -623,6 +641,7 @@ select { font-family: inherit; }
   bottom: 4px;
   left: 2px;
   right: 2px;
+  transform: translateX(6px);
   border-radius: var(--radius-sm);
   box-shadow: 0 0 0 2px var(--diagram-accent);
   pointer-events: none;
@@ -648,6 +667,12 @@ select { font-family: inherit; }
   justify-content: center;
   gap: 2px;
   cursor: pointer;
+  /* 2026-08-13 (Andre's ask): "mm"/"m" moved 4px right. This is the half of the shift
+     that actually separates the unit from the number - it grows .field-controls'
+     footprint by 4px, and since .field-line got that same 4px back on the right (see
+     its own margin-right comment), .field-val's left edge - and the value/ring inside
+     it - lands exactly where it always did. Only this box moves. */
+  margin-left: 4px;
 }
 /* v22: matches .field-label/.field-val's size, not its own smaller --text-xs step -
    Andre's ask, so "Length   25   m ▾" reads as one uniform size across the whole row
