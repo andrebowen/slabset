@@ -969,9 +969,9 @@
     // Two decimals, same as the Order ledger (Base / Wastage / Order). Ready-mix
     // stays 1dp via readyLine() (0.1 m³ truck step).
     lines.push('Base quantity: ' + withCommas(baseVol.toFixed(2)) + ' m³');
-    // Always show the wastage row, including +0% → 0.00 m³ when dialled to zero
+    // Always show the wastage row, including 0% → 0.00 m³ when dialled to zero
     // (same honesty as the on-screen Order ledger keeping the control at 0%).
-    lines.push('+' + wastePct + '% Wastage: ' + withCommas(wasteAmt.toFixed(2)) + ' m³');
+    lines.push(wastePct + '% Wastage: ' + withCommas(wasteAmt.toFixed(2)) + ' m³');
     lines.push('Order quantity: ' + withCommas(withWaste.toFixed(2)) + ' m³');
     lines.push('');
     lines.push('Supply options:');
