@@ -110,7 +110,7 @@
   var UNIT_FACTOR = { m: 1, mm: 0.001 };
 
   // Wastage is a fixed preset list via native <select> popup - carried over from v17.
-  // Notes live in option labels (e.g. "10% — Recommended for standard site").
+  // Notes live in option labels (e.g. "10% Recommended for standard site").
   // v22.48–50 HIG segments reverted (v22.51 Andre): back to Order-ledger pulldown.
   var WASTE_OPTS = [0, 5, 10, 15];
   var WASTE_DEFAULT = 10;
@@ -435,7 +435,7 @@
   function renderWastagePulldown() {
     var sel = document.getElementById('wastage-select');
     sel.innerHTML = WASTE_OPTS.map(function (p) {
-      var label = p + '% — ' + WASTE_NOTES[p];
+      var label = p + '% ' + WASTE_NOTES[p];
       return '<option value="' + p + '"' + (String(p) === vals.wastage ? ' selected' : '') + '>' + label + '</option>';
     }).join('');
     document.getElementById('wastage-current').textContent = vals.wastage + '%';

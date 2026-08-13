@@ -1,5 +1,5 @@
 // SlabSet v23 - bump VERSION on deploy so caches refresh.
-var VERSION = 'v23-20260813-2';
+var VERSION = 'v23-20260813-3';
 var CACHE = 'slabset-' + VERSION;
 var ASSETS = [
   './',
