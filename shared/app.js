@@ -499,6 +499,7 @@
     // Copy/Share needs to catch that the moment you leave the field, not wait for the
     // next keystroke, or a caution earned by tapping away goes unseen until send.
     renderResults();
+    pulseDim(id);
     // v22.46/follow-up — no scrollIntoView on field focus; keeps Job diagram stable (Andre).
     if (moveFocusToKeypad) {
       var firstKey = document.querySelector('#keypad .key');
@@ -895,6 +896,35 @@
         });
       }
     }
+  }
+
+  // v23.4 (Andre: "does not pulse the dimension line"): highlightDim()'s
+  // classList.toggle('is-active', hit) is a correct no-op when a group is already
+  // active - typing a digit calls renderFields() -> highlightDim() again on every
+  // keystroke, and that no-op is exactly what stops the pulse from restarting on every
+  // character (already tested and wanted). But it also means tapping a field that was
+  // ALREADY the focused one - which the app's default state makes true for Length on
+  // the very first tap after opening - never transitions the class at all, so it never
+  // pulses on what's often the very first, most natural interaction. focusField() is
+  // the actual "user just tapped a field" moment; force that field's group to restart
+  // regardless of its current state, every time this fires. offsetWidth read between
+  // the remove and the re-add forces a layout flush - without it the two class writes
+  // would coalesce into one style recalc and the browser would never see a transition
+  // to retrigger on.
+  function pulseDim(id) {
+    var svg = document.querySelector('#diagram svg');
+    if (!svg) return;
+    var f = fieldById(id);
+    var want = f ? f.label : null;
+    if (!want) return;
+    Array.prototype.forEach.call(svg.querySelectorAll('g.dim'), function (g) {
+      var t = g.querySelector('text');
+      if (t && labelText(t) === want) {
+        g.classList.remove('is-active');
+        void g.offsetWidth;
+        g.classList.add('is-active');
+      }
+    });
   }
 
   // ── Keypad ───────────────────────────────────────────────────────────────────

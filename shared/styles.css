@@ -113,7 +113,17 @@ html {
   color-scheme: light;
 }
 * {
-  -webkit-tap-highlight-color: transparent;
+  /* v23.4 (Andre: "still flashes black on row press"): rgba(0,0,0,0), not the
+     `transparent` keyword - a well-documented real-iOS-Safari gotcha where WebKit
+     sometimes ignores the keyword for this specific non-standard property and shows
+     its native black tap-highlight overlay anyway. That overlay is a separate
+     rendering layer from CSS :active (see .field-row:active etc. below, which stays -
+     it's still needed for browsers where this DOES work), so no amount of :active
+     background-color:transparent fixes it if this property itself isn't suppressing
+     the highlight. Playwright/Chromium (everything this app's automated checks run
+     in) never reproduces this quirk at all, so it can only really be caught on an
+     actual iPhone. */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 /* v20: smooths the light/dark switch, which previously flipped every colour on the
@@ -410,7 +420,7 @@ body.legal {
   opacity: 0.01;
   background: var(--surface-1);
   color: var(--surface-1);
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);   /* see :root's * rule for why not the keyword */
   transition: none;
   outline: none;
 }
@@ -1125,7 +1135,7 @@ body.legal {
   background: var(--surface-2);
   cursor: pointer;
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);   /* see :root's * rule for why not the keyword */
   /* v20: press feedback (.key:active below) previously had no transition at all -
      scale and colour both snapped with zero animation, despite a reduced-motion
      override already existing for the transform (written for a transition that wasn't
