@@ -907,10 +907,19 @@
   // the very first tap after opening - never transitions the class at all, so it never
   // pulses on what's often the very first, most natural interaction. focusField() is
   // the actual "user just tapped a field" moment; force that field's group to restart
-  // regardless of its current state, every time this fires. offsetWidth read between
-  // the remove and the re-add forces a layout flush - without it the two class writes
-  // would coalesce into one style recalc and the browser would never see a transition
-  // to retrigger on.
+  // regardless of its current state, every time this fires.
+  // v23.5 follow-up (Andre, on real hardware: still not pulsing, even though this
+  // tested fine in every automated check): first cut forced the reflow between the
+  // remove and the re-add by reading `g.offsetWidth`. offsetWidth is an HTMLElement
+  // property - `g` here is an SVGGElement, which doesn't reliably implement it per
+  // spec. Chromium exposes it permissively on SVG elements anyway (why this passed
+  // every Playwright check), but Safari is stricter about SVG elements not having
+  // that layout box, so the read likely silently no-ops there: no forced flush, the
+  // remove and the re-add coalesce into one style recalc, and the animation never
+  // sees a transition to restart on - exactly "works in testing, not on the phone".
+  // Double requestAnimationFrame instead: browser-agnostic, doesn't depend on any
+  // one element type implementing a specific layout property, and guarantees the
+  // "removed" state actually gets flushed to style before the class comes back.
   function pulseDim(id) {
     var svg = document.querySelector('#diagram svg');
     if (!svg) return;
@@ -921,8 +930,11 @@
       var t = g.querySelector('text');
       if (t && labelText(t) === want) {
         g.classList.remove('is-active');
-        void g.offsetWidth;
-        g.classList.add('is-active');
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            g.classList.add('is-active');
+          });
+        });
       }
     });
   }
