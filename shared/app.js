@@ -613,10 +613,10 @@
     // v22.28: full Order ledger in #volume-breakdown (scroll Order card).
     // v22.30: top pinned Order strip removed — Order card under Job is the sole order readout.
     var volEl = document.getElementById('volume-breakdown');
-    function ledgerRow(label, value, isTotal, isEmpty, enter) {
+    function ledgerRow(label, value, isTotal, isEmpty) {
       return '<div class="ledger-row' + (isTotal ? ' ledger-total' : '') + '">' +
         '<span class="ledger-label">' + label + '</span>' +
-        '<span class="ledger-val' + (isTotal ? ' qty-figure' : '') + (isEmpty ? ' is-empty' : '') + (enter ? ' is-enter' : '') + '">' + value + '</span>' +
+        '<span class="ledger-val' + (isTotal ? ' qty-figure' : '') + (isEmpty ? ' is-empty' : '') + '">' + value + '</span>' +
       '</div>';
     }
     // v23.4: the ledger always carries its own unit, even pre-completion - "— m³" reads
@@ -635,8 +635,15 @@
       volEl.innerHTML =
         ledgerRow('Base quantity', withCommas(baseVol.toFixed(2)) + ' m³', false, false) +
         wastageLedgerRow(withCommas((withWaste - baseVol).toFixed(2)) + ' m³') +
-        ledgerRow('Order quantity', orderText, true, false, orderEnter);
+        ledgerRow('Order quantity', orderText, true, false);
     }
+    // v23.8 (Andre, on real hardware: "main numbers dont do anything" - see
+    // triggerEnter()'s comment near pulseDim for the full reasoning): is-enter used to
+    // be baked straight into this innerHTML string, relying on Safari playing an
+    // animation on an element that already matches it the instant it's inserted. Now
+    // applied after the fact via the same forced double-rAF restart that fixed the
+    // diagram pulse, so it doesn't depend on that being reliable.
+    if (orderEnter) triggerEnter(volEl.querySelector('.ledger-row.ledger-total .ledger-val'));
     renderWastagePulldown();
 
     var el = document.getElementById('options');
@@ -693,11 +700,11 @@
           '<div class="hig-group" role="list">' +
             '<div class="hig-row" data-row="ready" role="listitem">' +
               '<span class="hig-row-label">Ready-mix</span>' +
-              '<span class="hig-row-val"><strong' + (readyEnter ? ' class="is-enter"' : '') + '>' + readyText + '</strong></span>' +
+              '<span class="hig-row-val"><strong>' + readyText + '</strong></span>' +
             '</div>' +
             '<div class="hig-row" data-row="bags" role="listitem">' +
               '<span class="hig-row-label">' + state.bagSize + ' kg Bags</span>' +
-              '<span class="hig-row-val"><strong' + (bagsEnter ? ' class="is-enter"' : '') + '>' + bagsText + '</strong></span>' +
+              '<span class="hig-row-val"><strong>' + bagsText + '</strong></span>' +
             '</div>' +
           '</div>' +
           '<div class="hig-caption" id="bag-size-label">Bag size</div>' +
@@ -705,6 +712,10 @@
             bagSizeButtons +
           '</div>' +
         '</div>';
+      // Same reasoning as the Order hero above - forced after insertion, not baked
+      // into the string.
+      if (readyEnter) triggerEnter(el.querySelector('[data-row="ready"] strong'));
+      if (bagsEnter) triggerEnter(el.querySelector('[data-row="bags"] strong'));
 
       Array.prototype.forEach.call(document.querySelectorAll('.bag-size-btn'), function (btn) {
         btn.addEventListener('click', function () {
@@ -936,6 +947,28 @@
           });
         });
       }
+    });
+  }
+
+  // v23.8 (Andre, on real hardware: "main numbers dont do anything" - the Order/Ready-
+  // mix/Bags flicker from v23.4). Same root cause as pulseDim() above, one level up:
+  // that fix forces a restart on a PERSISTENT element via classList; this one forces
+  // it on a FRESHLY INSERTED element instead. is-enter used to be baked directly into
+  // renderResults()'s innerHTML strings, on the assumption that an element which
+  // already matches an animated selector at the moment it's inserted will play that
+  // animation - true in Chromium (every automated check here passed), unreliable in
+  // Safari, which doesn't consistently animate a class present from an element's very
+  // first paint inside a synchronous innerHTML swap. Same double-rAF fix as pulseDim:
+  // remove (harmless no-op, the class was never in the fresh markup to begin with),
+  // then force-add it two frames later so Safari sees a genuine no-class -> class
+  // transition to key the animation off, instead of "arrived already animating".
+  function triggerEnter(el) {
+    if (!el) return;
+    el.classList.remove('is-enter');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.classList.add('is-enter');
+      });
     });
   }
 
