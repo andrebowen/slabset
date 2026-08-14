@@ -591,21 +591,20 @@ body.legal {
   opacity: 1;
   /* v23.4 (Andre, "should the active line blink to stand out more"): a literal loop
      was rejected - it would nag the whole time you're keyed into the pad, and this app
-     has no other looping motion anywhere. One-shot instead: two quick beats the moment
-     a dimension becomes active, then it settles into the same steady full-ink state
-     already declared above (the animation's own 100% keyframe matches those values
-     exactly, so nothing jumps when it ends - it just stops animating). Re-focusing a
-     different field retriggers it naturally: the class moves off the old group and
-     onto the new one, a fresh class addition, no JS reflow hack needed. Re-focusing the
-     *same* already-active field doesn't retrigger it, which is correct - nothing
-     changed for the eye to catch. */
+     has no other looping motion anywhere. One-shot instead: one beat the moment a
+     dimension becomes active (was two, v23.9 Andre's ask - simpler read), then it
+     settles into the same steady full-ink state already declared above (the
+     animation's own 100% keyframe matches those values exactly, so nothing jumps when
+     it ends - it just stops animating). Re-focusing a different field retriggers it
+     naturally: the class moves off the old group and onto the new one, a fresh class
+     addition, no JS reflow hack needed. Re-focusing the *same* already-active field
+     doesn't retrigger it on its own (see pulseDim() in app.js, which forces it to
+     regardless - every tap should beat once, including a re-tap). */
   animation: dim-pulse 0.4s ease-out;
 }
 @keyframes dim-pulse {
   0%   { opacity: 0.18; stroke-width: 1px; }
-  25%  { opacity: 1; stroke-width: 2.5px; }
-  50%  { opacity: 0.4; stroke-width: 1.5px; }
-  75%  { opacity: 1; stroke-width: 2.5px; }
+  40%  { opacity: 1; stroke-width: 2.5px; }
   100% { opacity: 1; stroke-width: 2px; }
 }
 @media (prefers-reduced-motion: reduce) {
