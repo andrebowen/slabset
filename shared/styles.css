@@ -379,13 +379,12 @@ body.legal {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: var(--text-m);   /* matches .field-label/.field-val below it, not
-                                 --text-l - Andre's explicit ask */
+  font-size: var(--text-s);   /* same 17px as Job rows */
   font-weight: 400;   /* same as Job / Order row labels */
   color: var(--text-primary);
   cursor: pointer;
 }
-.shape-heading-chevron { font-size: var(--text-m); line-height: 1; color: var(--text-secondary); }
+.shape-heading-chevron { font-size: var(--text-s); line-height: 1; color: var(--text-secondary); }
 .shape-heading select {
   position: absolute;
   left: 0;
@@ -399,7 +398,7 @@ body.legal {
   -webkit-appearance: none;
   border: 0;
   cursor: pointer;
-  font-size: var(--text-m);   /* 16px+, or iOS zooms the page when the menu opens */
+  font-size: var(--text-s);   /* 17px, same as rows; still 16px+ so iOS doesn't zoom */
 }
 
 /* iOS paints a black layer on opacity:0 native <select> overlays.
@@ -563,9 +562,28 @@ body.legal {
   stroke: var(--text-primary);
   stroke-width: 2px;
   opacity: 1;
+  /* v23.4 (Andre, "should the active line blink to stand out more"): a literal loop
+     was rejected - it would nag the whole time you're keyed into the pad, and this app
+     has no other looping motion anywhere. One-shot instead: two quick beats the moment
+     a dimension becomes active, then it settles into the same steady full-ink state
+     already declared above (the animation's own 100% keyframe matches those values
+     exactly, so nothing jumps when it ends - it just stops animating). Re-focusing a
+     different field retriggers it naturally: the class moves off the old group and
+     onto the new one, a fresh class addition, no JS reflow hack needed. Re-focusing the
+     *same* already-active field doesn't retrigger it, which is correct - nothing
+     changed for the eye to catch. */
+  animation: dim-pulse 0.4s ease-out;
+}
+@keyframes dim-pulse {
+  0%   { opacity: 0.18; stroke-width: 1px; }
+  25%  { opacity: 1; stroke-width: 2.5px; }
+  50%  { opacity: 0.4; stroke-width: 1.5px; }
+  75%  { opacity: 1; stroke-width: 2.5px; }
+  100% { opacity: 1; stroke-width: 2px; }
 }
 @media (prefers-reduced-motion: reduce) {
   #diagram g.dim line { transition: none; }
+  #diagram g.dim.is-active line { animation: none; }
 }
 
 /* Fields - a plain list inside the Inputs card. v22 (Andre's call, settled after two
@@ -918,10 +936,32 @@ body.legal {
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
-.qty-figure.is-enter { animation: qty-in 0.15s ease; }
-@keyframes qty-in { from { opacity: 0; } to { opacity: 1; } }
+/* v23.4 (Andre, "results should feel dominant & instant, not secondary"): was a plain
+   0.15s opacity fade, and only ever fired once (first time a shape became complete -
+   see the old state.hadOrder in app.js). It retriggers on every render where the
+   figure's own text actually changed (app.js's lastOrderText/lastReadyText/
+   lastBagsText memo decides that, not this CSS) - so typing a new digit livens the
+   answer up immediately, not just the first time one appears. Generalised from
+   .qty-figure.is-enter to plain .is-enter so the same "this number just updated"
+   signal also applies to Supply's Ready-mix/Bags values (.hig-row-val strong), which
+   don't carry .qty-figure. Went through two rejected tries first: a scale(1.06) pop
+   (Andre: don't want the numbers to change size), then a box-shadow "glow" ring
+   swapped through two colours (Andre: any filled shape flashing in behind the text
+   reads as the parchment page bleeding through the card, regardless of hue - a
+   box-shadow spread is a solid ring, not actually a soft glow). Landed on the same
+   language as the diagram's dimension-line pulse instead (opacity only, nothing
+   painted behind or around the glyphs, no size change) - already proven to read well
+   elsewhere in this app. Opacity is paint-only (no layout reflow), so this can't
+   reintroduce the scroll-jank class of bug the keypad fix solved either. */
+.is-enter { animation: figure-flicker 0.35s ease-out; }
+@keyframes figure-flicker {
+  0%   { opacity: 1; }
+  30%  { opacity: 0.4; }
+  60%  { opacity: 1; }
+  100% { opacity: 1; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .qty-figure.is-enter { animation: none; }
+  .is-enter { animation: none; }
 }
 /* Bag size - was .unit-picker--inline, a native-select chip sitting mid-label
    ("[20kg ▾] bags", removed here). v22.15 (Andre's ask, written out - "75 bags /
@@ -1027,26 +1067,34 @@ body.legal {
 .foot-links a:active { text-decoration: underline; }
 
 /* Keypad - pinned, always in reach. Plain 3-col, 12-key grid, no advance/Next key. */
-/* v20: slides in/out instead of snapping via display:none - closer to how a real
-   keyboard raises. max-height is the animatable stand-in (display and height: auto
-   can't transition); 300px comfortably exceeds the keypad's actual rendered height
-   (3 rows × 52px + 2×6px gaps + padding, well under 300 including safe-area), so the
-   transition timing reads as governed by duration, not by hitting the cap mid-animation.
-   Still fully removed from flex flow at 0 - #scroll-area's flex:1 reclaims the space
-   exactly as it did with display:none, just smoothly instead of instantly. */
+/* v20 used max-height as the animatable stand-in for display/height:auto, capped at an
+   arbitrary 300px - "comfortably exceeds the keypad's actual rendered height" as headroom
+   so the animation wouldn't visibly hit the cap. That headroom was the bug: measured
+   scrollHeight is ~242px, so the first ~20% of the 0.25s transition (300px -> ~242px) moved
+   nothing on screen at all - the box was already clamped to its content height - then the
+   remaining ~80% of the duration did the whole real 242px -> 0 collapse. Same total time,
+   badly front-loaded, reads as a stall-then-lurch rather than one smooth close. v23.4 (2026-08-14,
+   Andre flagged scroll jank on keypad close): grid-template-rows 1fr/0fr instead - the
+   standard "animate to auto height" trick. No cap to guess at, so it can't drift out of
+   sync with real content again (safe-area varies by device too), and every millisecond of
+   the transition moves the row track by an equal fraction of its actual height. #keypad
+   is both a grid item of this row (needs overflow:hidden + min-height:0 so the track can
+   shrink it past its content size) and its own grid for the 3-col key layout - a display
+   value only governs how an element lays out its own children, not how its parent treats
+   it as an item, so the two roles don't conflict. */
 .keypad-wrap {
   flex-shrink: 0;
+  display: grid;
+  grid-template-rows: 1fr;
   background: var(--surface-1);
   padding: 8px;   /* was 10px, vertical-space pass - the keypad is the single largest
                       fixed consumer of screen height (~200px), so trimming it directly
                       grows the scroll window above it */
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  max-height: 300px;
-  overflow: hidden;
-  transition: max-height 0.25s ease, padding-top 0.25s ease, padding-bottom 0.25s ease;
+  transition: grid-template-rows 0.25s ease, padding-top 0.25s ease, padding-bottom 0.25s ease;
 }
 .keypad-wrap.is-hidden {
-  max-height: 0;
+  grid-template-rows: 0fr;
   padding-top: 0;
   padding-bottom: 0;
 }
@@ -1058,6 +1106,8 @@ body.legal {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;   /* was 8px, vertical-space pass */
+  overflow: hidden;   /* lets .keypad-wrap's 1fr row track shrink it past content size */
+  min-height: 0;      /* grid items default to min-height:auto (content-based) otherwise */
 }
 .key {
   appearance: none;

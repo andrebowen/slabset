@@ -124,8 +124,7 @@
   var state = {
     shape: 'slab',
     focus: 'slabL',
-    bagSize: 20,
-    hadOrder: false
+    bagSize: 20
   };
 
   var DRAFT_KEY = 'slabset-draft';
@@ -426,7 +425,7 @@
         '<span id="wastage-current" aria-hidden="true"></span>' +
         '<svg class="ti wastage-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>' +
       '</span></span>' +
-      '<span class="ledger-val' + (amountStr ? '' : ' is-empty') + '">' + (amountStr || '—') + '</span>' +
+      '<span class="ledger-val' + (amountStr ? '' : ' is-empty') + '">' + (amountStr || '— m³') + '</span>' +
       '<select id="wastage-select" aria-label="Wastage"></select>' +
     '</div>';
   }
@@ -534,8 +533,17 @@
   }
   document.addEventListener('click', function (e) {
     if (e.target.closest('.field-row') || e.target.closest('#keypad-wrap')) return;
+    // v23.4: .bag-size-btn joins the wastage/shape pickers here - same reason. Its own
+    // click handler already calls renderResults() itself (to recompute Ready-mix/Bags
+    // for the new size), so falling through to blurField()'s *second* renderResults()
+    // call below was harmless before - identical output, nobody could tell two renders
+    // happened - but it silently erased the figure-pulse .is-enter class this second
+    // render legitimately earned, before the browser ever got to paint it: the pulse
+    // fired and vanished in the same tick. dismissKeypadQuiet() still closes the keypad
+    // and clears focus, it just doesn't rebuild the ledger/options DOM a second time.
     if (e.target.closest('.shape-heading') || e.target.closest('#shape-select') ||
-        e.target.closest('[data-row="wastage"]') || e.target.closest('#wastage-select')) {
+        e.target.closest('[data-row="wastage"]') || e.target.closest('#wastage-select') ||
+        e.target.closest('.bag-size-btn')) {
       dismissKeypadQuiet();
       return;
     }
@@ -554,6 +562,17 @@
   // render after that, and not again until the shape resets it (see shape-select) or the
   // user clears a field and completes it again.
   var didCompletePulse = false;
+
+  // v23.4 (Andre, "results should feel dominant & instant, not secondary"): memo of
+  // each result figure's last-rendered text, so the figure-pulse animation (scale +
+  // soft highlight, see .figure-pulse in styles.css) fires only on renders where the
+  // number actually changed. renderResults() tears down and rebuilds these rows'
+  // markup on every call - keypad open/close, a bag-size click, the theme toggle - not
+  // just the ones where a dimension changed, so without this memo every render would
+  // pulse, not just the ones where the figure did.
+  var lastOrderText = null;
+  var lastReadyText = null;
+  var lastBagsText = null;
 
   function renderResults() {
     var complete = isComplete();
@@ -599,19 +618,23 @@
         '<span class="ledger-val' + (isTotal ? ' qty-figure' : '') + (isEmpty ? ' is-empty' : '') + (enter ? ' is-enter' : '') + '">' + value + '</span>' +
       '</div>';
     }
-    var orderEnter = complete && !state.hadOrder;
-    state.hadOrder = !!complete;
+    // v23.4: the ledger always carries its own unit, even pre-completion - "— m³" reads
+    // as "an m³ answer is coming" rather than a bare dash that could be any kind of
+    // blank. orderText/orderEnter feed the hero figure's pulse (see lastOrderText above).
+    var orderText = complete ? withCommas(withWaste.toFixed(2)) + ' m³' : '— m³';
+    var orderEnter = complete && orderText !== lastOrderText;
+    lastOrderText = orderText;
     if (!complete) {
       volEl.innerHTML =
-        ledgerRow('Base quantity', '—', false, true) +
+        ledgerRow('Base quantity', '— m³', false, true) +
         wastageLedgerRow(null) +
-        ledgerRow('Order quantity', '—', true, true);
+        ledgerRow('Order quantity', orderText, true, true);
     } else {
       var baseVol = computeVolume();
       volEl.innerHTML =
         ledgerRow('Base quantity', withCommas(baseVol.toFixed(2)) + ' m³', false, false) +
         wastageLedgerRow(withCommas((withWaste - baseVol).toFixed(2)) + ' m³') +
-        ledgerRow('Order quantity', withCommas(withWaste.toFixed(2)) + ' m³', true, false, orderEnter);
+        ledgerRow('Order quantity', orderText, true, false, orderEnter);
     }
     renderWastagePulldown();
 
@@ -622,6 +645,15 @@
     } else {
       var ready = readyOrder(withWaste);
       var bags = bagCount(withWaste);
+      // Same "did this figure's own text actually change" gate as the Order hero
+      // above - a bag-size click changes bags but not ready, and vice versa isn't
+      // possible here but keeping them independently memoed is still correct.
+      var readyText = withCommas(ready.toFixed(1)) + ' m³';
+      var bagsText = withCommas(bags);
+      var readyEnter = readyText !== lastReadyText;
+      var bagsEnter = bagsText !== lastBagsText;
+      lastReadyText = readyText;
+      lastBagsText = bagsText;
 
       // Number leads each tile (v22.14). v22.44/v22.45 (Andre): equal Supply
       // tiles — no REC_REASON / "Recommended." / badge / is-recommended /
@@ -660,11 +692,11 @@
           '<div class="hig-group" role="list">' +
             '<div class="hig-row" data-row="ready" role="listitem">' +
               '<span class="hig-row-label">Ready-mix</span>' +
-              '<span class="hig-row-val"><strong>' + withCommas(ready.toFixed(1)) + ' m³</strong></span>' +
+              '<span class="hig-row-val"><strong' + (readyEnter ? ' class="is-enter"' : '') + '>' + readyText + '</strong></span>' +
             '</div>' +
             '<div class="hig-row" data-row="bags" role="listitem">' +
               '<span class="hig-row-label">' + state.bagSize + ' kg Bags</span>' +
-              '<span class="hig-row-val"><strong>' + withCommas(bags) + '</strong></span>' +
+              '<span class="hig-row-val"><strong' + (bagsEnter ? ' class="is-enter"' : '') + '>' + bagsText + '</strong></span>' +
             '</div>' +
           '</div>' +
           '<div class="hig-caption" id="bag-size-label">Bag size</div>' +
