@@ -1,0 +1,6 @@
+#!/bin/sh
+# Blocks a commit that leaves shared/styles.css with orphaned custom properties
+# or classes - see hooks/check-dead-css.py for what it checks and why.
+# Escape hatch for a real false positive: git commit --no-verify
+
+python3 "$(git rev-parse --show-toplevel)/hooks/check-dead-css.py"

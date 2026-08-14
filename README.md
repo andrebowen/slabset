@@ -42,6 +42,22 @@ No job-name field exists in this build (older docs describe one; it never made i
 an earlier version - see `CONTEXT.md`'s "Known gaps"). Clearing `slabset-draft` gives
 you a cold start.
 
+## Pre-commit check
+
+`hooks/check-dead-css.py` flags custom properties and classes defined in
+`shared/styles.css` with no live reference left anywhere in the site - the way a
+removed feature's CSS (and the comments describing it) can survive silently in a
+plain HTML/CSS/JS project with no build step to catch it. Runs automatically on
+`git commit` once hooksPath is pointed at the tracked hook (one-time, per clone):
+
+```bash
+git config core.hooksPath hooks
+```
+
+A real false positive (a class deliberately unused for now) can bypass it with
+`git commit --no-verify`, or get added to `CLASS_ALLOWLIST` in the script if it's
+going to stay that way (see `.sr-only`'s entry for the pattern).
+
 ## Deploy
 
 Not live. **Live is v18** (`v18-preview-21`) — see `LIVE.md`.

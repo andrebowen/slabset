@@ -30,44 +30,25 @@
      enough to qualify for the reduced 3:1 threshold). #6c6c70 clears 4.5:1 against
      both --bg and --surface-1. */
   --text-muted: #5C574F;
-  --text-accent: #3A362F;
   --bg-accent: #EDE8DC;
   --caution: #8a6100;
   --caution-bg: #fdf3dd;
   --radius: 10px;
   --radius-sm: 8px;
-  /* The one deliberate colour in an otherwise greyscale app - used only for the diagram
-     highlight and the focused-field ring (the same "you're editing this" signal, fired
-     at the same moment). Was iOS system blue (#007aff); switched to the palette's
-     mid-blue. Both are graphical, not text, so WCAG's 3:1 non-text threshold applies -
-     #3568DD clears it against light surfaces (5.03:1 on white, 4.51:1 on --bg). Dark
-     mode no longer reuses this literal value - see [data-theme="dark"] below, which
-     lightens the same hue for its own card surface instead. */
-  --diagram-accent: #3568DD;
-  /* Text colour for content sitting ON TOP of --diagram-accent (Copy/Share, see
-     .spec-btn) - white here, but flips to a near-black ink in dark mode below, since
-     the accent itself gets lighter there (see that block's comment). Checked against
-     both actual button fills, not just the raw accent swatch: 5.03:1 light, 5.78:1
-     dark - both clear the 4.5:1 text minimum. */
-  --accent-text: #ffffff;
-  /* 2026-08-12: trying .output-order (Buying options) with a fill again - pale
-     lavender in light theme, dark desaturated blue-violet below in
-     [data-theme="dark"]. Same token/values v22 shipped with, dropped in v22.1 when
-     the card went flat; brought back as an experiment, not yet a settled call. */
-  --results-light-bg: #FFFFFF;
 
   /* Job-site type scale - v18's HIG steps carried over, each bumped ~35-45% for
      outdoor legibility (direct sun, arm's-length, one glance while holding a tape).
      Same 5 roles as v18, just no longer tuned for a handheld indoor screen.
-     --text-xxs is v19-only, added for the caption-weight labels (Recommended badge,
-     Total Volume eyebrow, section labels) that read better small even at job-site
-     scale - everything else on the page grew, these didn't need to. */
+     --text-xxs is v19-only, added for the caption-weight labels (.tv-label eyebrows,
+     section labels) that read better small even at job-site scale - everything else
+     on the page grew, these didn't need to. */
   --text-xxs: 0.6875rem; /* 11px - the smallest step, caption/badge only */
   --text-xs: 0.875rem;   /* 14px - Caption 1: unit badges, tiny row labels */
   --text-s:  1.0625rem;  /* 17px - Footnote: section labels, row names, why-lines */
-  --text-m:  1.25rem;    /* 20px - Body: field values, buttons, keypad */
-  --text-l:  1.625rem;   /* 26px - Title 3: shape name, volume hero (Andre downsized the
-                             hero from --text-xl to this step) */
+  --text-m:  1.25rem;    /* 20px - Body: field values, buttons, keypad, shape name */
+  --text-l:  1.625rem;   /* 26px - Title 3: legal-page headings, keypad digits. (Order
+                             quantity - the volume hero - moved off this token to its
+                             own fixed size; see .ledger-row.ledger-total .qty-figure.) */
 }
 
 [data-theme="dark"] {
@@ -87,28 +68,9 @@
   --text-secondary: #A39C90;
   /* v20: lightened from #7c7c80 - same AA-contrast fix as light mode, see :root. */
   --text-muted: #9C9589;
-  --text-accent: #E8E2D6;
   --bg-accent: #2E2A24;
   --caution: #f5c451;
   --caution-bg: #2e2510;
-  /* Dark-mode tint of light mode's #3568DD (:root), not the same literal value -
-     the flat reuse was 2.77:1 against the dark card surface (#2c2c2e), under the 3:1
-     non-text minimum. Same hue/saturation (222°, 71%), lightness raised 54% -> 62% -
-     the same light/dark-tint pattern iOS system colours use, not a different blue.
-     5.78:1 against pure black, 3.84:1 against the card - clears 3:1 with margin,
-     matching v19's old dark-mode blue's 3.82:1 almost exactly. */
-  --diagram-accent: #5983E3;
-  /* Near-black ink, not white - the dark-mode accent above is a light tint (62%
-     lightness), so white text on it would be low-contrast. Matches the wordmark's
-     "Set" chip ink colour (#0D0905) for a consistent on-bright-surface tone. */
-  --accent-text: #0D0905;
-  /* Dark-theme pairing for --results-light-bg (:root) - a dark, desaturated
-     blue-violet rather than the light theme's pale lavender lightened further; an
-     aesthetic judgement call (unlike --diagram-accent's dark tint above, there's no
-     meaningful hue to preserve from a colour this close to white), not a strict
-     same-hue derivation. Default theme-token text colours (--text-primary etc.)
-     already work against it unmodified, same as they do against --surface-1 dark. */
-  --results-light-bg: #2A2418;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -588,7 +550,8 @@ body.legal {
 [data-theme="dark"] .diagram-svg [fill="#ffffff"] { fill: var(--bg); }
 
 /* No more "Length"/"Width" words drawn on the drawing - which dimension you're on is
-   now signalled purely by colour on its line, not a label. */
+   now signalled by opacity and stroke-width on its line (full ink, thicker, vs. 0.18
+   opacity for the rest), not a label or a colour change. */
 .diagram-svg text { display: none; }
 /* Dim lines start muted (0.18) so a newly injected shape doesn't flash full-ink
    then fade. The active group eases up to full ink. */
@@ -713,36 +676,10 @@ body.legal {
 [data-theme="dark"] .field-val::before {
   background: var(--surface-3);
 }
-/* Same blue as the diagram's highlighted line, so the focused box and the edge it
-   measures read as one connected thing rather than two separate signals. Still a ring,
-   not a fill - the box behind it is gone now (see .field-val above), so the ring alone
-   is the only focus signal left on this control.
-   v22 (Andre's ask): the ring reads 40px tall, not the full 44px tap target - drawn on
-   a ::after inset 4px top/bottom from .field-val's own box (36px), then box-shadow's
-   2px spread expands that back out by 2px on every edge, landing the ring's own outer
-   edge at 40px tall. Tap target itself is untouched (still the full 44px .field-val
-   box) - only the visible ring shrinks.
-   2026-08-12 fix: left/right were 0, so the same 2px box-shadow spread bled 2px past
-   .field-val's own left/right edges too, same trick as the top/bottom inset. That was
-   invisible everywhere a dimension row's value box had a neighbour (unit-picker,
-   wastage-pulldown) absorbing the 2px before .field-line's own `overflow: hidden`
-   boundary - but a count field's Quantity/Steps row (v22.3 dropped its old invisible
-   placeholder so the value sits flush against the row's true right edge, see that
-   delta) has no such buffer any more, so the ring's right side was getting clipped
-   flat, no rounded corner, right where .field-line's clip region began. Insetting
-   left/right by the same 2px the box-shadow spreads keeps the ring fully inside
-   .field-val's own box on every side - it no longer depends on a neighbour existing
-   to have room to bleed into.
-   2026-08-13 (Andre's ask): ring read tight against the value's right-most digit -
-   right/left insets both being 2px means the ring wraps .field-val's full 96px box,
-   but the value text sits right-aligned inside it, so almost all the slack lands on
-   the ring's left side and almost none on the right. Nudged the whole ring right with
-   a translateX rather than just closing up `right`, so top/bottom/left/right stay the
-   documented values above (still correct for the 40px-tall / no-flat-corner math) and
-   only the rendered position shifts. Safe to bleed past .field-val's own right edge -
-   the count field's Quantity/Steps row got its invisible unit-picker placeholder back
-   (see app.js, 2026-08-12), so every row has ~60px of buffer before .field-line's clip
-   edge again, not just dimension rows. */
+/* v23: the ring is gone - focus now reads as a pale warm fill behind the value (see
+   .field-val::before above) instead of an outline around it, matching the app's move
+   to a flat two-tone ink/parchment palette with no accent colour left to draw a ring
+   in. */
 
 .field-val.is-empty { color: var(--text-muted); }
 
@@ -768,8 +705,8 @@ body.legal {
   /* 2026-08-13 (Andre's ask): "mm"/"m" moved 4px right. This is the half of the shift
      that actually separates the unit from the number - it grows .field-controls'
      footprint by 4px, and since .field-line got that same 4px back on the right (see
-     its own margin-right comment), .field-val's left edge - and the value/ring inside
-     it - lands exactly where it always did. Only this box moves. */
+     its own margin-right comment), .field-val's left edge - and the value inside it -
+     lands exactly where it always did. Only this box moves. */
   margin-left: 4px;
 }
 /* v22: matches .field-label/.field-val's size, not its own smaller --text-xs step -
@@ -900,9 +837,10 @@ body.legal {
      (Andre flagged it, screenshot). One edge, matching the app's usual rhythm again,
      same as top/left/right always did.
      flex column + 12px gap added same day - the "Buying options" caption had 0px
-     separating it from the .buy-tile cards below, same missing-gap fix as
-     .tv-section (see that rule's comment), just more visible here since the content
-     right under the caption is a filled colour block, not plain text. */
+     separating it from the Ready-mix/Bags tiles below it (then .buy-tile cards, now
+     .hig-stack), same missing-gap fix as .tv-section (see that rule's comment), just
+     more visible here since the content right under the caption is a filled colour
+     block, not plain text. */
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -946,12 +884,6 @@ body.legal {
   text-align: right;
 }
 .hig-row-val strong { font-weight: 700; }
-.hig-footer {
-  margin: 6px 0 0;
-  font-size: var(--text-xs);
-  font-weight: 400;
-  color: var(--text-muted);
-}
 .hig-caption {
   margin: 12px 0 6px;
   font-size: var(--text-xs); /* 14px */
@@ -963,95 +895,25 @@ body.legal {
 
 .hig-stack .bag-size-buttons { margin: 0; }
 
-/* Buy card .tv-label uses the shared eyebrow treatment above.*/
-/* v22.35/v22.37: Ready-mix / Bags are discrete bordered cards again (gap +
-   borders), not hairline-separated flat blocks. Winner accent outline only —
-   no edge Recommended badge (v22.37). */
-.buy-split {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.buy-tile {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  /* Just a hair darker than the Supply card (--surface-1), no outline. */
-  background: color-mix(in srgb, var(--surface-1) 95%, #000 5%);
-}
-/* v22.55 Supply ledger row: label left, value right (was missing — labels
-   glued to figures as "Ready-mix0.3 m³" / "30kg bags18"). */
-.buy-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  font-size: var(--text-s);
-}
-.buy-row-label {
-  font-weight: 400;
-  color: var(--text-primary);
-  min-width: 0;
-}
-.buy-row-val {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-align: right;
-  flex-shrink: 0;
-}
-.buy-row-val strong { font-weight: 600; }
-/* .buy-tile-label (a separate regular-weight caption under the figure) removed
-   2026-08-12 - both tiles are one line now ("1.4 m³ Ready-mix", "34 × 20kg bags"),
-   Andre's ask, so there's no longer a second line to style.
-   Same day, second pass (Andre's ask): dropped from .qty-figure (--text-m, whole
-   line bold) to plain --text-s, bold on just the result number - "m³ Ready-mix"/
-   "× 20kg bags" are context for the number, not the answer itself. font-weight
-   explicit on both rules rather than relying on <strong>'s browser-default bold,
-   same habit the rest of this stylesheet keeps everywhere else. */
-.buy-tile-val { font-variant-numeric: tabular-nums; font-size: var(--text-s); font-weight: 400; }
-.buy-tile-val strong { font-weight: 700; }
-/* Quiet recommendation (v22.24–v22.37): winner = accent border + reason line
-   ("Recommended. …"); loser / dead band = hairline border only. Border carries
-   the selection (not a focus-visible ring / box-shadow focus mimic). */
-.buy-tile.is-recommended {
-  border-color: var(--diagram-accent);
-  border-width: 1.5px;
-}
-.buy-tile.is-recommended .buy-tile-val { color: var(--text-primary); }
-.buy-tile.is-demoted { color: var(--text-muted); }
-.buy-tile.is-demoted .buy-tile-val { color: var(--text-muted); }
-.buy-tile.is-demoted .buy-tile-val strong { font-weight: 600; color: var(--text-secondary); }
-.buy-rec {
-  margin-top: 4px;
-  font-size: var(--text-xs);
-  font-weight: 400;
-  line-height: 1.35;
-  color: var(--text-secondary);
-}
-/* Demoted Bags tile: unselected segments stay muted (track is shared; selected
-   thumb still uses primary ink via .is-selected). */
-.buy-tile.is-demoted .bag-size-btn:not(.is-selected) {
-  color: var(--text-muted);
-}
-/* The quantity itself, a step up from the label under it (Andre's call) - "2.2 m³"
-   or the bag count, not the whole tile. Bolder too, so the number both reads bigger
-   and carries more visual weight than its label. Shared with the Order-quantity
-   ledger row's figure above (.ledger-total .ledger-val, same class, same treatment) -
-   one rule for "the answer" wherever it appears in this card. */
+/* .qty-figure - "the answer" treatment. Only user left as of v23 is the Order-quantity
+   ledger row below (.ledger-row.ledger-total .qty-figure); Supply's Ready-mix/Bags
+   figures moved to the plain .hig-row-val <strong> above when Supply was rebuilt on
+   the HIG grouped-list pattern, and the old .buy-* tile system (bordered tiles,
+   Recommended-winner outline, demoted styling) that used to share this class was
+   removed as dead CSS the same pass - app.js hasn't emitted any of those classes
+   since the equal-tiles call (see options rendering, "no is-recommended / is-demoted
+   in the UI"). */
 .qty-figure {
   font-size: var(--text-m);
   font-weight: 700;
 }
-/* v22.26/v22.28: Order quantity figure is the hero answer in the Order ledger —
-   a step above Base/Wastage (--text-s rows) and above plain --text-m .qty-figure.
-   (v22.27 briefly overrode this for a mini pin ledger; removed in v22.28.) */
-/* v22.31: push Order hero further — --text-l + heavier weight + slight tracking. */
+/* Order quantity figure is the hero answer in the Order ledger - a step above
+   Base/Wastage (--text-s rows) and above plain --text-m .qty-figure.
+   2026-08-14 (Andre's ask, "make hero 30px"): fixed at 30px rather than the --text-l
+   token (26px) - it needs to move on its own from here, not drag the legal-page
+   headings and keypad digits that still share --text-l along with it. */
 .ledger-row.ledger-total .qty-figure {
-  font-size: var(--text-l);
+  font-size: 1.875rem; /* 30px */
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -1072,17 +934,8 @@ body.legal {
 /* v22.31: visible "Bag size" caption separates chips from Ready-mix/Bags choice. */
 /* v22.43 (Andre): iOS HIG segmented control — grey track, white/elevated selected
    thumb, muted unselected labels. Not separate bordered chips / mid-grey fill
-   (v22.42) / blue fill. Supply winner outline (.buy-tile.is-recommended) unchanged.
+   (v22.42) / blue fill.
    v22.73: HIG track + white thumb; track is --surface-3 so it recesses into the tile instead of a white-on-grey-on-white sandwich. */
-.bag-size-block { margin-top: 12px; }
-.bag-size-caption {
-  font-size: var(--text-xxs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
 .bag-size-buttons {
   display: flex;
   gap: 0;
@@ -1137,12 +990,11 @@ body.legal {
   height: 54px;
   border: 0;
   border-radius: var(--radius);
-  /* Was var(--text-primary) - flat black/white, no different from any other filled
-     control on the page. Copy/Share are the two most important tappable actions in
-     the app, so they get the app's one deliberate accent colour (see --diagram-accent's
-     comment) rather than blending into the greyscale system - same colour already
-     means "you're interacting with this" everywhere else (diagram highlight, focused-
-     field ring), so this isn't a new signal, just its biggest use of it. */
+  /* v23: flat ink black, not an accent colour - see the block comment above. Copy/Share
+     are the two most important tappable actions in the app, so they carry the app's
+     strongest possible weight (full ink fill, reversed text) within the same two-tone
+     palette everything else uses, rather than a separate colour standing in for
+     "important." */
   background: var(--text-primary);
   color: var(--bg);
   display: inline-flex;
