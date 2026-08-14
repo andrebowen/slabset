@@ -411,31 +411,30 @@ body.legal {
 }
 
 /* v23.5 (Andre, on real hardware: "still flashing black on row tap - shape, wastage,
-   mm/m"). Two separate bugs stacked here, both now fixed:
-   1) This rule used to read opacity: 0.01, on the theory (see old comment, still half
-      right) that opacity:0 lets iOS skip compositing the layer and paint a raw black
-      swatch on interaction instead. But .unit-picker-select and the standalone
-      .ledger-row[data-row="wastage"] > select rules further down the file each
-      declare their OWN opacity: 0 with equal specificity to this one - later in the
-      file wins a tie, so mm/m and Wastage were silently getting opacity:0 again
-      regardless of what this rule said. Shape (only ever targeted here, no later
-      competing rule) was NOT hit by that bug and flashed anyway - both fixed the
-      same way below, so whichever theory is right, both stop flashing.
-   2) Removed opacity entirely from all three controls' base rules (was 0, now unset -
-      see the rules above/below losing their `opacity: 0` lines) and switched this
-      rule from 0.01 to a plain opacity: 1. Any opacity below 1 asks iOS to blend the
-      element as a separate compositing layer, which is the more likely actual source
-      of the black flash on a native <select> - background/color already match the
-      card (surface-1 on surface-1), which is what actually hides it; opacity was
-      redundant on top of that and, on real hardware, actively counterproductive.
-   Can't reproduce this quirk in Playwright/Chromium at all (see the tap-highlight-
-   color fix earlier in this file for the same limitation), so this is verified by
-   reasoning about the cascade, not by seeing it fail locally - flag it again if any
-   of the three still flash after this. */
+   mm/m"). Real bug found and still fixed: .unit-picker-select and the standalone
+   .ledger-row[data-row="wastage"] > select rules further down the file each declared
+   their OWN opacity: 0 with equal specificity to this one - later in the file wins a
+   tie, so mm/m and Wastage were silently getting opacity:0 again regardless of what
+   this rule said (their `opacity: 0` lines are gone now, this rule is the one
+   remaining source of truth for all three).
+   v23.6 (opacity: 1) was WRONG and got reverted same day (Andre: "Shape and Wastage
+   rows are now missing all labels") - opacity here isn't just about hiding this
+   invisible overlay from view, it's the only reason the REAL visible label underneath
+   ("Slab / Pad", "Wastage 10%") shows through at all. This select sits on top of that
+   label in stacking order (position:absolute, later in the DOM, no z-index needed to
+   win); at low opacity you mostly see through it to the label below and only
+   faintly to its own white-on-white background - at opacity:1 its own solid
+   background fully occludes the label instead, which is what "missing all labels"
+   actually was. Back to a low, non-zero value: low enough to stay see-through, non-
+   zero so iOS doesn't skip compositing it and paint a raw black swatch on interaction
+   instead (the original theory this technique was built on, still the working one -
+   the real flash-causing bug this whole time was the duplicate-rule override above,
+   not the opacity value itself). Screenshotted this time, not just computed-style-
+   checked, before calling it fixed - that gap is exactly how the regression shipped. */
 .shape-heading select,
 .unit-picker-select,
 .ledger-row[data-row="wastage"] > select {
-  opacity: 1;
+  opacity: 0.01;
   background: var(--surface-1);
   color: var(--surface-1);
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);   /* see :root's * rule for why not the keyword */
