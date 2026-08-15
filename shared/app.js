@@ -1000,11 +1000,15 @@
   }
 
   // Plain 3-col, 12-key grid per the wireframe - no Next/advance key.
-  // v22.31: backspace uses a light Tabler-style SVG (sprite #i-backspace), not the
-  // system '⌫' glyph which renders as a heavy outlined rectangle on many fonts.
+  // v22.31: backspace uses a light SVG glyph, not the system '⌫' character which
+  // renders as a heavy outlined rectangle on many fonts. v23.9 (Andre, "should be a
+  // simple arrow"): was a Tabler-style tag-with-X backspace icon (sprite #i-backspace,
+  // boxy/busy for a single key); swapped for the plain #i-arrow-left sprite - just a
+  // line and a chevron, same stroke-based language as the shape/wastage chevrons
+  // elsewhere in the app rather than its own separate glyph style.
   var KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
   var BACKSPACE_ICO =
-    '<svg class="ti key-back-ico" aria-hidden="true"><use href="#i-backspace"/></svg>';
+    '<svg class="ti key-back-ico" aria-hidden="true"><use href="#i-arrow-left"/></svg>';
 
   // Real <button> elements, not tabindex="-1" divs (v19 fix) - the old markup meant a
   // keyboard-only or screen-reader user could never reach, let alone activate, a
