@@ -1149,7 +1149,7 @@ body.legal {
   justify-content: center;
   font-family: inherit;
   font-size: var(--text-l);
-  font-weight: 400;
+  font-weight: 600;   /* v23.10 (Andre: "might be better in a heavier weight") - was 400 */
   color: inherit;
   background: var(--surface-2);
   cursor: pointer;
@@ -1169,8 +1169,13 @@ body.legal {
   width: 1.35rem;
   height: 1.35rem;
   display: block;
-  stroke-width: 1.75;
-  opacity: 0.85;
+  /* v23.10 (Andre: "might be better in a heavier weight") - was 1.75/0.85, deliberately
+     lighter than the digits at the time to stay under the old boxy backspace glyph's
+     own visual weight. That reasoning doesn't apply to the plain arrow it replaced it
+     with (v23.9) - matching the now-600-weight digits instead of sitting lighter than
+     them. */
+  stroke-width: 2.25;
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
